@@ -8,7 +8,9 @@
     "build": "vite build",
     "preview": "vite preview --port 5174",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "lint": "tsc --noEmit -p tsconfig.json"
+    "lint": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "cesium": "^1.143.0",
