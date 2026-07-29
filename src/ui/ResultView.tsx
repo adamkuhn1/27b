@@ -1,6 +1,7 @@
 import { CARDINAL_LABEL } from "../lib/types";
 import type { ViewPlan } from "../lib/types";
 import { CesiumView } from "../viewer/CesiumView";
+import { TileCapturesProvider } from "../viewer/useTileCaptures";
 
 interface ResultViewProps {
   result: { ok: true; plan: ViewPlan; fromCache: boolean };
@@ -37,17 +38,19 @@ export function ResultView({ result, renderDisabled }: ResultViewProps) {
         </div>
       </div>
 
-      <div className="views">
-        {plan.views.map((view) => (
-          <figure className="view" key={view.cardinal}>
-            <figcaption className="view__label">
-              <span className="view__compass">{view.cardinal}</span>{" "}
-              {CARDINAL_LABEL[view.cardinal]} · {view.headingDeg}°
-            </figcaption>
-            <CesiumView view={view} disabled={renderDisabled} />
-          </figure>
-        ))}
-      </div>
+      <TileCapturesProvider plan={plan} disabled={renderDisabled}>
+        <div className="views">
+          {plan.views.map((view) => (
+            <figure className="view" key={view.cardinal}>
+              <figcaption className="view__label">
+                <span className="view__compass">{view.cardinal}</span>{" "}
+                {CARDINAL_LABEL[view.cardinal]} · {view.headingDeg}°
+              </figcaption>
+              <CesiumView view={view} disabled={renderDisabled} />
+            </figure>
+          ))}
+        </div>
+      </TileCapturesProvider>
     </section>
   );
 }
