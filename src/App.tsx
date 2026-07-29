@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AddressForm, type AddressFormValue } from "./ui/AddressForm";
 import {
   LoadingState,
@@ -20,6 +20,22 @@ export default function App() {
   const [ui, setUi] = useState<UiState>({ kind: "idle" });
   const abortRef = useRef<AbortController | null>(null);
   const imagerySource = hasImagerySource();
+
+  // Portfolio embed contract (apps/portfolio/src/lib/embedProtocol.ts): once
+  // the first frame has painted — the address form is interactive immediately —
+  // tell the shell to crossfade its loading veil out. rAF defers past the
+  // commit so we announce a painted frame, not just a mounted tree. No-op when
+  // running standalone.
+  useEffect(() => {
+    if (window.parent === window) return;
+    const raf = requestAnimationFrame(() => {
+      window.parent.postMessage(
+        { source: "portfolio-embed", type: "ready", id: "27b" },
+        "*",
+      );
+    });
+    return () => cancelAnimationFrame(raf);
+  }, []);
 
   const handleSubmit = useCallback(async (value: AddressFormValue) => {
     // Cancel any in-flight request so a fast re-search doesn't race.
