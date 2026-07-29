@@ -2,6 +2,7 @@ import { CARDINAL_LABEL } from "../lib/types";
 import type { ViewPlan } from "../lib/types";
 import { CesiumView } from "../viewer/CesiumView";
 import { TileCapturesProvider } from "../viewer/useTileCaptures";
+import { SaveViews } from "./SaveViews";
 
 interface ResultViewProps {
   result: { ok: true; plan: ViewPlan; fromCache: boolean };
@@ -50,6 +51,7 @@ export function ResultView({ result, renderDisabled }: ResultViewProps) {
             </figure>
           ))}
         </div>
+        {!renderDisabled && <SaveViews plan={plan} />}
       </TileCapturesProvider>
     </section>
   );

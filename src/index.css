@@ -266,6 +266,21 @@ body {
   color: var(--accent);
 }
 
+/* ---- Save views ---- */
+.save {
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+}
+.save__note {
+  font-size: 0.76rem;
+  color: var(--text-faint);
+  line-height: 1.5;
+  max-width: 48ch;
+}
+
 /* ---- No-imagery-source / no-data states ---- */
 .state {
   margin-top: 2.5rem;
