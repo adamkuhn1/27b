@@ -16,6 +16,79 @@ type UiState =
   | { kind: "loading" }
   | { kind: "result"; result: ViewPlanResult };
 
+interface Preset {
+  name: string;
+  address: string;
+  floor: number;
+  detail: string;
+}
+
+const PRESETS: Preset[] = [
+  {
+    name: "Empire State Bldg",
+    address: "350 5th Ave, Manhattan, New York, NY 10118",
+    floor: 80,
+    detail: "fl. 80 · Midtown Manhattan",
+  },
+  {
+    name: "One World Trade",
+    address: "285 Fulton St, Manhattan, New York, NY 10007",
+    floor: 100,
+    detail: "fl. 100 · Lower Manhattan",
+  },
+  {
+    name: "432 Park Avenue",
+    address: "432 Park Ave, Manhattan, New York, NY 10022",
+    floor: 80,
+    detail: "fl. 80 · Midtown Manhattan",
+  },
+  {
+    name: "Chrysler Building",
+    address: "405 Lexington Ave, Manhattan, New York, NY 10174",
+    floor: 60,
+    detail: "fl. 60 · Midtown East",
+  },
+  {
+    name: "30 Rockefeller Plaza",
+    address: "30 Rockefeller Plaza, Manhattan, New York, NY 10112",
+    floor: 65,
+    detail: "fl. 65 · Rockefeller Ctr",
+  },
+  {
+    name: "The Dakota",
+    address: "1 W 72nd St, Manhattan, New York, NY 10023",
+    floor: 10,
+    detail: "fl. 10 · Upper West Side",
+  },
+];
+
+interface BuildingPresetsProps {
+  onSelect: (value: AddressFormValue) => void;
+  busy: boolean;
+}
+
+function BuildingPresets({ onSelect, busy }: BuildingPresetsProps) {
+  return (
+    <div className="presets">
+      <span className="presets__label">NYC landmarks</span>
+      <div className="presets__row">
+        {PRESETS.map((p) => (
+          <button
+            key={p.address}
+            type="button"
+            className="preset"
+            disabled={busy}
+            onClick={() => onSelect({ address: p.address, floor: p.floor })}
+          >
+            <span className="preset__name">{p.name}</span>
+            <span className="preset__detail">{p.detail}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const [ui, setUi] = useState<UiState>({ kind: "idle" });
   const abortRef = useRef<AbortController | null>(null);
@@ -65,27 +138,30 @@ export default function App() {
     <div className="app">
       <div className="app__inner">
         <header className="masthead">
-          <div>
-            <p className="masthead__tag">Portfolio Suite · 27B</p>
-            <h1 className="masthead__title">
-              What would you see from <span>floor 27B</span>?
-            </h1>
-            <p className="masthead__sub">
-              Type a New York City address and a floor. 27B places a virtual
-              camera at the building's real coordinates and floor height inside
-              Google's photorealistic 3D reconstruction of the city, then looks
-              out in each cardinal direction.
-            </p>
-          </div>
+          <p className="masthead__tag">27B · real-geometry floor views · New York City</p>
+          <h1 className="masthead__title">
+            What would you see from <span>floor 27B</span>?
+          </h1>
+          <p className="masthead__sub">
+            Type any NYC address and a floor number. 27B finds the building,
+            estimates the camera height, and renders what you'd see looking
+            north, south, east, and west — using Google's real photorealistic
+            3D capture of the city, not a model or simulation.
+          </p>
         </header>
 
         <AddressForm onSubmit={handleSubmit} busy={ui.kind === "loading"} />
 
+        <BuildingPresets
+          onSelect={handleSubmit}
+          busy={ui.kind === "loading"}
+        />
+
         <p className="framing">
           These are <strong>approximately what you'd see</strong> — not your
-          actual view. Floor height is estimated (NYC building data has no
-          per-floor field), and the imagery is Google's real 3D capture of the
-          city, so expect the vantage to be close, not exact.
+          exact view. Floor height is estimated from building footprint data
+          (NYC doesn't publish per-floor heights), so the vantage is close but
+          not precise. The imagery is always real — never substituted.
         </p>
 
         {ui.kind === "loading" && <LoadingState />}
@@ -112,10 +188,13 @@ export default function App() {
       </div>
 
       <footer className="foot">
-        Imagery, when configured, is Google Photorealistic 3D Tiles rendered in
-        CesiumJS. Building height &amp; ground elevation from NYC OpenData
-        Building Footprints. Geocoding by NYC Planning GeoSearch. 27B never
-        fabricates a scene — no data means the honest “not available” state.
+        <div className="foot__inner">
+          <div className="foot__sources">
+            <span>Imagery: Google Photorealistic 3D Tiles via CesiumJS</span>
+            <span>Buildings: NYC OpenData Building Footprints</span>
+            <span>Geocoding: NYC Planning GeoSearch</span>
+          </div>
+        </div>
       </footer>
     </div>
   );

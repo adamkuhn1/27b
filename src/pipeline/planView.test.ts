@@ -35,6 +35,14 @@ const footprint: BuildingFootprint = {
   roofHeightM: 100,
   groundElevationM: 8,
   centroid: { lat: 40.7069, lng: -74.0113 },
+  // Minimal rectangular ring (~40 m × 40 m) so facade-distance geometry works.
+  ring: [
+    [-74.0117, 40.7065],
+    [-74.0109, 40.7065],
+    [-74.0109, 40.7073],
+    [-74.0117, 40.7073],
+    [-74.0117, 40.7065],
+  ],
 };
 
 beforeEach(() => {

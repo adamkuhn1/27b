@@ -18,9 +18,6 @@ interface ResultViewProps {
  */
 export function ResultView({ result, renderDisabled }: ResultViewProps) {
   const { plan, fromCache } = result;
-  const floorNote = plan.floorClampedToRoof
-    ? `floor ${plan.floor} (clamped to roof — building is shorter than that)`
-    : `floor ${plan.floor}`;
 
   return (
     <section className="result" aria-label="Building views">
@@ -28,14 +25,13 @@ export function ResultView({ result, renderDisabled }: ResultViewProps) {
         <div>
           <h2 className="result__addr">{plan.geocode.label}</h2>
           <p className="result__meta">
-            {floorNote} · eye elevation ≈ {plan.eyeElevationM.toFixed(1)} m above
-            sea level · roof {plan.footprint.roofHeightM.toFixed(1)} m ·{" "}
+            floor {plan.floor}{plan.floorClampedToRoof && <span className="meta-note"> (clamped — building is shorter)</span>} · eye {plan.eyeElevationM.toFixed(1)} m asl · roof {plan.footprint.roofHeightM.toFixed(1)} m ·{" "}
             <code>BIN {plan.footprint.bin}</code>
           </p>
         </div>
         <div>
           <span className="badge badge--approx">approximately what you'd see</span>{" "}
-          {fromCache && <span className="badge badge--cache">cached</span>}
+          {fromCache && <span className="badge badge--cache">from cache</span>}
         </div>
       </div>
 
@@ -44,8 +40,9 @@ export function ResultView({ result, renderDisabled }: ResultViewProps) {
           {plan.views.map((view) => (
             <figure className="view" key={view.cardinal}>
               <figcaption className="view__label">
-                <span className="view__compass">{view.cardinal}</span>{" "}
-                {CARDINAL_LABEL[view.cardinal]} · {view.headingDeg}°
+                <span className="view__compass">{view.cardinal}</span>
+                <span className="view__dir">{CARDINAL_LABEL[view.cardinal]}</span>
+                <span className="view__bearing">{view.headingDeg}°</span>
               </figcaption>
               <CesiumView view={view} disabled={renderDisabled} />
             </figure>

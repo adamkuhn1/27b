@@ -29,7 +29,7 @@ export function CesiumView({ view, disabled }: CesiumViewProps) {
   if (state === "error") {
     return (
       <div className="view__canvas" role="img" aria-label="Imagery unavailable">
-        <NoticeOverlay text="Imagery didn't load for this view." />
+        <NoticeOverlay text={captures.errorMsg ?? "Imagery didn't load for this view."} />
       </div>
     );
   }

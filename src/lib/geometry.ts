@@ -99,21 +99,89 @@ export function offsetLatLng(
 }
 
 /**
+ * Distance in meters from the building centroid to the footprint boundary in a
+ * given compass heading, found by ray-casting from the centroid through the
+ * polygon ring. This is the correct offset to use before adding FACADE_OFFSET_M,
+ * so the camera is placed just outside the building wall rather than inside it.
+ *
+ * For small rings or degenerate cases (ring has fewer than 3 points, or the ray
+ * misses every edge) the function returns 0 so the caller's FACADE_OFFSET_M
+ * still applies as a minimum push.
+ */
+export function facadeDistanceM(
+  ring: Array<[number, number]>,
+  centroid: { lat: number; lng: number },
+  headingDeg: number,
+): number {
+  if (ring.length < 3) return 0;
+
+  const bearing = toRad(headingDeg);
+  const dirX = Math.sin(bearing); // east component of heading unit vector
+  const dirY = Math.cos(bearing); // north component of heading unit vector
+
+  // Convert ring [lng, lat] pairs to metric offsets (meters east/north) from
+  // the centroid using the equirectangular approximation. Accurate to sub-metre
+  // across the tens of metres in a typical building footprint.
+  const cosLat = Math.cos(toRad(centroid.lat));
+  const pts = ring.map(([lng, lat]): [number, number] => [
+    (lng - centroid.lng) * toRad(1) * EARTH_RADIUS_M * cosLat, // x = east
+    (lat - centroid.lat) * toRad(1) * EARTH_RADIUS_M,           // y = north
+  ]);
+
+  let minT = Infinity;
+  const n = pts.length;
+  for (let i = 0; i < n; i++) {
+    const [ax, ay] = pts[i];
+    const [bx, by] = pts[(i + 1) % n];
+    // Solve: origin + t*dir = A + s*(B - A)
+    const ex = bx - ax;
+    const ey = by - ay;
+    const denom = dirX * ey - dirY * ex;
+    if (Math.abs(denom) < 1e-9) continue; // ray parallel to edge
+    const t = (ax * ey - ay * ex) / denom;
+    const s = (ax * dirY - ay * dirX) / denom;
+    // t > 0: intersection is ahead of the centroid along the heading.
+    // 0 <= s <= 1: intersection is on the segment, not its extension.
+    if (t > 1e-3 && s >= -1e-6 && s <= 1 + 1e-6 && t < minT) minT = t;
+  }
+
+  return Number.isFinite(minT) ? minT : 0;
+}
+
+/**
  * Build the four cardinal camera views for a footprint at a given eye
- * elevation. Each camera is pushed FACADE_OFFSET_M outward from the centroid in
- * its own heading, so it looks *away* from the building toward the horizon.
+ * elevation.
+ *
+ * Each camera is placed just outside the building facade in its heading
+ * direction — first we ray-cast from the centroid through the footprint ring
+ * to find the actual facade wall distance, then push FACADE_OFFSET_M beyond
+ * that wall. This replaces the previous 6-m-from-centroid heuristic, which
+ * placed the camera inside any building larger than ~12 m across.
+ *
+ * A slight downward tilt (pitchDeg < 0) is applied so city geometry fills the
+ * frame rather than open sky. The tilt increases gently with floor height: at
+ * street-level floors you want a near-horizontal view; at the 80th floor of
+ * the Empire State Building a –9° tilt puts the Midtown skyline in frame.
  */
 export function buildCameraViews(
   footprint: BuildingFootprint,
   eyeElevationM: number,
 ): CameraView[] {
+  const heightAboveGround = eyeElevationM - footprint.groundElevationM;
+  // –3° at ground level → –9° at 200 m+, clamped; keeps sky in the top third.
+  const pitchDeg = Math.max(-9, -(3 + heightAboveGround / 33));
+
   return CARDINALS.map((cardinal) => {
     const headingDeg = CARDINAL_HEADING[cardinal];
+    // True distance from centroid to facade wall in this direction, then push
+    // the camera FACADE_OFFSET_M outside the wall.
+    const wallDist = facadeDistanceM(footprint.ring, footprint.centroid, headingDeg);
+    const totalOffset = wallDist + FACADE_OFFSET_M;
     const { lat, lng } = offsetLatLng(
       footprint.centroid.lat,
       footprint.centroid.lng,
       headingDeg,
-      FACADE_OFFSET_M,
+      totalOffset,
     );
     return {
       cardinal,
@@ -121,7 +189,7 @@ export function buildCameraViews(
       lat,
       lng,
       heightM: eyeElevationM,
-      pitchDeg: 0, // look at the horizon; height-only framing, no parallax tilt.
+      pitchDeg,
     };
   });
 }

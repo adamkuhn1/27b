@@ -36,30 +36,128 @@ export interface RenderOptions {
   height?: number;
   /** Max ms to wait for tiles to settle per view before capturing anyway. */
   settleTimeoutMs?: number;
+  /**
+   * Aborts the session early (superseded plan, unmount, StrictMode's double
+   * effect invocation). Without this, an orphaned run keeps its own Cesium
+   * viewer and WebGL context alive and streaming tiles even after its caller
+   * has stopped listening, which is how two concurrent viewers end up
+   * fighting over the GPU (framebufferTexture2D "does not belong to this
+   * context" errors) instead of the second one just winning cleanly.
+   */
+  signal?: AbortSignal;
 }
 
-/** Wait until the tileset reports no tiles pending, or a timeout elapses. */
+class RenderAbortedError extends Error {
+  constructor() {
+    super("Tile render aborted (superseded).");
+    this.name = "RenderAbortedError";
+  }
+}
+
+/**
+ * Wait until the tileset is fully settled for the current view, or a timeout
+ * elapses.
+ *
+ * Design choices:
+ *
+ * 1. Synchronous render() in the drive loop — requestRenderMode offscreen
+ *    canvases may have their rAF callbacks throttled by the browser.  Calling
+ *    viewer.render() directly drives tile-network round-trips synchronously,
+ *    independent of the animation scheduler.
+ *
+ * 2. Debounce on loadProgress(0,0) — the event fires (0,0) both on startup
+ *    (before any tiles are requested) and briefly between tile batches while
+ *    the renderer refines the LOD. A 2-second grace period after seeing (0,0)
+ *    lets the second wave of detail tiles start before we declare done.
+ *
+ * 3. seenNonZero guard — never accept the initial (0,0) firing as "settled".
+ */
 function waitForTiles(
   viewer: Viewer,
   tileset: Cesium3DTileset,
   timeoutMs: number,
+  signal?: AbortSignal,
 ): Promise<void> {
   return new Promise((resolve) => {
     let done = false;
+    let seenNonZero = false;
+    let settleTimer: ReturnType<typeof setTimeout> | null = null;
+
     const finish = () => {
       if (done) return;
       done = true;
       cleanup();
       resolve();
     };
-    const remove = tileset.allTilesLoaded.addEventListener(finish);
-    const timer = setTimeout(finish, timeoutMs);
-    const cleanup = () => {
-      clearTimeout(timer);
-      remove();
+
+    if (signal) {
+      if (signal.aborted) {
+        finish();
+        return;
+      }
+      signal.addEventListener("abort", finish, { once: true });
+    }
+
+    const scheduleSettle = () => {
+      if (settleTimer) clearTimeout(settleTimer);
+      // Grace period: if no new tile activity starts in this window, we
+      // consider the scene settled and capture. Dense areas (lower Manhattan)
+      // never fully quiesce at a useful screen-space-error — there's always
+      // one more refinement pass available — so this triggers the hard
+      // timeout below in practice. Measured captures at that timeout already
+      // look complete, so the grace period only needs to be long enough to
+      // not cut off a real burst of new tiles, not to prove total silence.
+      settleTimer = setTimeout(finish, 900);
     };
-    // Nudge a render so load state advances even without user interaction.
+
+    const cancelSettle = () => {
+      if (settleTimer) { clearTimeout(settleTimer); settleTimer = null; }
+    };
+
+    const removeLoadProgress = tileset.loadProgress.addEventListener(
+      (pendingRequests: number, tilesProcessing: number) => {
+        if (pendingRequests > 0 || tilesProcessing > 0) {
+          seenNonZero = true;
+          cancelSettle(); // tiles still loading — restart the grace window
+        } else if (seenNonZero) {
+          scheduleSettle(); // tiles quiesced — start 2 s grace window
+        }
+      },
+    );
+
+    // allTilesLoaded is a belt-and-suspenders complement: if the tileset emits
+    // this, tiles definitely loaded, so start the grace window immediately.
+    const removeAllLoaded = tileset.allTilesLoaded.addEventListener(() => {
+      seenNonZero = true;
+      scheduleSettle();
+    });
+
+    const hardTimer = setTimeout(finish, timeoutMs);
+
+    // Drive tile streaming with synchronous viewer.render() so the tile
+    // network round-trips advance even when rAF is throttled for offscreen
+    // canvases.  30 ms ≈ 33 fps — enough throughput without excess quota cost.
+    const renderInterval = setInterval(() => {
+      if (done) return;
+      try {
+        viewer.scene.requestRender();
+        viewer.render();
+      } catch {
+        // Ignore errors from a partially-torn-down viewer.
+      }
+    }, 30);
+
+    const cleanup = () => {
+      clearTimeout(hardTimer);
+      cancelSettle();
+      removeLoadProgress();
+      removeAllLoaded();
+      clearInterval(renderInterval);
+      signal?.removeEventListener("abort", finish);
+    };
+
     viewer.scene.requestRender();
+    viewer.render();
   });
 }
 
@@ -74,10 +172,16 @@ export async function renderFourViews(
 ): Promise<CaptureResult[]> {
   const {
     apiKey,
-    width = 640,
-    height = 480,
-    settleTimeoutMs = 6000,
+    width = 800,
+    height = 600,
+    settleTimeoutMs = 9000,
+    signal,
   } = opts;
+
+  const checkAborted = () => {
+    if (signal?.aborted) throw new RenderAbortedError();
+  };
+  checkAborted();
 
   // Cesium requires *some* Ion token to boot even when we only use Google tiles.
   // Empty string disables Ion's default assets; the Google tileset is loaded
@@ -93,6 +197,23 @@ export async function renderFourViews(
   document.body.appendChild(host);
 
   let viewer: Viewer | null = null;
+  let destroyed = false;
+  const destroyNow = () => {
+    if (destroyed) return;
+    destroyed = true;
+    try {
+      viewer?.destroy();
+    } catch {
+      // Already torn down or mid-teardown — nothing more to do.
+    }
+  };
+  // Belt-and-suspenders: an abort mid-await (tileset creation, the warmup
+  // delay) is only caught by checkAborted() at the next checkpoint, which can
+  // be seconds away. This listener tears the WebGL context down the instant
+  // the signal fires, so an orphaned run can never overlap a fresh one on the
+  // GPU — that overlap is what produces cross-context WebGL errors.
+  signal?.addEventListener("abort", destroyNow, { once: true });
+
   try {
     viewer = new Viewer(host, {
       // Strip every default widget: this is a render surface, not a UI.
@@ -119,22 +240,60 @@ export async function renderFourViews(
     viewer.scene.globe.show = false; // hide the default ellipsoid globe.
 
     const tileset = await createGooglePhotorealistic3DTileset({ key: apiKey });
+    checkAborted(); // may have been destroyed by the listener while awaiting
+    // Lower the LOD error threshold below Cesium's default (16) to load
+    // building-level detail from mid-altitude. 4 was measured to be far too
+    // aggressive: one address blew past 11,000 tile requests and took ~4
+    // minutes to settle against the ~1,000/mo free-tier cap this app exists
+    // to respect. 10 is a middle ground — still resolves building facades,
+    // without the runaway refinement cost of the lowest settings.
+    tileset.maximumScreenSpaceError = 10;
     viewer.scene.primitives.add(tileset);
+
+    // Position the camera at the first view before warmup so the warm-up
+    // period streams tiles for the actual vantage, not a default globe position.
+    if (views.length > 0) applyCameraView(viewer.camera, views[0]);
+
+    // Allow tiles to begin streaming.
+    viewer.scene.requestRender();
+    await new Promise<void>((r) => setTimeout(r, 3000));
+    checkAborted();
 
     const captures: CaptureResult[] = [];
     for (const view of views) {
+      checkAborted();
       applyCameraView(viewer.camera, view);
       viewer.scene.requestRender();
-      await waitForTiles(viewer, tileset, settleTimeoutMs);
-      // One more explicit render after settle so the final frame is complete.
+      await waitForTiles(viewer, tileset, settleTimeoutMs, signal);
+      checkAborted();
+
+      // After tiles are settled, give the GPU time to finish uploading textures
+      // before reading back the canvas — a single render() call may fire before
+      // the texture upload queue drains. Two render + 1 s gives textures time.
       viewer.scene.requestRender();
+      await new Promise<void>((r) => setTimeout(r, 800));
+      viewer.scene.requestRender();
+      await new Promise<void>((r) => setTimeout(r, 200));
       viewer.render();
-      const dataUrl = viewer.canvas.toDataURL("image/png");
+
+      let dataUrl: string;
+      try {
+        dataUrl = viewer.canvas.toDataURL("image/png");
+      } catch (err) {
+        // SecurityError: WebGL canvas tainted by cross-origin tile textures.
+        // Google Photorealistic 3D Tiles must be served with ACAO headers for
+        // readback to work. If this fires, verify that tile responses include
+        // Access-Control-Allow-Origin (check DevTools Network → tile request
+        // → Response Headers). A CORS proxy is required if headers are absent.
+        const msg = err instanceof Error ? err.message : String(err);
+        throw new Error(`Canvas readback blocked (CORS taint): ${msg}`);
+      }
       captures.push({ cardinal: view.cardinal, dataUrl });
     }
     return captures;
   } finally {
-    viewer?.destroy();
+    signal?.removeEventListener("abort", destroyNow);
+    destroyNow();
     host.remove();
   }
 }

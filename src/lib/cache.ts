@@ -13,9 +13,9 @@
 
 import type { ViewPlan } from "./types";
 
-const NAMESPACE = "27b:cache:v1";
+const NAMESPACE = "27b:cache:v2";
 /** Bump when the ViewPlan shape or geometry math changes. */
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 2;
 
 interface CacheEnvelope {
   v: number;
