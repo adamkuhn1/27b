@@ -1,11 +1,14 @@
 // Building height + ground elevation via NYC OpenData Building Footprints.
 //
 // Source: NYC Building Footprints on the Socrata Open Data API (SODA), dataset
-// id `nqwf-w8eh`, a free, key-less GeoJSON/JSON endpoint. Fields we use:
-//   - BIN         : building identifier (join key from geocode)
-//   - heightroof  : roof height above ground (ft in the source -> meters here)
-//   - groundelev  : ground elevation above sea level (ft -> meters)
-//   - the_geom    : footprint polygon (used for the camera-anchor centroid)
+// id `5zhs-2jue`, a free, key-less GeoJSON/JSON endpoint. Fields we use:
+//   - bin            : building identifier (join key from geocode)
+//   - height_roof    : roof height above ground (ft in the source -> meters here)
+//   - ground_elevation : ground elevation above sea level (ft -> meters)
+//   - the_geom       : footprint polygon (used for the camera-anchor centroid)
+//
+// Note: the previous dataset `nqwf-w8eh` was retired by NYC; `5zhs-2jue` is
+// the current Building Footprints dataset with renamed fields.
 //
 // Height fields in the published dataset are in US survey feet; we convert to
 // meters so all downstream math is metric. If a record is missing or lacks
@@ -17,15 +20,15 @@
 import type { BuildingFootprint } from "./types";
 import { polygonCentroid } from "./geometry";
 
-const SODA_URL = "https://data.cityofnewyork.us/resource/nqwf-w8eh.json";
+const SODA_URL = "https://data.cityofnewyork.us/resource/5zhs-2jue.json";
 
 const FEET_TO_METERS = 0.3048;
 
 /** Raw SODA record shape (only the fields we read). */
 interface SodaFootprint {
   bin?: string;
-  heightroof?: string;
-  groundelev?: string;
+  height_roof?: string;
+  ground_elevation?: string;
   the_geom?: {
     type: string;
     coordinates: number[][][] | number[][][][];
@@ -130,8 +133,8 @@ export function parseFootprint(
   row: SodaFootprint,
   bin: string,
 ): BuildingFootprint {
-  const roofFt = num(row.heightroof);
-  const groundFt = num(row.groundelev);
+  const roofFt = num(row.height_roof);
+  const groundFt = num(row.ground_elevation);
 
   // A footprint with no usable roof height can't place a floor camera. Refuse
   // rather than invent a height.
@@ -156,5 +159,8 @@ export function parseFootprint(
     // GROUNDELEV can legitimately be ~0 near the waterline; default to 0.
     groundElevationM: (groundFt ?? 0) * FEET_TO_METERS,
     centroid: polygonCentroid(ring),
+    // Keep the polygon ring so buildCameraViews can ray-cast to the actual
+    // facade position rather than using a fixed small offset from the centroid.
+    ring,
   };
 }

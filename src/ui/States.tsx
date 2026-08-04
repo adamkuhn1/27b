@@ -5,15 +5,15 @@ export function LoadingState() {
   return (
     <div className="loading" role="status" aria-live="polite">
       <span className="spinner" aria-hidden="true" />
-      Resolving address, building height, and camera geometry…
+      Geocoding address · resolving building footprint · computing camera geometry…
     </div>
   );
 }
 
 const REASON_TITLE: Record<UnavailableReason, string> = {
-  "not-nyc": "That address isn't in New York City",
-  "geocode-failed": "We couldn't find that address",
-  "no-footprint": "Not available for this address yet",
+  "not-nyc": "Address isn't in New York City",
+  "geocode-failed": "Address not found",
+  "no-footprint": "Building footprint not available",
   "network-error": "Something went wrong",
 };
 
@@ -34,9 +34,8 @@ export function UnavailableState({
       <h2 className="state__title">{REASON_TITLE[reason]}</h2>
       <p className="state__body">{message}</p>
       <p className="state__body">
-        27B only shows a view when it can source real geometry for the exact
-        building. When it can't, it says so — it never substitutes a made-up
-        scene.
+        27B only renders when it can source real geometry for the exact address.
+        No geometry available means no view — not a placeholder.
       </p>
     </section>
   );

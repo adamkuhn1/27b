@@ -53,6 +53,10 @@ function emptyState(): MetricsState {
 export class Metrics {
   private state = emptyState();
   private listeners = new Set<() => void>();
+  // Cached snapshot: same reference is returned until emit() invalidates it.
+  // Required by useSyncExternalStore — getSnapshot must be referentially stable
+  // between mutations or React triggers an infinite update loop.
+  private _cache: MetricsSnapshot | null = null;
 
   /** Record that a new address request started. */
   recordAddress(): void {
@@ -89,13 +93,14 @@ export class Metrics {
   }
 
   snapshot(): MetricsSnapshot {
+    if (this._cache) return this._cache;
     const { cacheHits, cacheMisses, latencySamples } = this.state;
     const lookups = cacheHits + cacheMisses;
     const avg =
       latencySamples.length === 0
         ? 0
         : latencySamples.reduce((a, b) => a + b, 0) / latencySamples.length;
-    return {
+    this._cache = {
       addressesProcessed: this.state.addressesProcessed,
       cacheHits,
       cacheMisses,
@@ -105,6 +110,7 @@ export class Metrics {
       avgLatencyMs: avg,
       lastLatencyMs: latencySamples.at(-1) ?? 0,
     };
+    return this._cache;
   }
 
   /** Subscribe to changes; returns an unsubscribe fn (React-friendly). */
@@ -119,6 +125,7 @@ export class Metrics {
   }
 
   private emit(): void {
+    this._cache = null; // invalidate so next snapshot() recomputes
     this.listeners.forEach((l) => l());
   }
 }

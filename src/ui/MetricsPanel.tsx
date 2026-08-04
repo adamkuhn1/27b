@@ -42,10 +42,9 @@ export function MetricsPanel() {
         <Metric value={String(m.unavailable)} label="Unavailable" />
       </div>
       <p className="metrics__note">
-        Draft session figures, not verified claims. Latency covers the geometry
-        pipeline (geocode → footprint → camera math); cache hits skip the network
-        entirely, which is what keeps the metered 3D-tile renders under the free
-        cap.
+        Session-only, resets on reload. Latency covers geocode → footprint →
+        camera math; cache hits skip the network entirely, which is what keeps
+        3D-tile renders under the free-tier cap.
       </p>
     </section>
   );

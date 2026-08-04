@@ -19,7 +19,7 @@ const polygonGeom = {
 describe("parseFootprint", () => {
   it("converts feet to meters for roof height and ground elevation", () => {
     const fp = parseFootprint(
-      { bin: "1012345", heightroof: "300", groundelev: "40", the_geom: polygonGeom },
+      { bin: "1012345", height_roof: "300", ground_elevation: "40", the_geom: polygonGeom },
       "1012345",
     );
     expect(fp.roofHeightM).toBeCloseTo(300 * FT_TO_M, 6);
@@ -29,7 +29,7 @@ describe("parseFootprint", () => {
 
   it("computes a centroid inside the footprint", () => {
     const fp = parseFootprint(
-      { bin: "1012345", heightroof: "300", groundelev: "40", the_geom: polygonGeom },
+      { bin: "1012345", height_roof: "300", ground_elevation: "40", the_geom: polygonGeom },
       "1012345",
     );
     expect(fp.centroid.lng).toBeGreaterThan(-74.006);
@@ -44,7 +44,7 @@ describe("parseFootprint", () => {
       coordinates: [polygonGeom.coordinates],
     };
     const fp = parseFootprint(
-      { bin: "2", heightroof: "120", groundelev: "5", the_geom: multi },
+      { bin: "2", height_roof: "120", ground_elevation: "5", the_geom: multi },
       "2",
     );
     expect(fp.roofHeightM).toBeCloseTo(120 * FT_TO_M, 6);
@@ -53,7 +53,7 @@ describe("parseFootprint", () => {
 
   it("defaults ground elevation to 0 when missing (waterline buildings)", () => {
     const fp = parseFootprint(
-      { bin: "3", heightroof: "80", the_geom: polygonGeom },
+      { bin: "3", height_roof: "80", the_geom: polygonGeom },
       "3",
     );
     expect(fp.groundElevationM).toBe(0);
@@ -61,14 +61,14 @@ describe("parseFootprint", () => {
 
   it("refuses (no-footprint) when roof height is missing", () => {
     expect(() =>
-      parseFootprint({ bin: "4", groundelev: "10", the_geom: polygonGeom }, "4"),
+      parseFootprint({ bin: "4", ground_elevation: "10", the_geom: polygonGeom }, "4"),
     ).toThrowError(FootprintError);
   });
 
   it("refuses (no-footprint) when roof height is zero or negative", () => {
     expect(() =>
       parseFootprint(
-        { bin: "5", heightroof: "0", groundelev: "10", the_geom: polygonGeom },
+        { bin: "5", height_roof: "0", ground_elevation: "10", the_geom: polygonGeom },
         "5",
       ),
     ).toThrowError(FootprintError);
@@ -76,13 +76,13 @@ describe("parseFootprint", () => {
 
   it("refuses (no-footprint) when geometry is missing rather than inventing one", () => {
     expect(() =>
-      parseFootprint({ bin: "6", heightroof: "90", groundelev: "10" }, "6"),
+      parseFootprint({ bin: "6", height_roof: "90", ground_elevation: "10" }, "6"),
     ).toThrowError(FootprintError);
   });
 
   it("tags refusals with the no-footprint kind for honest routing", () => {
     try {
-      parseFootprint({ bin: "7", groundelev: "10", the_geom: polygonGeom }, "7");
+      parseFootprint({ bin: "7", ground_elevation: "10", the_geom: polygonGeom }, "7");
       expect.unreachable("should have thrown");
     } catch (e) {
       expect(e).toBeInstanceOf(FootprintError);

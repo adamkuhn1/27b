@@ -7,15 +7,28 @@ import {
   offsetLatLng,
   buildCameraViews,
   polygonCentroid,
+  facadeDistanceM,
 } from "./geometry";
 import { CARDINAL_HEADING } from "./types";
 import type { BuildingFootprint } from "./types";
+
+// A simple 100 m × 80 m rectangle centred at the building centroid (≈ ±50 m N/S,
+// ±40 m E/W in degrees). Used by geometry tests that need a real footprint ring.
+const CENTROID = { lat: 40.7128, lng: -74.006 };
+const RING: Array<[number, number]> = [
+  [CENTROID.lng - 0.00036, CENTROID.lat - 0.00045], // SW
+  [CENTROID.lng + 0.00036, CENTROID.lat - 0.00045], // SE
+  [CENTROID.lng + 0.00036, CENTROID.lat + 0.00045], // NE
+  [CENTROID.lng - 0.00036, CENTROID.lat + 0.00045], // NW
+  [CENTROID.lng - 0.00036, CENTROID.lat - 0.00045], // close
+];
 
 const building: BuildingFootprint = {
   bin: "1000000",
   roofHeightM: 100, // ~31 floors of headroom
   groundElevationM: 10,
-  centroid: { lat: 40.7128, lng: -74.006 },
+  centroid: CENTROID,
+  ring: RING,
 };
 
 describe("estimateFloorElevation", () => {
@@ -76,6 +89,25 @@ describe("offsetLatLng", () => {
   });
 });
 
+describe("facadeDistanceM", () => {
+  it("returns a positive distance for a north-facing ray on a rectangular ring", () => {
+    const d = facadeDistanceM(RING, CENTROID, 0); // north
+    expect(d).toBeGreaterThan(0);
+    // The ring extends ~50 m north of centroid (0.00045° × 111 320 m/°)
+    expect(d).toBeCloseTo(0.00045 * 111_320, 0);
+  });
+
+  it("is symmetric for opposite cardinals on a symmetric ring", () => {
+    const north = facadeDistanceM(RING, CENTROID, 0);
+    const south = facadeDistanceM(RING, CENTROID, 180);
+    expect(north).toBeCloseTo(south, 1);
+  });
+
+  it("returns 0 for a degenerate (< 3 point) ring", () => {
+    expect(facadeDistanceM([[0, 0], [1, 1]], CENTROID, 0)).toBe(0);
+  });
+});
+
 describe("buildCameraViews", () => {
   it("produces exactly the four cardinals with correct headings", () => {
     const views = buildCameraViews(building, 50);
@@ -83,18 +115,22 @@ describe("buildCameraViews", () => {
     for (const v of views) {
       expect(v.headingDeg).toBe(CARDINAL_HEADING[v.cardinal]);
       expect(v.heightM).toBe(50);
-      expect(v.pitchDeg).toBe(0);
+      // Pitch is negative (camera tilts slightly downward to frame the city).
+      expect(v.pitchDeg).toBeLessThan(0);
+      expect(v.pitchDeg).toBeGreaterThanOrEqual(-9);
     }
   });
 
-  it("offsets each camera outward from the centroid by the facade offset", () => {
+  it("places each camera OUTSIDE the building (beyond the facade wall)", () => {
     const views = buildCameraViews(building, 50);
     const north = views.find((v) => v.cardinal === "N")!;
-    // North camera should sit north of the centroid.
+    // North camera must sit north of the centroid by more than the raw FACADE_OFFSET_M
+    // (which used to be the entire offset); now it's wallDist + FACADE_OFFSET_M.
     expect(north.lat).toBeGreaterThan(building.centroid.lat);
-    // Offset magnitude ~ FACADE_OFFSET_M in latitude degrees.
     const dLat = north.lat - building.centroid.lat;
-    expect(dLat).toBeCloseTo(FACADE_OFFSET_M / 111_320, 5);
+    const dMeters = dLat * 111_320;
+    // Should be at least FACADE_OFFSET_M outside the north wall (~50 m from centroid).
+    expect(dMeters).toBeGreaterThan(FACADE_OFFSET_M + 40);
   });
 });
 

@@ -21,11 +21,14 @@ type CaptureState = "idle" | "loading" | "ready" | "error";
 interface TileCaptures {
   state: CaptureState;
   byCardinal: CaptureMap;
+  /** Human-readable diagnostic when state === "error". */
+  errorMsg?: string;
 }
 
 const CapturesContext = createContext<TileCaptures>({
   state: "idle",
   byCardinal: {},
+  errorMsg: undefined,
 });
 
 /**
@@ -76,22 +79,43 @@ export function TileCapturesProvider({
 
     setCaptures({ state: "loading", byCardinal: {} });
 
+    // Ties the Cesium session's lifetime to this effect. Without this, React
+    // 18 StrictMode's double-invoke (or a plan change) leaves the first run's
+    // viewer alive in the background — a second real WebGL context — and the
+    // two fight over the GPU instead of the first one being torn down.
+    const controller = new AbortController();
+
     // Lazily import the heavy Cesium renderer only on the real render path.
     (async () => {
       try {
         const { renderFourViews } = await import("./tileRenderer");
-        const results = await renderFourViews(plan.views, { apiKey: key });
+        const results = await renderFourViews(plan.views, {
+          apiKey: key,
+          signal: controller.signal,
+        });
         if (runId !== runIdRef.current) return; // superseded
         const map: CaptureMap = {};
         for (const r of results) map[r.cardinal] = r.dataUrl;
         writeCaptures(bin, plan.floor, map);
         setCaptures({ state: "ready", byCardinal: map });
-      } catch {
-        if (runId !== runIdRef.current) return;
+      } catch (err) {
+        if (runId !== runIdRef.current) return; // superseded — includes our own abort
+        const raw = err instanceof Error ? err.message : String(err);
+        // Cesium errors may be RequestErrorEvent objects with a statusCode field
+        // rather than standard Errors, so check both paths.
+        const status = (err as { statusCode?: unknown }).statusCode;
+        const is403 = status === 403 || /403|Forbidden/i.test(raw);
+        const msg = is403
+          ? "Map Tiles API returned 403 — enable it in Google Cloud Console (APIs & Services → Map Tiles API) and verify the key has no HTTP-referrer restrictions blocking localhost."
+          : raw && raw !== "[object Object]"
+            ? raw
+            : "Tile rendering failed unexpectedly.";
         // Honest failure: an empty/error frame, never a fabricated scene.
-        setCaptures({ state: "error", byCardinal: {} });
+        setCaptures({ state: "error", byCardinal: {}, errorMsg: msg });
       }
     })();
+
+    return () => controller.abort();
   }, [plan, disabled]);
 
   return (
