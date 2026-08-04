@@ -52,6 +52,13 @@ export interface BuildingFootprint {
   groundElevationM: number;
   /** Footprint centroid (WGS84), used as the camera anchor. */
   centroid: { lat: number; lng: number };
+  /**
+   * Outer footprint polygon ring as [lng, lat] pairs. Stored so geometry can
+   * ray-cast from the centroid to find the actual facade distance in each
+   * cardinal direction — instead of assuming 6 m (which puts the camera inside
+   * large buildings like ESB whose footprint spans 60+ m from centroid to edge).
+   */
+  ring: Array<[number, number]>;
 }
 
 /**

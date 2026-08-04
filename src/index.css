@@ -17,7 +17,7 @@
   --danger: #e08a6a;
   --ok: #6ad39a;
   --radius: 12px;
-  --radius-sm: 8px;
+  --radius-sm: 6px;
   --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Inter, sans-serif;
   --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
 }
@@ -55,37 +55,77 @@ body {
 
 /* ---- Masthead ---- */
 .masthead {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 1rem;
+  position: relative;
   border-bottom: 1px solid var(--line);
-  padding-bottom: 1.25rem;
-  margin-bottom: 2rem;
-  flex-wrap: wrap;
+  padding-bottom: 2rem;
+  margin-bottom: 2.5rem;
+  overflow: hidden;
 }
-.masthead__title {
-  margin: 0;
-  font-size: clamp(1.6rem, 4vw, 2.1rem);
-  font-weight: 640;
-  letter-spacing: -0.02em;
+
+/* large faint watermark — print / blueprint flavour */
+.masthead::after {
+  content: "27B";
+  position: absolute;
+  right: -0.25rem;
+  bottom: -1.25rem;
+  font-size: 10rem;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.024);
+  pointer-events: none;
+  user-select: none;
 }
-.masthead__title span {
-  color: var(--accent);
-}
-.masthead__sub {
-  margin: 0.35rem 0 0;
-  color: var(--text-dim);
-  font-size: 0.92rem;
-  max-width: 52ch;
-  line-height: 1.5;
-}
+
 .masthead__tag {
-  margin: 0;
-  font-size: 0.68rem;
-  letter-spacing: 0.2em;
+  margin: 0 0 1rem;
+  font-family: var(--mono);
+  font-size: 0.67rem;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--text-faint);
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+/* short tick mark before the eyebrow label */
+.masthead__tag::before {
+  content: "";
+  display: inline-block;
+  width: 1.25em;
+  height: 1px;
+  background: var(--accent-dim);
+  flex-shrink: 0;
+}
+
+.masthead__title {
+  margin: 0;
+  font-size: clamp(1.75rem, 4.5vw, 2.35rem);
+  font-weight: 680;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+/* "floor 27B" — technical callout, not just accent colour */
+.masthead__title span {
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: 0.875em;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  background: rgba(127, 176, 255, 0.07);
+  border: 1px solid var(--accent-dim);
+  border-radius: 4px;
+  padding: 0.08em 0.3em;
+}
+
+.masthead__sub {
+  margin: 0.8rem 0 0;
+  color: var(--text-dim);
+  font-size: 0.91rem;
+  max-width: 56ch;
+  line-height: 1.65;
 }
 
 /* ---- Form ---- */
@@ -106,8 +146,9 @@ body {
   gap: 0.4rem;
 }
 .field__label {
-  font-size: 0.75rem;
-  letter-spacing: 0.06em;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--text-faint);
 }
@@ -124,10 +165,16 @@ body {
 .field__input:focus {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(127, 176, 255, 0.15);
+  box-shadow: 0 0 0 3px rgba(127, 176, 255, 0.12);
 }
 .field__input[aria-invalid="true"] {
   border-color: var(--danger);
+}
+/* address input in monospace — addresses are data, not prose */
+.field__input--mono {
+  font-family: var(--mono);
+  font-size: 0.95rem;
+  letter-spacing: 0.01em;
 }
 .field__error {
   font-size: 0.78rem;
@@ -139,9 +186,10 @@ body {
   color: #08101f;
   border: none;
   border-radius: var(--radius-sm);
-  font-size: 0.98rem;
+  font-size: 0.95rem;
   font-weight: 620;
-  font-family: inherit;
+  font-family: var(--mono);
+  letter-spacing: 0.03em;
   padding: 0.72rem 1.35rem;
   cursor: pointer;
   transition: filter 0.15s ease, opacity 0.15s ease;
@@ -158,6 +206,9 @@ body {
   background: transparent;
   color: var(--text-dim);
   border: 1px solid var(--line-strong);
+  font-family: inherit;
+  font-size: 0.9rem;
+  letter-spacing: 0;
 }
 .btn--ghost:hover:not(:disabled) {
   color: var(--text);
@@ -165,12 +216,73 @@ body {
   filter: none;
 }
 
+/* ---- Presets — famous building shortcuts ---- */
+.presets {
+  margin-top: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+.presets__label {
+  font-family: var(--mono);
+  font-size: 0.67rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+.presets__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+/* architectural chip — border-only, monospace, no fill */
+.preset {
+  background: transparent;
+  border: 1px solid var(--line-strong);
+  border-radius: 3px;
+  color: var(--text-dim);
+  font-family: var(--mono);
+  cursor: pointer;
+  padding: 0.4rem 0.65rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.05rem;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  text-align: left;
+}
+.preset:hover:not(:disabled) {
+  border-color: var(--accent-dim);
+  color: var(--text);
+  background: rgba(127, 176, 255, 0.05);
+}
+.preset:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.preset__name {
+  font-size: 0.73rem;
+  letter-spacing: 0.04em;
+  font-weight: 500;
+}
+.preset__detail {
+  font-size: 0.62rem;
+  color: var(--text-faint);
+  letter-spacing: 0.03em;
+}
+
 /* ---- Framing note (the honesty copy) ---- */
 .framing {
-  margin: 1rem 0 0;
+  margin: 1.5rem 0 0;
   font-size: 0.82rem;
   color: var(--text-faint);
-  line-height: 1.55;
+  line-height: 1.6;
+  padding-left: 0.85rem;
+  border-left: 2px solid var(--line-strong);
+}
+.framing strong {
+  color: var(--text-dim);
+  font-weight: 500;
 }
 
 /* ---- Result region ---- */
@@ -195,18 +307,24 @@ body {
   color: var(--text-dim);
   font-size: 0.86rem;
   line-height: 1.5;
+  font-family: var(--mono);
 }
 .result__meta code {
   font-family: var(--mono);
   color: var(--text-faint);
   font-size: 0.82em;
 }
+.meta-note {
+  color: var(--danger);
+  font-size: 0.82em;
+}
 .badge {
   display: inline-block;
-  font-size: 0.7rem;
-  letter-spacing: 0.04em;
-  padding: 0.2rem 0.5rem;
-  border-radius: 999px;
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  font-family: var(--mono);
+  padding: 0.18rem 0.5rem;
+  border-radius: 3px;
   border: 1px solid var(--line-strong);
   color: var(--text-dim);
   vertical-align: middle;
@@ -246,24 +364,45 @@ body {
   height: 100%;
   display: block;
 }
+
+/* view label: full-width bar — technical instrument style */
 .view__label {
   position: absolute;
-  top: 0.6rem;
-  left: 0.6rem;
+  top: 0.55rem;
+  left: 0.55rem;
+  right: 0.55rem;
   z-index: 2;
-  font-size: 0.72rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
   color: var(--text);
-  background: rgba(8, 9, 12, 0.72);
-  border: 1px solid var(--line-strong);
-  border-radius: 999px;
-  padding: 0.22rem 0.6rem;
-  backdrop-filter: blur(4px);
+  background: rgba(8, 9, 12, 0.78);
+  border: 1px solid rgba(51, 54, 63, 0.8);
+  border-radius: 3px;
+  padding: 0.28rem 0.55rem;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
 .view__compass {
   font-weight: 700;
+  font-size: 0.78rem;
   color: var(--accent);
+  min-width: 1ch;
+}
+.view__dir {
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.65rem;
+}
+.view__bearing {
+  margin-left: auto;
+  color: var(--text-faint);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
 }
 
 /* ---- Save views ---- */
@@ -313,7 +452,7 @@ body {
   color: var(--accent);
   background: var(--bg-input);
   padding: 0.1rem 0.35rem;
-  border-radius: 5px;
+  border-radius: 4px;
 }
 
 /* ---- Loading ---- */
@@ -323,15 +462,18 @@ body {
   align-items: center;
   gap: 0.8rem;
   color: var(--text-dim);
-  font-size: 0.94rem;
+  font-size: 0.9rem;
+  font-family: var(--mono);
+  letter-spacing: 0.02em;
 }
 .spinner {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   border: 2px solid var(--line-strong);
   border-top-color: var(--accent);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
+  flex-shrink: 0;
 }
 @keyframes spin {
   to {
@@ -353,8 +495,9 @@ body {
 }
 .metrics__title {
   margin: 0;
-  font-size: 0.72rem;
-  letter-spacing: 0.16em;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--text-faint);
 }
@@ -376,7 +519,7 @@ body {
   color: var(--text);
 }
 .metric__label {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   color: var(--text-faint);
   margin-top: 0.2rem;
   letter-spacing: 0.03em;
@@ -385,17 +528,41 @@ body {
   margin: 0.9rem 0 0;
   font-size: 0.74rem;
   color: var(--text-faint);
-  line-height: 1.5;
+  line-height: 1.55;
 }
 
 /* ---- Footer ---- */
 .foot {
   border-top: 1px solid var(--line);
-  padding: 1.25rem clamp(1rem, 4vw, 2rem);
+  padding: 1.5rem clamp(1rem, 4vw, 2rem);
+}
+.foot__inner {
+  max-width: 1040px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.foot__sources {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 0;
   color: var(--text-faint);
-  font-size: 0.78rem;
-  text-align: center;
+  font-size: 0.74rem;
   line-height: 1.6;
+}
+.foot__sources span {
+  display: inline;
+}
+.foot__sources span + span::before {
+  content: " · ";
+  color: var(--line-strong);
+}
+.foot__note {
+  font-size: 0.74rem;
+  color: var(--text-faint);
+  line-height: 1.6;
+  font-style: italic;
 }
 .foot a {
   color: var(--text-dim);
