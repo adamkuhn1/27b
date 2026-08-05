@@ -1,0 +1,219 @@
+{
+  "generatedAt": "2026-08-05T05:21:21.808Z",
+  "address": "425 E 79th St, Manhattan, New York, NY",
+  "floors": [
+    10
+  ],
+  "provider": "Google Photorealistic 3D Tiles (Map Tiles API) via CesiumJS",
+  "results": [
+    {
+      "floor": 10,
+      "renderMs": 49953,
+      "attribution": "Imagery: Google Maps · Data LDEO-Columbia, NSF, NOAA, Data SIO, NOAA, U.S. Navy, NGA, GEBCO, Google, IBCAO, Landsat / Copernicus, U.S. Geological Survey, Vexcel Imaging US, Inc.",
+      "frameCount": 4,
+      "frameAlts": [
+        "Approximately the view facing NNE (29 degrees) from this floor",
+        "Approximately the view facing ESE (119 degrees) from this floor",
+        "Approximately the view facing SSW (209 degrees) from this floor",
+        "Approximately the view facing WNW (299 degrees) from this floor"
+      ],
+      "framesAreDataPng": true,
+      "tileRequests": {
+        "rootTilesetRequests": 1,
+        "rendererTileRequests": 4504,
+        "otherTileHostRequests": 0
+      },
+      "persistedLocalStorageKeys": [
+        "27b:cache:v3:425 e 79th st, manhattan, new york, ny::10"
+      ],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "plan": {
+        "address": "425 E 79th St, Manhattan, New York, NY",
+        "floor": 10,
+        "geocode": {
+          "label": "425 EAST 79 STREET, New York, NY, USA",
+          "lat": 40.772038,
+          "lng": -73.951304,
+          "bin": "1050349",
+          "borough": "Manhattan"
+        },
+        "footprint": {
+          "bin": "1050349",
+          "roofHeightM": 38.950392,
+          "groundElevationNavd88M": 12.192,
+          "centroid": {
+            "lng": -73.95143991184045,
+            "lat": 40.772101002483225
+          },
+          "ring": [
+            [
+              -73.951732325361,
+              40.772101731001
+            ],
+            [
+              -73.95163190226,
+              40.772238942712
+            ],
+            [
+              -73.951598123577,
+              40.77222465465
+            ],
+            [
+              -73.951580743905,
+              40.772248400825
+            ],
+            [
+              -73.951563050201,
+              40.77225277794
+            ],
+            [
+              -73.951468086051,
+              40.772212607951
+            ],
+            [
+              -73.951479440128,
+              40.772197095259
+            ],
+            [
+              -73.951411739604,
+              40.772168457741
+            ],
+            [
+              -73.951399925473,
+              40.772184598783
+            ],
+            [
+              -73.951155449504,
+              40.772081183363
+            ],
+            [
+              -73.951162625275,
+              40.772071378122
+            ],
+            [
+              -73.951167262492,
+              40.772065042345
+            ],
+            [
+              -73.951100407706,
+              40.7720367616
+            ],
+            [
+              -73.951088593522,
+              40.772052902612
+            ],
+            [
+              -73.95099129958,
+              40.772011746089
+            ],
+            [
+              -73.95098832367,
+              40.771997877972
+            ],
+            [
+              -73.951005744988,
+              40.77197407337
+            ],
+            [
+              -73.950971845793,
+              40.771959733743
+            ],
+            [
+              -73.951072269833,
+              40.771822522602
+            ],
+            [
+              -73.951233183154,
+              40.771890590529
+            ],
+            [
+              -73.951215539032,
+              40.771914698541
+            ],
+            [
+              -73.95127536357,
+              40.771940005486
+            ],
+            [
+              -73.951293008862,
+              40.771915897465
+            ],
+            [
+              -73.951512006651,
+              40.772008535459
+            ],
+            [
+              -73.951494362599,
+              40.772032642613
+            ],
+            [
+              -73.951555489896,
+              40.772058500168
+            ],
+            [
+              -73.951573133933,
+              40.772034393005
+            ],
+            [
+              -73.951603220386,
+              40.772047119852
+            ],
+            [
+              -73.951732325361,
+              40.772101731001
+            ]
+          ]
+        },
+        "eyeElevationNavd88M": 42.492000000000004,
+        "eyeElevationEllipsoidalM": 10.832375219799246,
+        "geoidHeightM": -31.659624780200758,
+        "floorClampedToRoof": false,
+        "basis": "facade",
+        "views": [
+          {
+            "slot": "V1",
+            "headingDeg": 29.088757333342926,
+            "compass": "NNE",
+            "lat": 40.772224784976956,
+            "lng": -73.95134897898974,
+            "heightM": 10.832375219799246,
+            "pitchDeg": -3.9181818181818184,
+            "standoffM": 15.768296717420975
+          },
+          {
+            "slot": "V2",
+            "headingDeg": 119.08875733334293,
+            "compass": "ESE",
+            "lat": 40.77189077652616,
+            "lng": -73.95094094259251,
+            "heightM": 10.832375219799246,
+            "pitchDeg": -3.9181818181818184,
+            "standoffM": 48.136535063631285
+          },
+          {
+            "slot": "V3",
+            "headingDeg": 209.08875733334298,
+            "compass": "SSW",
+            "lat": 40.771960090196664,
+            "lng": -73.95154342854569,
+            "heightM": 10.832375219799246,
+            "pitchDeg": -3.9181818181818184,
+            "standoffM": 17.950411876823154
+          },
+          {
+            "slot": "V4",
+            "headingDeg": 299.088757333343,
+            "compass": "WNW",
+            "lat": 40.77222154158013,
+            "lng": -73.95172601020515,
+            "heightM": 10.832375219799246,
+            "pitchDeg": -3.9181818181818184,
+            "standoffM": 27.600466402051882
+          }
+        ]
+      }
+    }
+  ]
+}

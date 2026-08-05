@@ -1,9 +1,18 @@
 // Lightweight, in-memory instrumentation (PLAN.md §6).
 //
-// Tracks the three numbers the plan asks 27B to instrument from the start:
+// Tracks the numbers the plan asks 27B to instrument from the start:
 //   - addresses processed
-//   - imagery-pipeline latency
-//   - cache hit rate
+//   - GEOMETRY-pipeline latency (geocode -> footprint -> camera math)
+//   - cache hit rate (geometry cache; imagery is never cached — see cache.ts)
+//
+// Naming precision matters here. This module measures the geometry pipeline,
+// NOT the imagery pipeline. The 3D-tile render is 35-65 s and dominates
+// end-to-end time (measured 2026-08-04: 53.9 s / 37.1 s / 50.0 s / 62.1 s
+// across four real runs), while the geometry pipeline is ~1 s. The UI panel
+// says so explicitly rather than letting a sub-second number imply the app is
+// fast. Imagery latency is currently measured only by the proof harnesses
+// (proof/evidence/summary-*.json), not surfaced in-app — a real instrumentation
+// gap, recorded rather than papered over.
 //
 // Deliberately dependency-free and honest: it counts real events the pipeline
 // emits, computes derived rates on read, and treats every number as a draft

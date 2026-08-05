@@ -113,13 +113,31 @@ export function normalizeHouseNumber(hn: string): string {
 /**
  * Decide whether a GeoSearch result really is the address that was typed.
  *
- * Three checks, in order of how badly they mislead a user:
- *   1. region (state) — a non-NY state in the query means the user meant
- *      somewhere else entirely.
- *   2. locality (city) — must be a NYC locality, or must actually appear in the
- *      matched label (so "Jamaica", "Astoria", "Riverdale" etc. still pass).
- *   3. house number + street — must match after normalization. This is the check
+ * Check order matters, and it is not the obvious one:
+ *   1. region (state) — a non-NY state in the query is positive evidence the
+ *      user meant somewhere else entirely.
+ *   2. house number + street — must match after normalization. This is the check
  *      that catches the fuzzy street fallback.
+ *   3. locality (city) — LAST, on purpose. See below.
+ *
+ * Why locality is checked last (fixed 2026-08-04, found by the mismatch proof
+ * harness): an unrecognised locality alone does not tell you the address is
+ * outside NYC. "31-45 45th St, Astoria" is matched by GeoSearch to "45-31 45
+ * STREET, Sunnyside" — a transposed house number. Checking locality first
+ * produced *"That address looks like it's in Astoria. 27B only covers New York
+ * City."*, which is false: Astoria is in Queens. The real problem was the house
+ * number, and the honest message is "we couldn't find that exact address".
+ *
+ * Running the number/street check first means that by the time the locality
+ * check runs, we know the house number and street DID match — so the city is
+ * the only discrepancy, and "you probably meant a different city" is a
+ * conclusion we have actually earned. "10 Downing Street, London" reaches it
+ * correctly: there genuinely is a 10 Downing Street in NYC, and the user named
+ * another city. Astoria never reaches it.
+ *
+ * The general rule: only claim an address is outside NYC on positive evidence
+ * (a non-NY state, or an otherwise-exact match in a city the user didn't name).
+ * Otherwise say what is certainly true — we could not verify the address.
  */
 export function verifyAddressMatch(
   parsed: ParsedQuery,
@@ -142,18 +160,6 @@ export function verifyAddressMatch(
     return notNyc(parsed.region!.trim());
   }
 
-  const locality = parsed.locality?.trim().toUpperCase();
-  if (locality && !NYC_LOCALITIES.has(locality)) {
-    const label = (matched.label ?? "").toUpperCase();
-    const inLabel = label.includes(locality);
-    const isBorough = (matched.borough ?? "").toUpperCase() === locality;
-    const isMatchedLocality =
-      (matched.locality ?? "").toUpperCase() === locality;
-    if (!inLabel && !isBorough && !isMatchedLocality) {
-      return notNyc(parsed.locality!.trim());
-    }
-  }
-
   // Without a parsed street there is nothing to verify against, and an
   // unverified match is exactly the failure mode this module exists to stop.
   if (!parsed.street || !matched.street) return notFound;
@@ -171,6 +177,22 @@ export function verifyAddressMatch(
   const got = normalizeStreet(matched.street);
   if (want.length !== got.length || want.some((t, i) => t !== got[i])) {
     return notFound;
+  }
+
+  // House number and street both matched exactly. So if the city the user named
+  // is one we can't place in NYC and the matched result doesn't corroborate it,
+  // the city is the ONLY thing that disagrees — which is the one situation where
+  // "you meant a different city" is a supportable conclusion rather than a guess.
+  const locality = parsed.locality?.trim().toUpperCase();
+  if (locality && !NYC_LOCALITIES.has(locality)) {
+    const label = (matched.label ?? "").toUpperCase();
+    const inLabel = label.includes(locality);
+    const isBorough = (matched.borough ?? "").toUpperCase() === locality;
+    const isMatchedLocality =
+      (matched.locality ?? "").toUpperCase() === locality;
+    if (!inLabel && !isBorough && !isMatchedLocality) {
+      return notNyc(parsed.locality!.trim());
+    }
   }
 
   return { ok: true };

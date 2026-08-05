@@ -155,6 +155,25 @@ const FUZZY_SUBSTITUTIONS = [
       label: "1 CENTRAL PARK SOUTH, New York, NY, USA",
     },
   },
+  {
+    // Regression: verbatim live GeoSearch response, 2026-08-04. GeoSearch
+    // transposes the hyphenated Queens house number (31-45 -> 45-31) and lands
+    // in a different neighbourhood. Astoria IS in New York City, so the refusal
+    // must be "we couldn't find that exact address", NOT "that address looks
+    // like it's in Astoria / 27B only covers New York City" — which is what the
+    // old locality-first check produced, and which is simply untrue.
+    query: "31-45 45th St, Astoria, Queens, NY",
+    expect: "geocode-failed",
+    parsed: { housenumber: "31-45", street: "45th St", locality: "Astoria", region: "NY" },
+    matched: {
+      housenumber: "45-31",
+      street: "45 STREET",
+      locality: "New York",
+      borough: "Queens",
+      region_a: "NY",
+      label: "45-31 45 STREET, Sunnyside, NY, USA",
+    },
+  },
 ];
 
 describe("normalizeStreet", () => {
