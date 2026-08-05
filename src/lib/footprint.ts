@@ -85,6 +85,15 @@ export async function fetchFootprintByBin(
   bin: string,
   signal?: AbortSignal,
 ): Promise<BuildingFootprint> {
+  // `bin` is interpolated into a SoQL string literal below; encodeURIComponent
+  // only makes the URL well-formed, it does not escape a `'` for SoQL. `bin`
+  // is provider-supplied (the geocoder's join key), not raw user input, but
+  // validating its known shape (NYC BINs are a 7-digit numeric string) before
+  // it ever reaches the query string costs nothing and closes the gap
+  // regardless of where the value came from.
+  if (!/^\d{1,10}$/.test(bin)) {
+    throw new FootprintError(`Malformed BIN: "${bin}"`, "network-error");
+  }
   const url = `${SODA_URL}?$where=bin='${encodeURIComponent(
     bin,
   )}'&$limit=1`;

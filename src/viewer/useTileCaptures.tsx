@@ -107,7 +107,15 @@ export function TileCapturesProvider({
         setCaptures({ state: "ready", bySlot: map, attribution });
       } catch (err) {
         if (runId !== runIdRef.current) return; // superseded — includes our own abort
-        const raw = err instanceof Error ? err.message : String(err);
+        // Cesium tile-load errors can embed the failing request URL, and the
+        // Map Tiles key rides in that URL's query string. The key is already
+        // public in the built bundle, but there's no reason to additionally
+        // put it in an error message a user might screenshot or paste into a
+        // bug report -- strip any `key=...` query param before it's ever
+        // stored or rendered. Same principle as proof/run-proof.mjs's
+        // "never log the key" query-string strip.
+        const rawMsg = err instanceof Error ? err.message : String(err);
+        const raw = rawMsg.replace(/([?&]key=)[^&\s"']+/gi, "$1[redacted]");
         // Cesium errors may be RequestErrorEvent objects with a statusCode field
         // rather than standard Errors, so check both paths.
         const status = (err as { statusCode?: unknown }).statusCode;
