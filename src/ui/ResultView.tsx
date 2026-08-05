@@ -28,24 +28,28 @@ export function ResultView({ result, renderDisabled }: ResultViewProps) {
             floor {plan.floor}
             {plan.floorClampedToRoof && (
               <span className="meta-note"> (clamped — building is shorter)</span>
-            )}{" "}
-            · eye {aboveGroundM.toFixed(1)} m above ground · roof{" "}
-            {plan.footprint.roofHeightM.toFixed(1)} m ·{" "}
-            <code>BIN {plan.footprint.bin}</code>
+            )}
           </p>
-          <p className="result__meta result__meta--dim">
-            {plan.basis === "facade"
-              ? "Views look out along this building's own facades (from its footprint), so the bearings are not N/E/S/W."
-              : "This footprint has no dominant facade orientation, so these are true compass views."}{" "}
-            Camera height {plan.eyeElevationNavd88M.toFixed(1)} m NAVD88 ={" "}
-            {plan.eyeElevationEllipsoidalM.toFixed(1)} m WGS84 ellipsoidal
-            (geoid {plan.geoidHeightM.toFixed(1)} m).
-          </p>
+          <details className="disclosure">
+            <summary>How this was placed</summary>
+            <p className="result__meta result__meta--dim">
+              Eye {aboveGroundM.toFixed(1)} m above ground · roof{" "}
+              {plan.footprint.roofHeightM.toFixed(1)} m ·{" "}
+              <code>BIN {plan.footprint.bin}</code>
+            </p>
+            <p className="result__meta result__meta--dim">
+              {plan.basis === "facade"
+                ? "Views look out along this building's own facades (from its footprint), so the bearings are not N/E/S/W."
+                : "This footprint has no dominant facade orientation, so these are true compass views."}{" "}
+              Camera height {plan.eyeElevationNavd88M.toFixed(1)} m NAVD88 ={" "}
+              {plan.eyeElevationEllipsoidalM.toFixed(1)} m WGS84 ellipsoidal
+              (geoid {plan.geoidHeightM.toFixed(1)} m).
+            </p>
+          </details>
         </div>
-        <div>
-          <span className="badge badge--approx">approximately what you'd see</span>{" "}
-          {fromCache && <span className="badge badge--cache">geometry from cache</span>}
-        </div>
+        <p className="result__note">
+          approximately what you'd see{fromCache ? " · from cache" : ""}
+        </p>
       </div>
 
       <TileCapturesProvider plan={plan} disabled={renderDisabled}>

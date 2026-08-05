@@ -120,13 +120,18 @@ export function TileCapturesProvider({
         // rather than standard Errors, so check both paths.
         const status = (err as { statusCode?: unknown }).statusCode;
         const is403 = status === 403 || /403|Forbidden/i.test(raw);
-        const msg = is403
-          ? "Map Tiles API returned 403 — enable it in Google Cloud Console (APIs & Services → Map Tiles API) and verify the key has no HTTP-referrer restrictions blocking localhost."
-          : raw && raw !== "[object Object]"
-            ? raw
-            : "Tile rendering failed unexpectedly.";
+        // The specific cause is an operator diagnostic, not visitor copy — it
+        // goes to the console (and the README's troubleshooting note covers
+        // the 403 case), never onto the screen. The on-screen message stays
+        // generic and honest: nothing rendered, and nothing was faked either.
+        console.error(
+          is403
+            ? "[27b] Map Tiles API returned 403 — check the key is enabled for the Map Tiles API and has no HTTP-referrer restriction blocking this origin."
+            : "[27b] tile render failed:",
+          raw && raw !== "[object Object]" ? raw : err,
+        );
         // Honest failure: an empty/error frame, never a fabricated scene.
-        setCaptures({ state: "error", bySlot: {}, errorMsg: msg });
+        setCaptures({ state: "error", bySlot: {} });
       }
     })();
 
