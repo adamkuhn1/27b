@@ -177,12 +177,72 @@ Verified against the current Google documentation on **2026-08-04**:
   of the tab. An earlier build persisted captures to localStorage and offered a
   PNG download — both were removed as licence violations, and the app now purges
   the retired `27b:captures:*` keys on startup.
-- **No AI pass on this imagery.** The Map Tiles API policies restrict the API to
-  visualization and specifically exclude "Image analysis" and "Machine
-  interpretation"; ToS §3.2.3(c) separately prohibits creating content from
-  Google Maps Content. The depth/ControlNet photorealism pass sketched in
-  `research/27b-imagery.md` is therefore **not permissible on Google 3D-tile
-  output** and is not built.
+- **No AI pass on this imagery — dropped permanently, not deferred.** The v1
+  feature list originally called for "AI compositing" on top of the real source
+  imagery. On this provider path that is not available to us, so it has been
+  **removed from scope** rather than parked as a limitation. The Map Tiles API
+  policies restrict the API to visualization and specifically exclude *"Image
+  analysis"* and *"Machine interpretation"*; ToS §3.2.3(c) ("No Creating Content
+  From Google Maps Content") separately prohibits creating content from it,
+  including (vii) using it to "train, test, validate or fine-tune" AI models.
+  The depth/ControlNet photorealism pass sketched in `research/27b-imagery.md`
+  §1 Step 3 is therefore not permissible and is not built.
+
+  Concretely, 27B does not and will not: alter provider imagery with generative
+  AI; remove, obscure or restyle attribution; upscale frames via generative
+  reconstruction; fill unavailable or occluded areas synthetically; or present
+  an enhanced image as provider-original. **Real rendered frames, plus separate
+  UI annotation drawn outside the image, is the whole pipeline.** The one thing
+  composited into the PNG is the attribution bar itself, which the policy
+  requires to travel with the pixels.
+
+  This is also the stronger honesty position: "no AI touches the imagery path"
+  is a claim that survives inspection, which "AI-enhanced photorealism" would
+  not.
+
+### The Cesium "Google geocoder only" warning
+
+CesiumJS prints a one-time console warning — *"Only the Google geocoder can be
+used with Google Photorealistic 3D Tiles"* — unless you pass
+`onlyUsingWithGoogleGeocoder: true`. 27B geocodes with NYC Planning GeoSearch,
+so **we leave the flag unset and let the warning print.** The flag changes
+nothing except whether the message appears; setting it would be attesting to
+something untrue about this app in order to silence a message.
+
+Re-checked 2026-08-04 for any Google-side basis for the restriction. None found
+in: [Photorealistic 3D Tiles](https://developers.google.com/maps/documentation/tile/3d-tiles)
+(updated 2026-07-31) · [3D Tiles overview](https://developers.google.com/maps/documentation/tile/3d-tiles-overview)
+(2026-07-31) · [Work with a 3D Tiles renderer](https://developers.google.com/maps/documentation/tile/use-renderer)
+(2026-07-31) · [Map Tiles API Policies](https://developers.google.com/maps/documentation/tile/policies)
+(2026-07-31) · [Maps Platform ToS](https://cloud.google.com/maps-platform/terms)
+(last modified 2026-06-23; **zero** occurrences of "geocoder") · [Maps Service
+Specific Terms](https://cloud.google.com/maps-platform/terms/maps-service-terms)
+(last modified 2026-06-10; **zero** occurrences of "geocoder", and no Map Tiles
+section at all). Cesium's own [Appendix B-2 third-party terms for Google Maps
+Content](https://cesium.com/legal/terms-for-google/) (2025-08-20) states no
+geocoder requirement either.
+
+The nearest applicable clause is ToS §3.2.3(e) "No Use With Non-Google Maps",
+which concerns displaying Google Maps Content with or near a non-Google **map**.
+27B's viewer disables the base imagery layer and hides the globe, so no map of
+any kind is displayed alongside the tiles, and no non-Google map exists anywhere
+in the app.
+
+This section records an **absence of evidence, not a legal conclusion.** We did
+not find a basis; that is not the same as proving none exists, and this is not
+legal advice. Residual risk is judged low. If it matters commercially, the
+clean resolutions are to ask Google directly or to switch to the Google
+Geocoding API — the latter costs the NYC-open-data story and the BIN join that
+the footprint lookup depends on, which is a large part of what makes the project
+interesting.
+
+### Cost, quota and abuse controls
+
+See [`docs/BILLING_AND_QUOTA.md`](docs/BILLING_AND_QUOTA.md) for the full
+recommended control set (key restriction, per-session and global caps, the
+kill-switch, logging minimisation, and the pre-deploy checklist). It is
+**documented, not implemented** — none of those controls exist in code today,
+and 27B must not be deployed to a public origin until they do.
 
 ## Cost
 
