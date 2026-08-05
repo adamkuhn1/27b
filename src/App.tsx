@@ -5,7 +5,6 @@ import {
   UnavailableState,
   NoImagerySourceState,
 } from "./ui/States";
-import { MetricsPanel } from "./ui/MetricsPanel";
 import { ResultView } from "./ui/ResultView";
 import { planView } from "./pipeline/planView";
 import { hasImagerySource } from "./lib/config";
@@ -195,8 +194,6 @@ export default function App() {
               <NoImagerySourceState />
             </>
           ))}
-
-        <MetricsPanel />
       </div>
 
       <footer className="foot">
