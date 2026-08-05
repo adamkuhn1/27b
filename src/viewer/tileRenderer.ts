@@ -4,10 +4,17 @@
 // is the only metered resource (~1,000 tile-events/mo free). A live, always-on
 // globe would stream tiles continuously. Instead we spin up a single offscreen
 // Cesium viewer, load the Google tileset ONCE, move the camera to each of the
-// four cardinal vantages, wait for tiles to settle, capture a static PNG per
+// four facade vantages, wait for tiles to settle, capture a static PNG per
 // view, then tear the viewer down. Four still captures per address, then the
-// viewer is gone — no ongoing tile traffic. Captures are handed to the cache so
-// repeat lookups render nothing at all.
+// viewer is gone — no ongoing tile traffic.
+//
+// The captures are NOT cached anywhere. Google Maps Platform ToS §3.2.3(b)
+// forbids caching Google Maps Content except where the Maps Service Specific
+// Terms allow it, and those terms enumerate 21 services with no Map Tiles entry
+// at all (re-verified 2026-08-04 against the document last modified
+// 2026-06-10). So a repeat lookup of the same address is a new render and a new
+// billable root-tileset request; that is the licence-correct trade, not an
+// oversight. See docs/BILLING_AND_QUOTA.md.
 //
 // This module is only ever imported behind the key gate; it is never on the
 // no-key code path, so a missing key can't reach real tile calls.
@@ -294,6 +301,26 @@ export async function renderFourViews(
   };
   checkAborted();
 
+  // Hard provider guard. Cesium's createGooglePhotorealistic3DTileset does this
+  // when no key is resolvable:
+  //
+  //     const key = apiOptions.key ?? GoogleMaps.defaultApiKey;
+  //     if (!defined(key)) return requestCachedIonTileset(tilesetOptions);
+  //
+  // i.e. it silently switches to Cesium Ion's hosted copy — a different
+  // provider, a different account, and a different meter, with no signal to the
+  // user. The imagery would still be real, so this is not a fabrication risk,
+  // but 27B states on screen which provider produced each frame, and an
+  // undisclosed provider swap would make that statement false. The app already
+  // gates on a present key (useTileCaptures.tsx), so this is belt-and-suspenders
+  // against a future caller: refuse loudly rather than change provider quietly.
+  // Verified against cesium@1.143.0.
+  if (!apiKey || !apiKey.trim()) {
+    throw new Error(
+      "No Map Tiles API key supplied — refusing to render rather than falling back to a different imagery provider.",
+    );
+  }
+
   // Cesium requires *some* Ion token to boot even when we only use Google tiles.
   // Empty string disables Ion's default assets; the Google tileset is loaded
   // explicitly below with the Maps key, so no Ion asset is fetched.
@@ -363,6 +390,29 @@ export async function renderFourViews(
     // into the frame so the attribution can never be separated from the pixels.
     // https://developers.google.com/maps/documentation/tile/3d-tiles
     // https://developers.google.com/maps/documentation/tile/policies
+    //
+    // We deliberately do NOT pass `onlyUsingWithGoogleGeocoder: true`.
+    //
+    // Cesium emits a one-time console warning ("Only the Google geocoder can be
+    // used with Google Photorealistic 3D Tiles") unless that flag is set. The
+    // flag is a self-attestation, not a switch: it changes nothing except
+    // whether the warning prints. 27B geocodes with NYC Planning GeoSearch, so
+    // setting it to `true` would be asserting something untrue about this app
+    // in order to silence a message. We take the warning instead.
+    //
+    // Re-checked 2026-08-04 for any Google-side basis for the restriction, and
+    // found none in: Photorealistic 3D Tiles (updated 2026-07-31), 3D Tiles
+    // overview (2026-07-31), "Work with a 3D Tiles renderer" (2026-07-31), Map
+    // Tiles API Policies (2026-07-31), Maps Platform ToS (last modified
+    // 2026-06-23 — zero occurrences of "geocoder"), Maps Service Specific Terms
+    // (last modified 2026-06-10 — zero occurrences of "geocoder", and no Map
+    // Tiles section at all). ToS §3.2.3(e) restricts use with a non-Google
+    // *Map*, not a non-Google geocoder; this viewer disables the base imagery
+    // layer and the globe, so no map of any kind is displayed alongside.
+    //
+    // This is a recorded absence of evidence, not a legal opinion, and not a
+    // claim that the restriction does not exist. See README "The Cesium
+    // 'Google geocoder only' warning" for the residual-risk position.
     const tileset = await createGooglePhotorealistic3DTileset(
       { key: apiKey },
       { showCreditsOnScreen: true },

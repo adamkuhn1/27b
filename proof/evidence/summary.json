@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-05T01:02:02.196Z",
+  "generatedAt": "2026-08-05T05:19:23.776Z",
   "address": "350 5th Ave, Manhattan, New York, NY 10118",
   "floors": [
     6,
@@ -9,7 +9,7 @@
   "results": [
     {
       "floor": 6,
-      "renderMs": 48179,
+      "renderMs": 53858,
       "attribution": "Imagery: Google Maps · Data LDEO-Columbia, NSF, NOAA, Data SIO, NOAA, U.S. Navy, NGA, GEBCO, Google, IBCAO, Landsat / Copernicus, U.S. Geological Survey, Vexcel Imaging US, Inc.",
       "frameCount": 4,
       "frameAlts": [
@@ -162,7 +162,7 @@
     },
     {
       "floor": 80,
-      "renderMs": 47074,
+      "renderMs": 37098,
       "attribution": "Imagery: Google Maps · Data LDEO-Columbia, NSF, NOAA, Data SIO, NOAA, U.S. Navy, NGA, GEBCO, Google, IBCAO, Landsat / Copernicus, U.S. Geological Survey, Vexcel Imaging US, Inc.",
       "frameCount": 4,
       "frameAlts": [

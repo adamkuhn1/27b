@@ -1,0 +1,155 @@
+{
+  "generatedAt": "2026-08-05T05:17:35.447Z",
+  "baseUrl": "http://localhost:5187/",
+  "results": [
+    {
+      "case": "out-of-state-street-name",
+      "typedAddress": "1 Infinite Loop, Cupertino, CA",
+      "floor": 3,
+      "substituteGeoSearchWouldHaveGiven": {
+        "available": true,
+        "label": "1 ASH LOOP, Bronx, NY, USA",
+        "bin": "2100962",
+        "lat": 40.871429,
+        "lng": -73.831372,
+        "confidence": 0.8,
+        "matchType": "fallback",
+        "parsedText": {
+          "subject": "1 Infinite Loop",
+          "housenumber": "1",
+          "street": "Infinite Loop",
+          "locality": "Cupertino",
+          "region": "CA",
+          "admin": "Cupertino, CA"
+        }
+      },
+      "appBehaviour": {
+        "stateText": "Address isn't in New York CityThat address looks like it's in CA. 27B only covers New York City.27B only renders when it can source real geometry for the exact address. No geometry available means no view — not a placeholder.",
+        "renderedImageFrames": 0,
+        "liveCanvasElements": 0,
+        "tileHostRequests": 0,
+        "rootTilesetRequests": 0,
+        "persistedLocalStorageKeys": []
+      }
+    },
+    {
+      "case": "nonexistent-brooklyn-street",
+      "typedAddress": "123 Fake Street, Brooklyn, NY",
+      "floor": 4,
+      "substituteGeoSearchWouldHaveGiven": {
+        "available": true,
+        "label": "123 SCHERMERHORN STREET, Brooklyn, NY, USA",
+        "bin": "3319419",
+        "lat": 40.690377,
+        "lng": -73.98875,
+        "confidence": 0.8,
+        "matchType": "fallback",
+        "parsedText": {
+          "subject": "123 Fake Street",
+          "housenumber": "123",
+          "street": "Fake Street",
+          "locality": "Brooklyn",
+          "region": "NY",
+          "admin": "Brooklyn, NY"
+        }
+      },
+      "appBehaviour": {
+        "stateText": "Address not foundWe couldn't find that exact address in New York City. Check the street name and try again.27B only renders when it can source real geometry for the exact address. No geometry available means no view — not a placeholder.",
+        "renderedImageFrames": 0,
+        "liveCanvasElements": 0,
+        "tileHostRequests": 0,
+        "rootTilesetRequests": 0,
+        "persistedLocalStorageKeys": []
+      }
+    },
+    {
+      "case": "nonexistent-queens-address",
+      "typedAddress": "77777 Imaginary Ave, Queens, NY",
+      "floor": 2,
+      "substituteGeoSearchWouldHaveGiven": {
+        "available": true,
+        "label": "77777 SPRINGFIELD AVENUE, Cambria Heights, NY, USA",
+        "bin": "4452078",
+        "lat": 40.69866,
+        "lng": -73.742314,
+        "confidence": 0.8,
+        "matchType": "fallback",
+        "parsedText": {
+          "subject": "77777 Imaginary Ave",
+          "housenumber": "77777",
+          "street": "Imaginary Ave",
+          "locality": "Queens",
+          "region": "NY",
+          "admin": "Queens, NY"
+        }
+      },
+      "appBehaviour": {
+        "stateText": "Address not foundWe couldn't find that exact address in New York City. Check the street name and try again.27B only renders when it can source real geometry for the exact address. No geometry available means no view — not a placeholder.",
+        "renderedImageFrames": 0,
+        "liveCanvasElements": 0,
+        "tileHostRequests": 0,
+        "rootTilesetRequests": 0,
+        "persistedLocalStorageKeys": []
+      }
+    },
+    {
+      "case": "foreign-address",
+      "typedAddress": "10 Downing Street, London",
+      "floor": 3,
+      "substituteGeoSearchWouldHaveGiven": {
+        "available": true,
+        "label": "10 DOWNING STREET, New York, NY, USA",
+        "bin": "1008350",
+        "lat": 40.729373,
+        "lng": -74.002789,
+        "confidence": 0.8,
+        "matchType": "fallback",
+        "parsedText": {
+          "subject": "10 Downing Street",
+          "housenumber": "10",
+          "street": "Downing Street",
+          "locality": "London",
+          "admin": "London"
+        }
+      },
+      "appBehaviour": {
+        "stateText": "Address isn't in New York CityThat address looks like it's in London. 27B only covers New York City.27B only renders when it can source real geometry for the exact address. No geometry available means no view — not a placeholder.",
+        "renderedImageFrames": 0,
+        "liveCanvasElements": 0,
+        "tileHostRequests": 0,
+        "rootTilesetRequests": 0,
+        "persistedLocalStorageKeys": []
+      }
+    },
+    {
+      "case": "transposed-house-number",
+      "typedAddress": "31-45 45th St, Astoria, Queens, NY",
+      "floor": 2,
+      "substituteGeoSearchWouldHaveGiven": {
+        "available": true,
+        "label": "45-31 45 STREET, Sunnyside, NY, USA",
+        "bin": "4001953",
+        "lat": 40.742471,
+        "lng": -73.919121,
+        "confidence": 0.8,
+        "matchType": "fallback",
+        "parsedText": {
+          "subject": "31-45 45th St",
+          "housenumber": "31-45",
+          "street": "45th St",
+          "locality": "Astoria",
+          "region": "NY",
+          "admin": "Astoria, Queens, NY"
+        }
+      },
+      "appBehaviour": {
+        "stateText": "Address not foundWe couldn't find that exact address in New York City. Check the street name and try again.27B only renders when it can source real geometry for the exact address. No geometry available means no view — not a placeholder.",
+        "renderedImageFrames": 0,
+        "liveCanvasElements": 0,
+        "tileHostRequests": 0,
+        "rootTilesetRequests": 0,
+        "persistedLocalStorageKeys": []
+      }
+    }
+  ]
+}
