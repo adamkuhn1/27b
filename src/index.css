@@ -18,7 +18,13 @@
   --text-faint: #6b6f78;
   --accent: #5d7a91; /* declared per-project accent (site.ts); used once, below */
   --danger: #e08a6a;
-  --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Inter, sans-serif;
+  /* Byte-identical to the shell's --serif (apps/portfolio/src/index.css), and
+     the face is shipped from src/main.tsx. This used to be a system sans
+     stack, which made 27B the one surface in the suite with no typographic
+     relationship to the other two. */
+  --serif: "EB Garamond", "Cormorant Garamond", Garamond, "Times New Roman", serif;
+  /* Mono survives on exactly two roles: a section label, and something you
+     click. Not on data readouts, figure labels, or status text. */
   --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
 }
 
@@ -32,9 +38,13 @@ body,
   margin: 0;
 }
 body {
-  font-family: var(--font);
+  font-family: var(--serif);
+  font-size: 18px;
+  line-height: 1.6;
   background: var(--bg);
   color: var(--text);
+  /* No OS blue on the number spinner or any future native control. */
+  accent-color: var(--text-dim);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -92,12 +102,12 @@ body {
 
 /* "floor 27B" — the project's one accent mark. Plain colour, no chip, no
    border, no fill: the whole point is that it's a mark, not a control. */
+/* "floor 27B" — the project's one accent mark. Plain colour in the running
+   typeface: switching to monospace mid-sentence made the token look pasted in
+   from a different document. */
 .masthead__title span {
   color: var(--accent);
-  font-family: var(--mono);
-  font-size: 0.875em;
   font-weight: 600;
-  letter-spacing: -0.01em;
 }
 
 .masthead__sub {
@@ -125,12 +135,11 @@ body {
   flex-direction: column;
   gap: 0.4rem;
 }
+/* A form label, which is neither a section heading nor something you click,
+   so it is prose at prose size. */
 .field__label {
-  font-family: var(--mono);
-  font-size: 0.68rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--text-faint);
+  font-size: 0.92rem;
+  color: var(--text-dim);
 }
 .field__input {
   background: var(--bg-input);
@@ -148,12 +157,6 @@ body {
 }
 .field__input[aria-invalid="true"] {
   border-color: var(--danger);
-}
-/* address input in monospace — addresses are data, not prose */
-.field__input--mono {
-  font-family: var(--mono);
-  font-size: 0.95rem;
-  letter-spacing: 0.01em;
 }
 .field__error {
   font-size: 0.78rem;
@@ -276,9 +279,8 @@ body {
 .result__meta {
   margin: 0.25rem 0 0;
   color: var(--text-dim);
-  font-size: 0.86rem;
+  font-size: 0.92rem;
   line-height: 1.5;
-  font-family: var(--mono);
 }
 .result__meta code {
   font-family: var(--mono);
@@ -358,9 +360,7 @@ body {
   display: flex;
   align-items: center;
   gap: 0.45rem;
-  font-family: var(--mono);
-  font-size: 0.68rem;
-  letter-spacing: 0.06em;
+  font-size: 0.82rem;
   color: var(--text);
   background: rgba(8, 9, 12, 0.85);
   border: 1px solid rgba(51, 54, 63, 0.8);
@@ -374,9 +374,7 @@ body {
 }
 .view__dir {
   color: var(--text-dim);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  font-size: 0.65rem;
+  font-size: 0.8rem;
 }
 .view__bearing {
   margin-left: auto;
@@ -388,10 +386,9 @@ body {
 /* ---- Imagery attribution (required by Map Tiles API policies) ---- */
 .attribution {
   margin: 0.9rem 0 0;
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   color: var(--text-dim);
   line-height: 1.5;
-  font-family: var(--mono);
 }
 .attribution strong {
   color: var(--text);
@@ -427,9 +424,7 @@ body {
   align-items: center;
   gap: 0.8rem;
   color: var(--text-dim);
-  font-size: 0.9rem;
-  font-family: var(--mono);
-  letter-spacing: 0.02em;
+  font-size: 0.95rem;
 }
 .spinner {
   width: 14px;
