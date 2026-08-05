@@ -1,0 +1,11 @@
+# Proof-run evidence is deliberately NOT committed.
+#
+# The screenshots and frame PNGs contain Google Maps Content. Google Maps
+# Platform ToS §3.2.3(a)/(b) prohibit storing, re-hosting or re-sharing that
+# Content, and the Map Tiles API policies prohibit "Offline uses". Keeping the
+# evidence on the machine that produced it — and citing it by path in
+# docs/repair/product-proof-sprint/27b/REPORT.md — is the conservative reading.
+#
+# Everything that is safe to keep (camera parameters, request counts, timings,
+# attribution strings) lives in summary.json, which IS committed.
+evidence/*.png
