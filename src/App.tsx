@@ -146,7 +146,7 @@ export default function App() {
     <div className="app">
       <div className="app__inner">
         <header className="masthead">
-          <p className="masthead__tag">27B · real-geometry floor views · New York City</p>
+          <p className="masthead__tag">Real-geometry floor views, New York City</p>
           <h1 className="masthead__title">
             What would you see from <span>floor 27B</span>?
           </h1>
@@ -165,11 +165,11 @@ export default function App() {
         />
 
         <p className="framing">
-          These are <strong>approximately what you'd see</strong> — not your
+          These are <strong>approximately what you'd see</strong>, not your
           exact view. Floor height is estimated from building footprint data
           (NYC doesn't publish per-floor heights), and the four bearings come
           from the building's footprint, not from a floor plan, so the vantage
-          is close but not precise. The imagery is always real — never
+          is close but not precise. The imagery is always real, never
           substituted.
         </p>
 

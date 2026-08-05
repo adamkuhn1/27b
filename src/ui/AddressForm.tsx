@@ -41,7 +41,7 @@ export function AddressForm({ onSubmit, busy }: AddressFormProps) {
         </label>
         <input
           id="addr"
-          className="field__input field__input--mono"
+          className="field__input"
           type="text"
           inputMode="text"
           autoComplete="street-address"
