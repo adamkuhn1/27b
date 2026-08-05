@@ -32,6 +32,14 @@ address verification, building/height lookup, elevation + heading math, the
 geometry cache, metrics, and the full UI (including the honest "not available"
 and "imagery not configured" states).
 
+**Do not submit an address lookup against a real API key just to look at the
+UI.** Geocoding and the footprint lookup are free NYC open-data services, but
+a successful lookup also fires the one metered step — the Cesium render — the
+moment a key is present. Everything short of that render (the form, the
+landmark presets, validation, both honest-failure states, narrow/mobile
+layouts) can be exercised with no address ever submitted, or with `View from
+here` clicked on an empty field.
+
 ### The one key you need
 
 The renderer is gated behind a single env var:
@@ -88,14 +96,26 @@ no-key — that can fabricate imagery.
 | `src/lib/geoid.ts` | **NAVD88 → WGS84 ellipsoidal height** via a baked GEOID18 lattice (NOAA NGS). Worth ~-31.8 m in NYC. |
 | `src/lib/geometry.ts` | Floor elevation + roof clamp, dominant facade axis, outermost-wall raycast, camera placement (verified outside the footprint). **The tested math.** |
 | `src/lib/cache.ts` | Geometry-only cache (localStorage). Rendered imagery is deliberately never cached — see below. |
-| `src/lib/metrics.ts` | Addresses processed, geometry latency, cache hit rate. |
+| `src/lib/metrics.ts` | Addresses processed, geometry latency, cache hit rate — recorded on every real pipeline run (PLAN.md §6). No UI panel reads it today (see below); it's there to be queried, not to be a dashboard. |
 | `src/lib/config.ts` | The `VITE_GOOGLE_MAPS_KEY` gate. |
 | `src/pipeline/planView.ts` | Orchestrates geocode → footprint → geometry; routes **every** failure to the honest unavailable state. Deps injectable for tests. |
 | `src/viewer/cesiumCamera.ts` | `CameraView` → Cesium camera (deg→rad orientation). |
 | `src/viewer/tileRenderer.ts` | Single-session Cesium render → 4 static PNGs with attribution composited in, then tears down. |
 | `src/viewer/useTileCaptures.tsx` | Renders captures once per plan and shares via context; key-gated; in-memory only. |
-| `src/ui/*` | Form, states, four-view grid, attribution line, metrics panel. |
-| `proof/*` | Browser harnesses that prove the happy path and the failure paths against the live services. |
+| `src/ui/*` | Form, states, four-view grid, attribution line. |
+| `proof/*` | Browser harnesses that prove the happy path and the failure paths against the live services. `proof/evidence/INDEX.md` is a plain-language guide to the captured screenshots. |
+
+**On the metrics panel:** an earlier build rendered `lib/metrics.ts`'s counters
+in a visible "Pipeline metrics" panel on the main screen, reading `0 / 0 / 0%`
+before a visitor had typed anything, with a footnote citing a Maps Platform
+ToS clause number and the free-tier quota. The visual-authorship pass removed
+that panel (and the CSS behind it) as decoration that added no information a
+visitor needed before using the tool — real instrumentation numbers, shown
+uninvited, still read as a stray dev panel. The counters themselves are
+unchanged and still increment on every real request; they're just not wired
+to any UI right now. Re-adding a surfaced view of them (behind a restrained
+disclosure, only after a lookup) is a reasonable future change, not a
+reversal of this one.
 
 ### Why the four views are not N/E/S/W
 
@@ -133,6 +153,24 @@ eye_WGS84  = eye_NAVD88 + GEOID18(lat, lng)          (≈ −31.8 m in NYC)
 conversion is not cosmetic: NYC publishes orthometric heights and Cesium/3D
 Tiles consume ellipsoidal ones, so skipping it puts the camera ~32 m — about ten
 floors — too high.
+
+---
+
+## Visual language
+
+`src/index.css` follows the suite-wide visual authorship pass (2026-08-05):
+one shared dark ground (matching the tone the portfolio presents its business
+card against, not a colour 27B chose on its own), the one project accent
+declared in `apps/portfolio/src/config/site.ts` (`#5d7a91`) used exactly
+once — the "floor 27B" text in the headline — never as a button fill, a
+focus glow, or a badge colour, and no `border-radius` anywhere, since nothing
+in this UI represents a physical object the way the portfolio's business card
+does. Containers (the result state boxes, the four view frames) only appear
+where a border separates two genuinely different kinds of material; nothing
+sits in a box just because it's text. Technical detail that's real but not
+part of the primary question — NAVD88/WGS84/geoid figures, BIN, roof
+height — lives behind a closed-by-default `<details>` disclosure rather than
+inline in the result header.
 
 ---
 
@@ -236,6 +274,28 @@ Geocoding API — the latter costs the NYC-open-data story and the BIN join that
 the footprint lookup depends on, which is a large part of what makes the project
 interesting.
 
+### Troubleshooting the render
+
+If a key is set but every view shows "Imagery didn't load for this view.",
+check the browser console — the actual cause is logged there (an earlier
+build put this diagnosis in the on-screen notice itself, which meant a
+Google Cloud Console walkthrough was rendered over a supposedly finished
+building view; that's an operator runbook, not visitor copy, so it moved
+here instead). The most common cause by far:
+
+- **A `403` from `tile.googleapis.com`.** The key exists but either the
+  **Map Tiles API** isn't enabled for the project (**APIs & Services →
+  Library → Map Tiles API → Enable**), or the key has an HTTP-referrer
+  restriction that doesn't include the origin you're loading from (`Map Tiles
+  API` keys restricted to a deploy domain will 403 against `localhost`, and
+  vice versa — use separate keys for dev and prod, per
+  `docs/BILLING_AND_QUOTA.md`).
+- **Billing not enabled on the project.** The Map Tiles API requires it even
+  to stay inside the free monthly allotment.
+
+Whatever the cause, the honest failure holds regardless: no image renders,
+and nothing is drawn in its place.
+
 ### Cost, quota and abuse controls
 
 See [`docs/BILLING_AND_QUOTA.md`](docs/BILLING_AND_QUOTA.md) for the full
@@ -289,3 +349,16 @@ NODE_PATH=/tmp/pw/node_modules node apps/27b/proof/run-failure-paths.mjs
 committed. The **screenshots and frame PNGs are not** — they contain Google Maps
 Content, and §3.2.3(a)/(b) say not to store or re-share it. They stay on the
 machine that produced them.
+
+### Reviewing the proof package
+
+The images live at `apps/27b/proof/evidence/` **on the machine that captured
+them** (2026-08-04) — they're gitignored on purpose, so a fresh clone won't
+have them. `proof/evidence/INDEX.md` is a plain-language guide to that folder:
+a recommended viewing order, a one-line label for every image, and pointers to
+the JSON files that are safe to keep. It doesn't repeat the compliance or
+provider analysis — that's `docs/repair/release-candidate/27b/REPORT.md`,
+whose §12 is the actual decision page (three options: accept this provider
+direction, reject it, or request one bounded change). Start with
+`proof/evidence/INDEX.md`, then read REPORT.md §7–§12 with the images open
+side by side.
