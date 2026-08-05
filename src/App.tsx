@@ -151,11 +151,9 @@ export default function App() {
             What would you see from <span>floor 27B</span>?
           </h1>
           <p className="masthead__sub">
-            Type any NYC address and a floor number. 27B finds the building in
-            NYC's open building data, estimates the camera height for that
-            floor, and looks out along each of the building's four facades —
-            using Google's real photorealistic 3D capture of the city, not a
-            model or simulation.
+            Type any NYC address and a floor number. 27B finds the building,
+            estimates the camera height for that floor, and looks out along
+            its four facades using real captured imagery of the city.
           </p>
         </header>
 

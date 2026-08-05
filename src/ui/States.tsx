@@ -33,32 +33,24 @@ export function UnavailableState({
     <section className="state" role="status" aria-live="polite">
       <h2 className="state__title">{REASON_TITLE[reason]}</h2>
       <p className="state__body">{message}</p>
-      <p className="state__body">
-        27B only renders when it can source real geometry for the exact address.
-        No geometry available means no view — not a placeholder.
-      </p>
     </section>
   );
 }
 
 /**
  * Shown when the geometry resolved but no imagery source is configured
- * (VITE_GOOGLE_MAPS_KEY unset). Truthful about *why* there's no render, and
- * deliberately NOT a placeholder scene.
+ * (VITE_GOOGLE_MAPS_KEY unset — see the README for how to set one). Truthful
+ * about *why* there's no render, and deliberately NOT a placeholder scene. The
+ * setup instructions for an operator live in the README, not here.
  */
 export function NoImagerySourceState() {
   return (
-    <section className="state state--placeholder">
+    <section className="state">
       <h2 className="state__title">Imagery source not configured</h2>
       <p className="state__body">
-        The building geometry below is real and resolved. The photorealistic
-        render is gated behind an imagery key that isn't set in this environment,
-        so the four views can't be drawn here.
-      </p>
-      <p className="state__body">
-        Set <code>VITE_GOOGLE_MAPS_KEY</code> (Google Map Tiles API) to enable
-        the CesiumJS render. See <code>.env.example</code>. This state is shown
-        instead of a placeholder scene on purpose — 27B never fabricates imagery.
+        The building geometry above is real. This copy of the app doesn't have
+        an imagery source connected, so the four views are shown as empty
+        frames rather than a placeholder scene.
       </p>
     </section>
   );
