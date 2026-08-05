@@ -10,6 +10,7 @@
 
 import type { GeocodeResult } from "./types";
 import { isWithinNyc } from "./validation";
+import { verifyAddressMatch, type ParsedQuery } from "./addressMatch";
 
 const GEOSEARCH_URL =
   "https://geosearch.planninglabs.nyc/v2/search";
@@ -21,6 +22,10 @@ interface PeliasFeature {
     label?: string;
     name?: string;
     borough?: string;
+    housenumber?: string;
+    street?: string;
+    locality?: string;
+    region_a?: string;
     // GeoSearch surfaces NYC identifiers under addendum.pad.
     addendum?: { pad?: { bin?: string | number } };
   };
@@ -28,6 +33,8 @@ interface PeliasFeature {
 
 interface PeliasResponse {
   features?: PeliasFeature[];
+  /** Pelias echoes its own parse of the query here; we verify against it. */
+  geocoding?: { query?: { parsed_text?: ParsedQuery } };
 }
 
 export class GeocodeError extends Error {
@@ -92,6 +99,23 @@ export async function geocodeAddress(
       "That address resolved outside New York City.",
       "not-nyc",
     );
+  }
+
+  // Pelias always answers with *something*. Verify that the something it found
+  // is the address that was typed — see lib/addressMatch.ts for why this is not
+  // optional. A silent fuzzy substitution would render real imagery of the
+  // wrong building under the user's address, which is a worse lie than a
+  // missing image.
+  const verdict = verifyAddressMatch(data.geocoding?.query?.parsed_text ?? {}, {
+    housenumber: feature.properties.housenumber,
+    street: feature.properties.street,
+    locality: feature.properties.locality,
+    borough: feature.properties.borough,
+    region_a: feature.properties.region_a,
+    label: feature.properties.label,
+  });
+  if (!verdict.ok) {
+    throw new GeocodeError(verdict.message, verdict.kind);
   }
 
   const binRaw = feature.properties.addendum?.pad?.bin;

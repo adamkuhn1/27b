@@ -77,20 +77,25 @@ export async function planView(
     // 3. Footprint height + centroid.
     const footprint = await d.fetchFootprint(geo.bin, signal);
 
-    // 4. Geometry math (pure, real): elevation + four cardinal cameras.
-    const { eyeElevationM, clampedToRoof } = estimateFloorElevation(
+    // 4. Geometry math (pure, real): elevation (both datums) + four cameras
+    //    aimed along the building's own facades where the footprint supports it.
+    const elevation = estimateFloorElevation(footprint, floor);
+    const { views, basis } = buildCameraViews(
       footprint,
-      floor,
+      elevation.eyeElevationEllipsoidalM,
+      elevation.eyeElevationNavd88M - footprint.groundElevationNavd88M,
     );
-    const views = buildCameraViews(footprint, eyeElevationM);
 
     const plan: ViewPlan = {
       address,
       floor,
       geocode: geo,
       footprint,
-      eyeElevationM,
-      floorClampedToRoof: clampedToRoof,
+      eyeElevationNavd88M: elevation.eyeElevationNavd88M,
+      eyeElevationEllipsoidalM: elevation.eyeElevationEllipsoidalM,
+      geoidHeightM: elevation.geoidHeightM,
+      floorClampedToRoof: elevation.clampedToRoof,
+      basis,
       views,
     };
 

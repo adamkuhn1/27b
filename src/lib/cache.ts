@@ -1,21 +1,33 @@
 // Address-keyed cache for geocode + footprint results.
 //
 // Why this matters beyond speed: the raw Google Photorealistic 3D Tiles render
-// is the only metered resource in the pipeline (free to ~1,000 tile-events/mo).
-// Caching the *geometry* (geocode + footprint + camera plan) means a repeat
-// lookup of the same (address, floor) never re-hits GeoSearch/Socrata and, more
-// importantly, lets the viewer serve a previously captured render instead of
-// re-streaming tiles. The cache is the mechanism that keeps the free tile cap
-// viable — see README "Cost-cap notes".
+// is the only metered resource in the pipeline (1,000 free root-tileset requests
+// per month). Caching the *geometry* (geocode + footprint + camera plan) means a
+// repeat lookup of the same (address, floor) never re-hits GeoSearch/Socrata.
+//
+// WHAT IS DELIBERATELY **NOT** CACHED: the rendered imagery. Google Maps
+// Platform ToS §3.2.3(b) ("Customer will not cache Google Maps Content except as
+// expressly permitted under the Maps Service Specific Terms") applies, and the
+// Maps Service Specific Terms contain no Map Tiles API caching allowance —
+// verified 2026-08-04, the document has no Map Tiles section at all. The Map
+// Tiles API policies page repeats it ("you must not pre-fetch, index, store, or
+// cache any Content") and separately prohibits "Offline uses". So rendered
+// frames live only in the React state of the tab that produced them and are
+// gone on reload. An earlier version of this file persisted PNG captures to
+// localStorage per (BIN, floor); that was removed as a licence violation, not
+// as an optimisation trade-off.
+// Refs: https://cloud.google.com/maps-platform/terms (§3.2.3),
+//       https://developers.google.com/maps/documentation/tile/policies
 //
 // Storage: localStorage (synchronous, simple, survives reload). Values are
 // namespaced + versioned so a schema change invalidates old entries cleanly.
+// Everything stored here is derived from NYC open data + our own math.
 
 import type { ViewPlan } from "./types";
 
-const NAMESPACE = "27b:cache:v2";
+const NAMESPACE = "27b:cache:v3";
 /** Bump when the ViewPlan shape or geometry math changes. */
-const SCHEMA_VERSION = 2;
+const SCHEMA_VERSION = 3;
 
 interface CacheEnvelope {
   v: number;
@@ -70,59 +82,24 @@ export function writePlan(address: string, floor: number, plan: ViewPlan): void 
   }
 }
 
-// ---- Rendered-capture cache -------------------------------------------------
-//
-// The four static PNG captures are the expensive artifact (they cost tile
-// events to produce). Cache them per (BIN, floor) so a repeat lookup of the same
-// building+floor renders ZERO tiles. Kept in a separate namespace from plans
-// because captures are large (data URLs) and may need eviction independently.
-
-const CAPTURE_NS = "27b:captures:v1";
-
-/** Map of cardinal -> PNG data URL. */
+/** Map of view slot -> PNG data URL, held in memory for the current render only. */
 export type CaptureMap = Partial<Record<string, string>>;
 
-interface CaptureEnvelope {
-  v: number;
-  savedAt: number;
-  captures: CaptureMap;
-}
-
-export function captureKey(bin: string, floor: number): string {
-  return `${CAPTURE_NS}:${bin}::${floor}`;
-}
-
-export function readCaptures(bin: string, floor: number): CaptureMap | null {
-  const store = storage();
-  if (!store) return null;
-  const raw = store.getItem(captureKey(bin, floor));
-  if (!raw) return null;
-  try {
-    const env = JSON.parse(raw) as CaptureEnvelope;
-    if (env.v !== SCHEMA_VERSION || !env.captures) return null;
-    return env.captures;
-  } catch {
-    return null;
-  }
-}
-
-export function writeCaptures(
-  bin: string,
-  floor: number,
-  captures: CaptureMap,
-): void {
+/**
+ * Remove every 27B key from localStorage, including the retired
+ * `27b:captures:*` namespace written by pre-2026-08-04 builds. Anyone who ran
+ * the old build still has Google tile imagery sitting in their browser storage;
+ * this runs on startup so that data is deleted rather than merely orphaned.
+ */
+export function purgeRetiredCaptureCache(): void {
   const store = storage();
   if (!store) return;
-  const env: CaptureEnvelope = {
-    v: SCHEMA_VERSION,
-    savedAt: Date.now(),
-    captures,
-  };
-  try {
-    store.setItem(captureKey(bin, floor), JSON.stringify(env));
-  } catch {
-    // Capture data URLs are large; quota errors are expected and acceptable.
+  const keys: string[] = [];
+  for (let i = 0; i < store.length; i++) {
+    const k = store.key(i);
+    if (k && k.startsWith("27b:captures:")) keys.push(k);
   }
+  keys.forEach((k) => store.removeItem(k));
 }
 
 /** Clear all 27B cache entries (used by tests + a UI "clear cache" action). */
@@ -132,7 +109,6 @@ export function clearCache(): void {
   const keys: string[] = [];
   for (let i = 0; i < store.length; i++) {
     const k = store.key(i);
-    // Both plan (27b:cache:) and capture (27b:captures:) namespaces.
     if (k && k.startsWith("27b:")) keys.push(k);
   }
   keys.forEach((k) => store.removeItem(k));

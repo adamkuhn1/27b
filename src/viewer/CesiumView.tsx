@@ -1,4 +1,4 @@
-import { CARDINAL_LABEL, type CameraView } from "../lib/types";
+import type { CameraView } from "../lib/types";
 import { useTileCaptures } from "./useTileCaptures";
 
 interface CesiumViewProps {
@@ -8,13 +8,14 @@ interface CesiumViewProps {
 }
 
 /**
- * A single cardinal view frame.
+ * A single view frame.
  *
  * - `disabled` (no imagery key): shows an empty labeled frame with a truthful
  *   note. It never draws a placeholder or simulated scene.
  * - enabled: shows the static PNG captured from the shared Cesium 3D-tile
- *   session for this cardinal (see useTileCaptures). The capture IS real
- *   photogrammetric imagery from Google Photorealistic 3D Tiles.
+ *   session for this slot (see useTileCaptures). The capture IS real
+ *   photogrammetric imagery from Google Photorealistic 3D Tiles, with Google's
+ *   per-frame data attribution composited along its bottom edge.
  */
 export function CesiumView({ view, disabled }: CesiumViewProps) {
   const captures = useTileCaptures(disabled);
@@ -42,7 +43,7 @@ export function CesiumView({ view, disabled }: CesiumViewProps) {
     );
   }
 
-  const dataUrl = captures.byCardinal[view.cardinal];
+  const dataUrl = captures.bySlot[view.slot];
   if (!dataUrl) {
     return (
       <div className="view__canvas" role="img" aria-label="Imagery unavailable">
@@ -55,9 +56,9 @@ export function CesiumView({ view, disabled }: CesiumViewProps) {
     <img
       className="view__canvas"
       src={dataUrl}
-      alt={`Approximately the view facing ${CARDINAL_LABEL[
-        view.cardinal
-      ].toLowerCase()} from this floor`}
+      alt={`Approximately the view facing ${view.compass} (${Math.round(
+        view.headingDeg,
+      )} degrees) from this floor`}
       loading="lazy"
     />
   );

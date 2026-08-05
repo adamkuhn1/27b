@@ -23,7 +23,7 @@ describe("parseFootprint", () => {
       "1012345",
     );
     expect(fp.roofHeightM).toBeCloseTo(300 * FT_TO_M, 6);
-    expect(fp.groundElevationM).toBeCloseTo(40 * FT_TO_M, 6);
+    expect(fp.groundElevationNavd88M).toBeCloseTo(40 * FT_TO_M, 6);
     expect(fp.bin).toBe("1012345");
   });
 
@@ -56,7 +56,7 @@ describe("parseFootprint", () => {
       { bin: "3", height_roof: "80", the_geom: polygonGeom },
       "3",
     );
-    expect(fp.groundElevationM).toBe(0);
+    expect(fp.groundElevationNavd88M).toBe(0);
   });
 
   it("refuses (no-footprint) when roof height is missing", () => {

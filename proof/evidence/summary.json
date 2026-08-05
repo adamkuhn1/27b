@@ -1,0 +1,315 @@
+{
+  "generatedAt": "2026-08-05T01:02:02.196Z",
+  "address": "350 5th Ave, Manhattan, New York, NY 10118",
+  "floors": [
+    6,
+    80
+  ],
+  "provider": "Google Photorealistic 3D Tiles (Map Tiles API) via CesiumJS",
+  "results": [
+    {
+      "floor": 6,
+      "renderMs": 48179,
+      "attribution": "Imagery: Google Maps · Data LDEO-Columbia, NSF, NOAA, Data SIO, NOAA, U.S. Navy, NGA, GEBCO, Google, IBCAO, Landsat / Copernicus, U.S. Geological Survey, Vexcel Imaging US, Inc.",
+      "frameCount": 4,
+      "frameAlts": [
+        "Approximately the view facing NNE (29 degrees) from this floor",
+        "Approximately the view facing ESE (119 degrees) from this floor",
+        "Approximately the view facing SSW (209 degrees) from this floor",
+        "Approximately the view facing WNW (299 degrees) from this floor"
+      ],
+      "framesAreDataPng": true,
+      "tileRequests": {
+        "rootTilesetRequests": 1,
+        "rendererTileRequests": 5266,
+        "otherTileHostRequests": 0
+      },
+      "persistedLocalStorageKeys": [
+        "27b:cache:v3:350 5th ave, manhattan, new york, ny 10118::6"
+      ],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "plan": {
+        "address": "350 5th Ave, Manhattan, New York, NY 10118",
+        "floor": 6,
+        "geocode": {
+          "label": "350 5 AVENUE, New York, NY, USA",
+          "lat": 40.748441,
+          "lng": -73.985656,
+          "bin": "1015862",
+          "borough": "Manhattan"
+        },
+        "footprint": {
+          "bin": "1015862",
+          "roofHeightM": 377.58329171836806,
+          "groundElevationNavd88M": 15.24,
+          "centroid": {
+            "lng": -73.98570971241999,
+            "lat": 40.748455502042006
+          },
+          "ring": [
+            [
+              -73.98608527878,
+              40.748921498021
+            ],
+            [
+              -73.98482339139,
+              40.74839078918
+            ],
+            [
+              -73.984909832216,
+              40.748271913883
+            ],
+            [
+              -73.985031089296,
+              40.74810515772
+            ],
+            [
+              -73.985157291953,
+              40.747931600537
+            ],
+            [
+              -73.98648794223,
+              40.748491226399
+            ],
+            [
+              -73.986469871701,
+              40.748516078254
+            ],
+            [
+              -73.986682947706,
+              40.748605687253
+            ],
+            [
+              -73.98655560005,
+              40.748780826345
+            ],
+            [
+              -73.98635802669,
+              40.748697735913
+            ],
+            [
+              -73.986345130771,
+              40.748715469858
+            ],
+            [
+              -73.98632962892,
+              40.748708950154
+            ],
+            [
+              -73.986312563843,
+              40.748732419825
+            ],
+            [
+              -73.986154048034,
+              40.748950418863
+            ],
+            [
+              -73.98608527878,
+              40.748921498021
+            ]
+          ]
+        },
+        "eyeElevationNavd88M": 32.74,
+        "eyeElevationEllipsoidalM": 0.9688589395959681,
+        "geoidHeightM": -31.771141060404034,
+        "floorClampedToRoof": false,
+        "basis": "facade",
+        "views": [
+          {
+            "slot": "V1",
+            "headingDeg": 28.98366319610102,
+            "compass": "NNE",
+            "lat": 40.748738246376675,
+            "lng": -73.98550297275283,
+            "heightM": 0.9688589395959681,
+            "pitchDeg": -3.5303030303030303,
+            "standoffM": 35.981332835170804
+          },
+          {
+            "slot": "V2",
+            "headingDeg": 118.98366319610102,
+            "compass": "ESE",
+            "lat": 40.74812927095203,
+            "lng": -73.98493232861992,
+            "heightM": 0.9688589395959681,
+            "pitchDeg": -3.5303030303030303,
+            "standoffM": 74.94605906223977
+          },
+          {
+            "slot": "V3",
+            "headingDeg": 208.98366319610102,
+            "compass": "SSW",
+            "lat": 40.748185355859746,
+            "lng": -73.98590724045135,
+            "heightM": 0.9688589395959681,
+            "pitchDeg": -3.5303030303030303,
+            "standoffM": 34.378123647284795
+          },
+          {
+            "slot": "V4",
+            "headingDeg": 298.983663196101,
+            "compass": "WNW",
+            "lat": 40.74874020208783,
+            "lng": -73.98638813091014,
+            "heightM": 0.9688589395959681,
+            "pitchDeg": -3.5303030303030303,
+            "standoffM": 65.40500615954741
+          }
+        ]
+      }
+    },
+    {
+      "floor": 80,
+      "renderMs": 47074,
+      "attribution": "Imagery: Google Maps · Data LDEO-Columbia, NSF, NOAA, Data SIO, NOAA, U.S. Navy, NGA, GEBCO, Google, IBCAO, Landsat / Copernicus, U.S. Geological Survey, Vexcel Imaging US, Inc.",
+      "frameCount": 4,
+      "frameAlts": [
+        "Approximately the view facing NNE (29 degrees) from this floor",
+        "Approximately the view facing ESE (119 degrees) from this floor",
+        "Approximately the view facing SSW (209 degrees) from this floor",
+        "Approximately the view facing WNW (299 degrees) from this floor"
+      ],
+      "framesAreDataPng": true,
+      "tileRequests": {
+        "rootTilesetRequests": 1,
+        "rendererTileRequests": 3647,
+        "otherTileHostRequests": 0
+      },
+      "persistedLocalStorageKeys": [
+        "27b:cache:v3:350 5th ave, manhattan, new york, ny 10118::80"
+      ],
+      "consoleErrors": [],
+      "plan": {
+        "address": "350 5th Ave, Manhattan, New York, NY 10118",
+        "floor": 80,
+        "geocode": {
+          "label": "350 5 AVENUE, New York, NY, USA",
+          "lat": 40.748441,
+          "lng": -73.985656,
+          "bin": "1015862",
+          "borough": "Manhattan"
+        },
+        "footprint": {
+          "bin": "1015862",
+          "roofHeightM": 377.58329171836806,
+          "groundElevationNavd88M": 15.24,
+          "centroid": {
+            "lng": -73.98570971241999,
+            "lat": 40.748455502042006
+          },
+          "ring": [
+            [
+              -73.98608527878,
+              40.748921498021
+            ],
+            [
+              -73.98482339139,
+              40.74839078918
+            ],
+            [
+              -73.984909832216,
+              40.748271913883
+            ],
+            [
+              -73.985031089296,
+              40.74810515772
+            ],
+            [
+              -73.985157291953,
+              40.747931600537
+            ],
+            [
+              -73.98648794223,
+              40.748491226399
+            ],
+            [
+              -73.986469871701,
+              40.748516078254
+            ],
+            [
+              -73.986682947706,
+              40.748605687253
+            ],
+            [
+              -73.98655560005,
+              40.748780826345
+            ],
+            [
+              -73.98635802669,
+              40.748697735913
+            ],
+            [
+              -73.986345130771,
+              40.748715469858
+            ],
+            [
+              -73.98632962892,
+              40.748708950154
+            ],
+            [
+              -73.986312563843,
+              40.748732419825
+            ],
+            [
+              -73.986154048034,
+              40.748950418863
+            ],
+            [
+              -73.98608527878,
+              40.748921498021
+            ]
+          ]
+        },
+        "eyeElevationNavd88M": 269.54,
+        "eyeElevationEllipsoidalM": 237.768858939596,
+        "geoidHeightM": -31.771141060404034,
+        "floorClampedToRoof": false,
+        "basis": "facade",
+        "views": [
+          {
+            "slot": "V1",
+            "headingDeg": 28.98366319610102,
+            "compass": "NNE",
+            "lat": 40.748738246376675,
+            "lng": -73.98550297275283,
+            "heightM": 237.768858939596,
+            "pitchDeg": -9,
+            "standoffM": 35.981332835170804
+          },
+          {
+            "slot": "V2",
+            "headingDeg": 118.98366319610102,
+            "compass": "ESE",
+            "lat": 40.74812927095203,
+            "lng": -73.98493232861992,
+            "heightM": 237.768858939596,
+            "pitchDeg": -9,
+            "standoffM": 74.94605906223977
+          },
+          {
+            "slot": "V3",
+            "headingDeg": 208.98366319610102,
+            "compass": "SSW",
+            "lat": 40.748185355859746,
+            "lng": -73.98590724045135,
+            "heightM": 237.768858939596,
+            "pitchDeg": -9,
+            "standoffM": 34.378123647284795
+          },
+          {
+            "slot": "V4",
+            "headingDeg": 298.983663196101,
+            "compass": "WNW",
+            "lat": 40.74874020208783,
+            "lng": -73.98638813091014,
+            "heightM": 237.768858939596,
+            "pitchDeg": -9,
+            "standoffM": 65.40500615954741
+          }
+        ]
+      }
+    }
+  ]
+}

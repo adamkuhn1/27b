@@ -19,14 +19,25 @@ import {
   Ion,
   ImageryLayer,
 } from "cesium";
-import type { CameraView, Cardinal } from "../lib/types";
+import type { CameraView, ViewSlot } from "../lib/types";
 import { applyCameraView } from "./cesiumCamera";
 
 export interface CaptureResult {
-  cardinal: Cardinal;
-  /** data: URL PNG of the rendered frame. */
+  slot: ViewSlot;
+  /** data: URL PNG of the rendered frame, with attribution baked along the bottom. */
   dataUrl: string;
+  /**
+   * The data attributions Google returned for the tiles actually displayed in
+   * this frame (e.g. ["Google", "Vexcel Imaging US, Inc."]). Kept as separate
+   * credits rather than one joined string so they can be de-duplicated across
+   * frames without splitting on a comma that belongs inside a company name.
+   * Map Tiles API policies require these to be displayed with the imagery.
+   */
+  attribution: string[];
 }
+
+/** Text we are required to show alongside the imagery (policy: logo or the words). */
+const GOOGLE_ATTRIBUTION = "Google Maps";
 
 export interface RenderOptions {
   /** Google Map Tiles API key (Photorealistic 3D Tiles). Required. */
@@ -162,9 +173,103 @@ function waitForTiles(
 }
 
 /**
- * Render the four cardinal views for a plan into static PNG data URLs using a
- * single, disposable Cesium session. The offscreen container is created and
- * removed internally so callers just await the captures.
+ * Read the aggregated data attribution for the frame Cesium just drew.
+ *
+ * Cesium writes the credits for the current frame into `creditDisplay.container`
+ * (that is what `showCreditsOnScreen: true` populates). Google's Photorealistic
+ * 3D Tiles return their attribution per tile in the glTF `asset.copyright`
+ * field, and the Map Tiles API policy is to "aggregate, sort, and display in a
+ * line, all attributions for displayed tiles" — Cesium already aggregates and
+ * de-duplicates them, so we read the aggregate rather than re-implement it.
+ */
+export function readAttribution(viewer: Viewer): string[] {
+  const container = viewer.creditDisplay?.container;
+  if (!container) return [];
+  // Cesium puts one child element per on-screen credit inside
+  // `.cesium-credit-textContainer`, separated by `.cesium-credit-delimiter`
+  // spans, with the lightbox "Data attribution" link as a sibling of the
+  // container. Enumerating the children (rather than reading textContent off
+  // the whole widget) is what keeps the delimiter and the expand link out of
+  // the string and keeps individual credits separable for de-duplication.
+  const textContainer = container.querySelector<HTMLElement>(
+    ".cesium-credit-textContainer",
+  );
+  const seen = new Set<string>();
+  for (const child of Array.from(textContainer?.children ?? [])) {
+    if (child.classList.contains("cesium-credit-delimiter")) continue;
+    const text = (child.textContent ?? "").trim();
+    if (text && text !== "Data attribution") seen.add(text);
+  }
+  return Array.from(seen).sort();
+}
+
+/**
+ * Compose the WebGL frame plus a bottom attribution bar into a single PNG.
+ *
+ * The attribution is baked into the pixels on purpose: a `<img src=data:...>`
+ * detached from the Cesium widget would otherwise carry no credit at all, and
+ * the policy requires the attribution to be displayed with the imagery. The bar
+ * sits below/over the bottom edge of the frame and is never overlapped by other
+ * UI. Exported for the render-path unit test.
+ */
+export function composeAttributedPng(
+  source: HTMLCanvasElement,
+  attribution: string[],
+): string {
+  const FONT =
+    "12px system-ui, -apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif";
+  const PAD = 8;
+  const LINE_H = 15;
+
+  const text =
+    attribution.length > 0
+      ? `${GOOGLE_ATTRIBUTION} · ${attribution.join(", ")}`
+      : GOOGLE_ATTRIBUTION;
+
+  // Measure first so the bar is tall enough to show the credits IN FULL. The
+  // policy asks for the attributions "in full"; truncating them to fit would be
+  // the wrong trade, so the image grows instead.
+  const measure = document.createElement("canvas").getContext("2d");
+  if (!measure) throw new Error("2D context unavailable for attribution compositing");
+  measure.font = FONT;
+  const maxWidth = source.width - PAD * 2;
+  const lines: string[] = [];
+  let current = "";
+  for (const word of text.split(" ")) {
+    const next = current ? `${current} ${word}` : word;
+    if (measure.measureText(next).width > maxWidth && current) {
+      lines.push(current);
+      current = word;
+    } else {
+      current = next;
+    }
+  }
+  if (current) lines.push(current);
+
+  const barH = lines.length * LINE_H + PAD;
+  const out = document.createElement("canvas");
+  out.width = source.width;
+  out.height = source.height + barH;
+  const ctx = out.getContext("2d");
+  if (!ctx) throw new Error("2D context unavailable for attribution compositing");
+
+  ctx.drawImage(source, 0, 0);
+  ctx.fillStyle = "#0b0d10";
+  ctx.fillRect(0, source.height, out.width, barH);
+  ctx.fillStyle = "#e8eaed";
+  ctx.font = FONT;
+  ctx.textBaseline = "top";
+  lines.forEach((line, i) => {
+    ctx.fillText(line, PAD, source.height + PAD / 2 + i * LINE_H);
+  });
+
+  return out.toDataURL("image/png");
+}
+
+/**
+ * Render the four views for a plan into static PNG data URLs using a single,
+ * disposable Cesium session. The offscreen container is created and removed
+ * internally so callers just await the captures.
  */
 export async function renderFourViews(
   views: CameraView[],
@@ -174,7 +279,13 @@ export async function renderFourViews(
     apiKey,
     width = 800,
     height = 600,
-    settleTimeoutMs = 9000,
+    // 9 s was measured to be too short: the last view of a four-view run was
+    // still at a coarse LOD when it was captured, which reads as "blocky" —
+    // exactly the impression this project must never give, even though the
+    // geometry is real photogrammetry throughout. 16 s lets the mesh refine.
+    // Renderer tile requests inside an open session are unmetered, so the only
+    // cost of waiting longer is wall-clock time.
+    settleTimeoutMs = 16000,
     signal,
   } = opts;
 
@@ -232,14 +343,30 @@ export async function renderFourViews(
       requestRenderMode: true,
       maximumRenderTimeChange: Infinity,
       // No default Bing/Ion base imagery layer — we only want the Google mesh.
+      // This also keeps any non-Google map service out of the same view, which
+      // Maps Platform ToS §3.2.3(e) ("No Use With Non-Google Maps") requires.
       baseLayer: false as unknown as ImageryLayer,
+      // WebGL clears its drawing buffer after compositing unless asked not to,
+      // so `canvas.toDataURL()` can come back blank/black depending on when the
+      // browser composites. Readback is the whole point of this module, so the
+      // buffer must be preserved. (Verified in Chrome: without this the capture
+      // is not reliable frame to frame.)
+      contextOptions: { webgl: { preserveDrawingBuffer: true } },
     });
 
-    // Attribution must stay visible on any displayed frame (Maps ToS). Cesium's
-    // credit container renders Google's attribution into the canvas capture.
     viewer.scene.globe.show = false; // hide the default ellipsoid globe.
 
-    const tileset = await createGooglePhotorealistic3DTileset({ key: apiKey });
+    // `showCreditsOnScreen: true` is what Google's own Photorealistic 3D Tiles
+    // sample sets, and the docs require "a 3D Tiles renderer that supports the
+    // display of copyright attribution". It makes Cesium surface the per-tile
+    // `asset.copyright` strings; we read them back below and composite them
+    // into the frame so the attribution can never be separated from the pixels.
+    // https://developers.google.com/maps/documentation/tile/3d-tiles
+    // https://developers.google.com/maps/documentation/tile/policies
+    const tileset = await createGooglePhotorealistic3DTileset(
+      { key: apiKey },
+      { showCreditsOnScreen: true },
+    );
     checkAborted(); // may have been destroyed by the listener while awaiting
     // Lower the LOD error threshold below Cesium's default (16) to load
     // building-level detail from mid-altitude. 4 was measured to be far too
@@ -276,9 +403,14 @@ export async function renderFourViews(
       await new Promise<void>((r) => setTimeout(r, 200));
       viewer.render();
 
+      // Read the attributions Google returned for the tiles in THIS frame.
+      // Cesium rebuilds the credit container each frame from the tiles it just
+      // drew, so this is per-view data, not a constant.
+      const attribution = readAttribution(viewer);
+
       let dataUrl: string;
       try {
-        dataUrl = viewer.canvas.toDataURL("image/png");
+        dataUrl = composeAttributedPng(viewer.canvas, attribution);
       } catch (err) {
         // SecurityError: WebGL canvas tainted by cross-origin tile textures.
         // Google Photorealistic 3D Tiles must be served with ACAO headers for
@@ -288,7 +420,7 @@ export async function renderFourViews(
         const msg = err instanceof Error ? err.message : String(err);
         throw new Error(`Canvas readback blocked (CORS taint): ${msg}`);
       }
-      captures.push({ cardinal: view.cardinal, dataUrl });
+      captures.push({ slot: view.slot, dataUrl, attribution });
     }
     return captures;
   } finally {

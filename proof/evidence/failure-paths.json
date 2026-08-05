@@ -1,0 +1,32 @@
+{
+  "generatedAt": "2026-08-05T01:00:13.251Z",
+  "results": [
+    {
+      "case": "outside-nyc",
+      "address": "1 Infinite Loop, Cupertino, CA",
+      "floor": 3,
+      "stateText": "Address isn't in New York CityThat address looks like it's in CA. 27B only covers New York City.27B only renders when it can source real geometry for the exact address. No geometry available means no view — not a placeholder.",
+      "renderedImageFrames": 0,
+      "liveCanvasElements": 0,
+      "tileHostRequests": 0
+    },
+    {
+      "case": "nyc-address-no-building-record",
+      "address": "1 Central Park, Manhattan, New York, NY",
+      "floor": 3,
+      "stateText": "Address not foundWe couldn't find that exact address in New York City. Check the street name and try again.27B only renders when it can source real geometry for the exact address. No geometry available means no view — not a placeholder.",
+      "renderedImageFrames": 0,
+      "liveCanvasElements": 0,
+      "tileHostRequests": 0
+    },
+    {
+      "case": "no-imagery-key",
+      "address": "350 5th Ave, Manhattan, New York, NY 10118",
+      "floor": 27,
+      "stateText": "Imagery source not configuredThe building geometry below is real and resolved. The photorealistic render is gated behind an imagery key that isn't set in this environment, so the four views can't be drawn here.Set VITE_GOOGLE_MAPS_KEY (Google Map Tiles API) to enable the CesiumJS render. See .env.example. This state is shown instead of a placeholder scene on purpose — 27B never fabricates imagery.",
+      "renderedImageFrames": 0,
+      "liveCanvasElements": 0,
+      "tileHostRequests": 0
+    }
+  ]
+}

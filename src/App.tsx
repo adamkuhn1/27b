@@ -9,7 +9,16 @@ import { MetricsPanel } from "./ui/MetricsPanel";
 import { ResultView } from "./ui/ResultView";
 import { planView } from "./pipeline/planView";
 import { hasImagerySource } from "./lib/config";
+import { purgeRetiredCaptureCache } from "./lib/cache";
 import type { ViewPlanResult } from "./lib/types";
+
+// One-time cleanup: builds before 2026-08-04 persisted rendered Google tile
+// imagery to localStorage. That is not permitted under Google Maps Platform ToS
+// §3.2.3(b) (no caching of Google Maps Content absent a service-specific
+// allowance, and the Maps Service Specific Terms grant none for Map Tiles), so
+// any such data left in a returning visitor's browser is deleted at startup
+// rather than merely ignored.
+purgeRetiredCaptureCache();
 
 type UiState =
   | { kind: "idle" }
@@ -143,10 +152,11 @@ export default function App() {
             What would you see from <span>floor 27B</span>?
           </h1>
           <p className="masthead__sub">
-            Type any NYC address and a floor number. 27B finds the building,
-            estimates the camera height, and renders what you'd see looking
-            north, south, east, and west — using Google's real photorealistic
-            3D capture of the city, not a model or simulation.
+            Type any NYC address and a floor number. 27B finds the building in
+            NYC's open building data, estimates the camera height for that
+            floor, and looks out along each of the building's four facades —
+            using Google's real photorealistic 3D capture of the city, not a
+            model or simulation.
           </p>
         </header>
 
@@ -160,8 +170,10 @@ export default function App() {
         <p className="framing">
           These are <strong>approximately what you'd see</strong> — not your
           exact view. Floor height is estimated from building footprint data
-          (NYC doesn't publish per-floor heights), so the vantage is close but
-          not precise. The imagery is always real — never substituted.
+          (NYC doesn't publish per-floor heights), and the four bearings come
+          from the building's footprint, not from a floor plan, so the vantage
+          is close but not precise. The imagery is always real — never
+          substituted.
         </p>
 
         {ui.kind === "loading" && <LoadingState />}
@@ -190,9 +202,10 @@ export default function App() {
       <footer className="foot">
         <div className="foot__inner">
           <div className="foot__sources">
-            <span>Imagery: Google Photorealistic 3D Tiles via CesiumJS</span>
+            <span>Imagery: Google Maps (Photorealistic 3D Tiles, via CesiumJS)</span>
             <span>Buildings: NYC OpenData Building Footprints</span>
             <span>Geocoding: NYC Planning GeoSearch</span>
+            <span>Vertical datum: NOAA NGS GEOID18</span>
           </div>
         </div>
       </footer>
