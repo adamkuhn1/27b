@@ -36,15 +36,20 @@ export function MetricsPanel() {
       <div className="metrics__grid">
         <Metric value={String(m.addressesProcessed)} label="Addresses processed" />
         <Metric value={String(m.plansProduced)} label="Plans produced" />
-        <Metric value={pct(m.cacheHitRate)} label="Cache hit rate" />
-        <Metric value={ms(m.avgLatencyMs)} label="Avg latency" />
-        <Metric value={ms(m.lastLatencyMs)} label="Last latency" />
+        <Metric value={pct(m.cacheHitRate)} label="Geometry cache hit rate" />
+        <Metric value={ms(m.avgLatencyMs)} label="Avg geometry latency" />
+        <Metric value={ms(m.lastLatencyMs)} label="Last geometry latency" />
         <Metric value={String(m.unavailable)} label="Unavailable" />
       </div>
       <p className="metrics__note">
         Session-only, resets on reload. Latency covers geocode → footprint →
-        camera math; cache hits skip the network entirely, which is what keeps
-        3D-tile renders under the free-tier cap.
+        camera math only; it does not include the 3D-tile render, which takes
+        roughly a minute. The cache covers <em>geometry</em> (NYC open data +
+        our own math). Rendered imagery is deliberately never cached — Google
+        Maps Platform ToS §3.2.3(b) permits caching Google Maps Content only
+        where the service-specific terms allow it, and there is no Map Tiles
+        allowance — so every render costs exactly one root-tileset request
+        (1,000/month free).
       </p>
     </section>
   );

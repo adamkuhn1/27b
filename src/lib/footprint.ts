@@ -4,8 +4,12 @@
 // id `5zhs-2jue`, a free, key-less GeoJSON/JSON endpoint. Fields we use:
 //   - bin            : building identifier (join key from geocode)
 //   - height_roof    : roof height above ground (ft in the source -> meters here)
-//   - ground_elevation : ground elevation above sea level (ft -> meters)
+//   - ground_elevation : ground elevation, NAVD88 orthometric (ft -> meters)
 //   - the_geom       : footprint polygon (used for the camera-anchor centroid)
+//
+// Vertical datum note: the published elevations are referenced to NAVD88 (the
+// dataset metadata says "Based on the North American Vertical Datum of 1988").
+// They are NOT WGS84 ellipsoidal heights; lib/geoid.ts does that conversion.
 //
 // Note: the previous dataset `nqwf-w8eh` was retired by NYC; `5zhs-2jue` is
 // the current Building Footprints dataset with renamed fields.
@@ -157,7 +161,9 @@ export function parseFootprint(
     bin: row.bin ?? bin,
     roofHeightM: roofFt * FEET_TO_METERS,
     // GROUNDELEV can legitimately be ~0 near the waterline; default to 0.
-    groundElevationM: (groundFt ?? 0) * FEET_TO_METERS,
+    // This is an NAVD88 ORTHOMETRIC height, not an ellipsoidal one — see
+    // lib/geoid.ts for the conversion the renderer needs.
+    groundElevationNavd88M: (groundFt ?? 0) * FEET_TO_METERS,
     centroid: polygonCentroid(ring),
     // Keep the polygon ring so buildCameraViews can ray-cast to the actual
     // facade position rather than using a fixed small offset from the centroid.

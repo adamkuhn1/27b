@@ -44,7 +44,11 @@ export function validateAddress(raw: string): AddressValidation {
     return { valid: false, normalized, error: "That address looks too short." };
   }
   // Require a leading house number so we resolve to a specific building.
-  if (!/^\d+[a-z]?\s+\S+/i.test(normalized)) {
+  // Queens and parts of the Bronx use hyphenated house numbers ("89-14 Parsons
+  // Blvd"), and fractional/lettered numbers exist too ("12A", "1/2"), so the
+  // pattern has to allow more than a bare integer — the earlier `^\d+[a-z]?\s`
+  // rejected every hyphenated Queens address before it ever reached GeoSearch.
+  if (!/^\d+(?:[-/]\d+)?[a-z]?\s+\S+/i.test(normalized)) {
     return {
       valid: false,
       normalized,

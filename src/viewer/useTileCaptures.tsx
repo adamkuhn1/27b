@@ -7,27 +7,36 @@ import {
   type ReactNode,
 } from "react";
 import type { CaptureMap } from "../lib/cache";
-import { readCaptures, writeCaptures } from "../lib/cache";
 import { googleMapsKey } from "../lib/config";
 import type { ViewPlan } from "../lib/types";
 
-// The four cardinal captures are produced ONCE per plan (a single Cesium
-// session, four static frames) and shared across the four CesiumView frames via
-// context. This is what keeps the app to one tile-loading session per address
-// instead of four live globes. A cache hit renders zero tiles.
+// The four captures are produced ONCE per plan (a single Cesium session, four
+// static frames) and shared across the four CesiumView frames via context. That
+// is what keeps the app to ONE root-tileset request per address instead of four
+// live globes — and the root-tileset request is the billable unit for
+// Photorealistic 3D Tiles (the renderer's own tile requests inside the session
+// are unmetered):
+// https://developers.google.com/maps/documentation/tile/usage-and-billing
+//
+// The frames are NOT persisted. Google Maps Platform ToS §3.2.3(b) forbids
+// caching Google Maps Content except where the Maps Service Specific Terms
+// allow it, and those terms contain no Map Tiles allowance. So captures live in
+// this component's state for as long as the result is on screen, and no longer.
 
 type CaptureState = "idle" | "loading" | "ready" | "error";
 
 interface TileCaptures {
   state: CaptureState;
-  byCardinal: CaptureMap;
+  bySlot: CaptureMap;
+  /** Aggregated Google data attribution for the frames on screen. */
+  attribution?: string;
   /** Human-readable diagnostic when state === "error". */
   errorMsg?: string;
 }
 
 const CapturesContext = createContext<TileCaptures>({
   state: "idle",
-  byCardinal: {},
+  bySlot: {},
   errorMsg: undefined,
 });
 
@@ -49,35 +58,27 @@ export function TileCapturesProvider({
 }) {
   const [captures, setCaptures] = useState<TileCaptures>({
     state: disabled ? "idle" : "loading",
-    byCardinal: {},
+    bySlot: {},
   });
   // Guard against double-run (React 18 StrictMode) and stale plan updates.
   const runIdRef = useRef(0);
 
   useEffect(() => {
     if (disabled) {
-      setCaptures({ state: "idle", byCardinal: {} });
+      setCaptures({ state: "idle", bySlot: {} });
       return;
     }
 
     const key = googleMapsKey();
     if (!key) {
       // Belt-and-suspenders: no key => never touch the renderer.
-      setCaptures({ state: "idle", byCardinal: {} });
+      setCaptures({ state: "idle", bySlot: {} });
       return;
     }
 
     const runId = ++runIdRef.current;
-    const bin = plan.footprint.bin;
 
-    // Cache hit: render nothing, spend no tile events.
-    const cached = readCaptures(bin, plan.floor);
-    if (cached && Object.keys(cached).length > 0) {
-      setCaptures({ state: "ready", byCardinal: cached });
-      return;
-    }
-
-    setCaptures({ state: "loading", byCardinal: {} });
+    setCaptures({ state: "loading", bySlot: {} });
 
     // Ties the Cesium session's lifetime to this effect. Without this, React
     // 18 StrictMode's double-invoke (or a plan change) leaves the first run's
@@ -95,9 +96,15 @@ export function TileCapturesProvider({
         });
         if (runId !== runIdRef.current) return; // superseded
         const map: CaptureMap = {};
-        for (const r of results) map[r.cardinal] = r.dataUrl;
-        writeCaptures(bin, plan.floor, map);
-        setCaptures({ state: "ready", byCardinal: map });
+        for (const r of results) map[r.slot] = r.dataUrl;
+        // Union of the per-frame credits, sorted — the Map Tiles policy asks for
+        // all attributions for displayed tiles, aggregated and sorted, in a line.
+        const attribution = Array.from(
+          new Set(results.flatMap((r) => r.attribution).filter(Boolean)),
+        )
+          .sort()
+          .join(", ");
+        setCaptures({ state: "ready", bySlot: map, attribution });
       } catch (err) {
         if (runId !== runIdRef.current) return; // superseded — includes our own abort
         const raw = err instanceof Error ? err.message : String(err);
@@ -111,7 +118,7 @@ export function TileCapturesProvider({
             ? raw
             : "Tile rendering failed unexpectedly.";
         // Honest failure: an empty/error frame, never a fabricated scene.
-        setCaptures({ state: "error", byCardinal: {}, errorMsg: msg });
+        setCaptures({ state: "error", bySlot: {}, errorMsg: msg });
       }
     })();
 
@@ -125,9 +132,9 @@ export function TileCapturesProvider({
   );
 }
 
-/** Read the shared capture state for the current cardinal frame. */
+/** Read the shared capture state for the current view frame. */
 export function useTileCaptures(disabled?: boolean): TileCaptures {
   const ctx = useContext(CapturesContext);
-  if (disabled) return { state: "idle", byCardinal: {} };
+  if (disabled) return { state: "idle", bySlot: {} };
   return ctx;
 }

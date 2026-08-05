@@ -4,12 +4,14 @@ import type { CameraView } from "../lib/types";
 
 function view(headingDeg: number, pitchDeg = 0): CameraView {
   return {
-    cardinal: "N",
+    slot: "V1",
     headingDeg,
+    compass: "N",
     lat: 40.7,
     lng: -74,
     heightM: 50,
     pitchDeg,
+    standoffM: 26,
   };
 }
 

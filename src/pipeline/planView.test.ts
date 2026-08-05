@@ -33,7 +33,7 @@ const geo: GeocodeResult = {
 const footprint: BuildingFootprint = {
   bin: "1001001",
   roofHeightM: 100,
-  groundElevationM: 8,
+  groundElevationNavd88M: 8,
   centroid: { lat: 40.7069, lng: -74.0113 },
   // Minimal rectangular ring (~40 m × 40 m) so facade-distance geometry works.
   ring: [
