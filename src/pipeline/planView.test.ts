@@ -2,9 +2,14 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { planView } from "./planView";
 import { GeocodeError } from "../lib/geocode";
 import { FootprintError } from "../lib/footprint";
+import { NeighborError } from "../lib/neighbors";
 import { clearCache } from "../lib/cache";
 import { metrics } from "../lib/metrics";
-import type { BuildingFootprint, GeocodeResult } from "../lib/types";
+import type {
+  BuildingFootprint,
+  GeocodeResult,
+  NeighborBuilding,
+} from "../lib/types";
 
 // A minimal in-memory localStorage so the cache layer works in Node.
 function installLocalStorage() {
@@ -45,6 +50,30 @@ const footprint: BuildingFootprint = {
   ],
 };
 
+/** A tower 30 m due north-north-east of the subject, tall enough to block. */
+const blockingNeighbor: NeighborBuilding = {
+  bin: "1002002",
+  roofHeightM: 200,
+  groundElevationNavd88M: 8,
+  ring: [
+    [-74.01135, 40.70755],
+    [-74.01105, 40.70755],
+    [-74.01105, 40.70785],
+    [-74.01135, 40.70785],
+    [-74.01135, 40.70755],
+  ],
+};
+
+/**
+ * Every test in this file is offline. `fetchNeighbors` is stubbed by default so
+ * the pipeline never reaches a network, and a test that wants a failure asks
+ * for one explicitly.
+ */
+const stubNeighbors = (
+  neighbors: NeighborBuilding[] = [],
+  incomplete = false,
+) => vi.fn().mockResolvedValue({ neighbors, incomplete });
+
 beforeEach(() => {
   installLocalStorage();
   clearCache();
@@ -56,6 +85,7 @@ describe("planView — happy path", () => {
     const res = await planView("11 Wall St", 27, undefined, {
       geocode: vi.fn().mockResolvedValue(geo),
       fetchFootprint: vi.fn().mockResolvedValue(footprint),
+      fetchNeighbors: stubNeighbors(),
     });
     expect(res.ok).toBe(true);
     if (!res.ok) return;
@@ -68,19 +98,106 @@ describe("planView — happy path", () => {
   it("serves the second identical request from cache (zero network)", async () => {
     const geocode = vi.fn().mockResolvedValue(geo);
     const fetchFootprint = vi.fn().mockResolvedValue(footprint);
-    await planView("11 Wall St", 27, undefined, { geocode, fetchFootprint });
-    const second = await planView("11 Wall St", 27, undefined, {
-      geocode,
-      fetchFootprint,
-    });
+    const neighbors = stubNeighbors();
+    const deps = { geocode, fetchFootprint, fetchNeighbors: neighbors };
+    await planView("11 Wall St", 27, undefined, deps);
+    const second = await planView("11 Wall St", 27, undefined, deps);
     expect(second.ok).toBe(true);
     if (second.ok) expect(second.fromCache).toBe(true);
     // Network deps only called once despite two lookups.
     expect(geocode).toHaveBeenCalledTimes(1);
     expect(fetchFootprint).toHaveBeenCalledTimes(1);
+    expect(neighbors).toHaveBeenCalledTimes(1);
     expect(metrics.snapshot().cacheHits).toBe(1);
   });
 });
+
+describe("planView — the enclosure layer is an annotation, never the result", () => {
+  const deps = (fetchNeighbors: PlanDepsNeighbors) => ({
+    geocode: vi.fn().mockResolvedValue(geo),
+    fetchFootprint: vi.fn().mockResolvedValue(footprint),
+    fetchNeighbors,
+  });
+
+  it("attaches a per-direction assessment when neighbours resolve", async () => {
+    const res = await planView(
+      "11 Wall St",
+      3,
+      undefined,
+      deps(stubNeighbors([blockingNeighbor])),
+    );
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.plan.confidence).not.toBeNull();
+    expect(res.plan.confidence!.neighborsConsidered).toBe(1);
+    for (const view of res.plan.views) {
+      expect(res.plan.confidence!.bySlot[view.slot]).toBeDefined();
+    }
+    // The tower is due NNE and towers over floor 3, so that direction is not open.
+    const bands = res.plan.views.map(
+      (v) => res.plan.confidence!.bySlot[v.slot]!.band,
+    );
+    expect(bands).toContain("enclosed");
+  });
+
+  it("still produces the full plan when the neighbour lookup fails", async () => {
+    const res = await planView(
+      "11 Wall St",
+      27,
+      undefined,
+      deps(vi.fn().mockRejectedValue(new NeighborError("service down"))),
+    );
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.plan.views).toHaveLength(4);
+    // null means "no notes available" — it must never be read as "open".
+    expect(res.plan.confidence).toBeNull();
+  });
+
+  it("still produces the full plan when the neighbour lookup hangs past its budget", async () => {
+    vi.useFakeTimers();
+    try {
+      const hang = vi.fn(
+        (_lat: number, _lng: number, _r: number, signal?: AbortSignal) =>
+          new Promise((_resolve, reject) => {
+            signal?.addEventListener("abort", () =>
+              reject(new NeighborError("aborted")),
+            );
+          }),
+      );
+      const pending = planView("11 Wall St", 27, undefined, deps(hang as never));
+      await vi.advanceTimersByTimeAsync(5000);
+      const res = await pending;
+      expect(res.ok).toBe(true);
+      if (res.ok) expect(res.plan.confidence).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("carries the incomplete-neighbour-data flag through to the plan", async () => {
+    const res = await planView(
+      "11 Wall St",
+      27,
+      undefined,
+      deps(stubNeighbors([blockingNeighbor], true)),
+    );
+    expect(res.ok).toBe(true);
+    if (res.ok) expect(res.plan.confidence!.neighborDataIncomplete).toBe(true);
+  });
+
+  it("records the footprint's rectangularity instead of discarding it", async () => {
+    const res = await planView("11 Wall St", 27, undefined, deps(stubNeighbors()));
+    expect(res.ok).toBe(true);
+    if (res.ok) expect(res.plan.facadeConcentration).toBeGreaterThan(0.9);
+  });
+});
+
+type PlanDepsNeighbors = Parameters<typeof planView>[3] extends
+  | { fetchNeighbors?: infer F }
+  | undefined
+  ? F
+  : never;
 
 describe("planView — honest failure routing (never a fake scene)", () => {
   it("routes a geocode 'not-nyc' error to unavailable", async () => {
@@ -141,6 +258,7 @@ describe("planView — metrics", () => {
     await planView("11 Wall St", 27, undefined, {
       geocode: vi.fn().mockResolvedValue(geo),
       fetchFootprint: vi.fn().mockResolvedValue(footprint),
+      fetchNeighbors: stubNeighbors(),
     });
     const snap = metrics.snapshot();
     expect(snap.addressesProcessed).toBe(1);
