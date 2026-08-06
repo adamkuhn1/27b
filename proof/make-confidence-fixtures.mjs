@@ -159,8 +159,13 @@ async function main() {
       subject: trim(subjectRow),
       neighbors: rows.map(trim).filter(Boolean),
     };
+    // Written compact on purpose. Pretty-printing 200 polygons puts ~13,000
+    // lines of coordinates per building into the repo, which dwarfs every real
+    // change in a diffstat without making a single number more reviewable.
+    // These are machine inputs; the reviewable artifact is the calibration
+    // table the tests print from them.
     const file = join(OUT_DIR, `${kase.name}.json`);
-    writeFileSync(file, `${JSON.stringify(fixture, null, 1)}\n`);
+    writeFileSync(file, `${JSON.stringify(fixture)}\n`);
     manifest.push({
       name: kase.name,
       bin,
