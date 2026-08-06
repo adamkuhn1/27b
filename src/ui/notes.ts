@@ -66,6 +66,13 @@ export function directionNote(
 
 /** Copy for a direction whose imagery did not arrive. */
 export const NO_IMAGERY_NOTE = "This direction didn't load.";
+/**
+ * Copy for a whole render that never started. Said once, at the result head,
+ * rather than four identical times under four empty frames — and it states
+ * what did NOT happen, because that is the guarantee.
+ */
+export const NO_IMAGERY_AT_ALL_NOTE =
+  "The imagery didn't load. The measurements above are still real; nothing has been put in its place.";
 export const RETRY_THIS_DIRECTION = "Retry this direction";
 export const RENDER_ALL_AGAIN = "Render all four again";
 
@@ -81,9 +88,17 @@ export interface PlanNote {
  */
 export function planNotes(
   plan: ViewPlan,
-  opts: { loadedCount?: number; totalCount?: number } = {},
+  opts: {
+    loadedCount?: number;
+    totalCount?: number;
+    /** True when the render session never opened at all. */
+    imageryUnavailable?: boolean;
+  } = {},
 ): PlanNote[] {
   const notes: PlanNote[] = [];
+  if (opts.imageryUnavailable) {
+    notes.push({ id: "no-imagery", text: NO_IMAGERY_AT_ALL_NOTE });
+  }
   const aboveGroundM =
     plan.eyeElevationNavd88M - plan.footprint.groundElevationNavd88M;
 

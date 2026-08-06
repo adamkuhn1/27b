@@ -63,6 +63,7 @@ function ResultBody({
   const notes = planNotes(plan, {
     loadedCount: loaded,
     totalCount: plan.views.length,
+    imageryUnavailable: captures.phase === "failed",
   });
 
   const phaseBySlot: Partial<Record<ViewSlot, SlotPhase>> = {};
@@ -136,15 +137,20 @@ function ResultBody({
 function ViewPane({ plan, view }: { plan: ViewPlan; view: CameraView }) {
   const captures = useTileCaptures();
   const slot = captures.bySlot[view.slot];
-  const failed = slot?.phase === "failed" || captures.phase === "failed";
+  const sessionFailed = captures.phase === "failed";
+  const failed = slot?.phase === "failed" || sessionFailed;
+  // When the whole session failed, the reason is stated once at the head
+  // instead of four identical times under four empty frames.
   const note = failed
-    ? NO_IMAGERY_NOTE
+    ? sessionFailed
+      ? null
+      : NO_IMAGERY_NOTE
     : directionNote(confidenceFor(plan.confidence, view.slot), {
         settled: slot?.phase === "ready" ? slot.settled : undefined,
       });
 
   return (
-    <figure className="view" data-phase={slot?.phase ?? "queued"}>
+    <figure className="view" data-phase={failed ? "failed" : slot?.phase ?? "queued"}>
       <figcaption className="view__label">
         <span className="view__compass">{view.compass}</span>
         <span className="view__bearing">{view.headingDeg.toFixed(0)}° true</span>
