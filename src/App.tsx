@@ -100,7 +100,6 @@ function BuildingPresets({ onSelect, busy }: BuildingPresetsProps) {
 export default function App() {
   const [ui, setUi] = useState<UiState>({ kind: "idle" });
   const abortRef = useRef<AbortController | null>(null);
-  const lastRequestRef = useRef<AddressFormValue | null>(null);
   // Changing this remounts the result, which opens a new render session. It is
   // the only way to re-render after a session has closed, and it costs one root
   // tileset request — the same as re-rendering all four directions, which is
@@ -130,7 +129,6 @@ export default function App() {
     abortRef.current?.abort();
     const ac = new AbortController();
     abortRef.current = ac;
-    lastRequestRef.current = value;
     setRenderAttempt(0);
 
     setUi({ kind: "loading" });
