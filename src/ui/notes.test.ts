@@ -8,6 +8,9 @@
 import { describe, it, expect } from "vitest";
 import {
   LOW_VANTAGE_M,
+  NO_IMAGERY_NOTE,
+  RENDER_ALL_AGAIN,
+  RETRY_THIS_DIRECTION,
   confidenceFor,
   directionNote,
   planNotes,
@@ -180,6 +183,17 @@ describe("whole-result notes", () => {
     });
     expect(notes.map((n) => n.id)).not.toContain("partial");
   });
+
+  it("says once, at the head, that no imagery loaded at all", () => {
+    const notes = planNotes(plan({ confidence: report() }), {
+      loadedCount: 0,
+      totalCount: 4,
+      imageryUnavailable: true,
+    });
+    expect(notes[0].id).toBe("no-imagery");
+    // States what did NOT happen, because that is the guarantee.
+    expect(notes[0].text).toMatch(/nothing has been put in its place/i);
+  });
 });
 
 describe("confidenceFor", () => {
@@ -235,6 +249,14 @@ describe("nothing this module can say is a claim the data doesn't support", () =
     ]) {
       out.push(...planNotes(p, { loadedCount: 3, totalCount: 4 }).map((n) => n.text));
     }
+    out.push(
+      ...planNotes(plan({ confidence: report() }), {
+        imageryUnavailable: true,
+      }).map((n) => n.text),
+      NO_IMAGERY_NOTE,
+      RETRY_THIS_DIRECTION,
+      RENDER_ALL_AGAIN,
+    );
     return out;
   };
 
