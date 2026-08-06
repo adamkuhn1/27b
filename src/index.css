@@ -259,22 +259,137 @@ body {
   font-weight: 500;
 }
 
-/* ---- Result region ---- */
+/* ---- Result region ----
+   A sheet of drawings: a plan, four elevations, and the notes that qualify
+   them. The head states what the drawing is before anything is drawn. */
 .result {
   margin-top: 2.5rem;
 }
 .result__head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
-  margin-bottom: 0.35rem;
+  margin-bottom: 1rem;
 }
 .result__addr {
   margin: 0;
   font-size: 1.15rem;
   font-weight: 600;
+}
+/* The approximate/exact distinction, stated where it cannot be missed. */
+.result__frame {
+  margin: 0.35rem 0 0;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.result__sub {
+  margin: 0.2rem 0 0;
+  font-size: 0.88rem;
+  color: var(--text-faint);
+}
+
+/* Notes qualifying the whole result. Hairline rule, no box: they are marginalia
+   on a drawing, not an alert. */
+.notes {
+  margin: 0 0 1.25rem;
+  padding: 0 0 0 0.9rem;
+  border-left: 1px solid var(--line-strong);
+  list-style: none;
+  font-size: 0.84rem;
+  line-height: 1.6;
+  color: var(--text-dim);
+  max-width: 68ch;
+}
+.notes li + li {
+  margin-top: 0.2rem;
+}
+
+/* Plan beside elevations, the way a drawing set is laid out. */
+.result__drawings {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+@media (max-width: 860px) {
+  .result__drawings {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---- Plan diagram ---- */
+.plan {
+  margin: 0;
+  position: sticky;
+  top: 1rem;
+}
+@media (max-width: 860px) {
+  .plan {
+    position: static;
+    max-width: 260px;
+  }
+}
+.plan__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.plan__ring {
+  fill: none;
+  stroke: var(--text-dim);
+  stroke-width: 1;
+}
+/* An axis is hairline while its direction is queued and solid once its frame
+   has landed, so every mark on the drawing is a completed unit of work. */
+.plan__stem,
+.plan__look {
+  stroke: var(--line-strong);
+  stroke-width: 1;
+}
+.plan__stem {
+  stroke-dasharray: 2 3;
+}
+.plan__eye {
+  fill: none;
+  stroke: var(--line-strong);
+  stroke-width: 1;
+}
+.plan__label {
+  fill: var(--text-faint);
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 0.08em;
+}
+.plan__axis--capturing .plan__stem,
+.plan__axis--capturing .plan__look,
+.plan__axis--capturing .plan__eye {
+  stroke: var(--text-faint);
+}
+.plan__axis--ready .plan__stem {
+  stroke-dasharray: none;
+}
+.plan__axis--ready .plan__stem,
+.plan__axis--ready .plan__look {
+  stroke: var(--text);
+}
+.plan__axis--ready .plan__eye {
+  stroke: var(--text);
+  fill: var(--text);
+}
+.plan__axis--ready .plan__label {
+  fill: var(--text-dim);
+}
+.plan__axis--failed .plan__stem,
+.plan__axis--failed .plan__look,
+.plan__axis--failed .plan__eye {
+  stroke: var(--line);
+}
+.plan__caption {
+  margin: 0.5rem 0 0;
+  font-size: 0.72rem;
+  color: var(--text-faint);
+  line-height: 1.5;
 }
 .result__meta {
   margin: 0.25rem 0 0;
@@ -292,21 +407,11 @@ body {
   font-size: 0.78rem;
   max-width: 72ch;
 }
-.meta-note {
-  color: var(--danger);
-  font-size: 0.82em;
-}
-.result__note {
-  margin: 0;
-  font-size: 0.8rem;
-  font-style: italic;
-  color: var(--text-faint);
-}
 
 /* Restrained disclosure for the placement math (NAVD88/WGS84/geoid, BIN, roof
    height) — real and available, but not primary. Closed by default. */
 .disclosure {
-  margin-top: 0.5rem;
+  margin-top: 1.25rem;
 }
 .disclosure summary {
   cursor: pointer;
@@ -323,12 +428,15 @@ body {
   margin-bottom: 0.5rem;
 }
 
-/* ---- Four-view grid ---- */
+/* ---- Four elevations ----
+   Each pane is a drawing plate: a caption line above the frame, the frame, and
+   whatever qualifies it below. The caption sits ABOVE rather than over the
+   image, so a pane with no imagery is still a labelled plate rather than an
+   empty box with floating text. */
 .views {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
-  margin-top: 1.5rem;
+  gap: 1.25rem 1rem;
 }
 @media (max-width: 560px) {
   .views {
@@ -336,63 +444,96 @@ body {
   }
 }
 .view {
-  position: relative;
-  aspect-ratio: 4 / 3;
-  border: 1px solid var(--line);
-  overflow: hidden;
-  background: var(--bg-raised);
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
 }
 .view__canvas,
 .view canvas {
   width: 100%;
-  height: 100%;
+  aspect-ratio: 4 / 3;
   display: block;
+  border: 1px solid var(--line);
+  object-fit: cover;
+}
+/* A pane with no imagery is EMPTY. Not a gradient, not a silhouette, not a
+   "representative" image — the ground the whole page sits on, behind a rule.
+   This declaration is load-bearing for the project's central promise. */
+.view__canvas--empty {
+  background: transparent;
+}
+.view[data-phase="capturing"] .view__canvas--empty {
+  border-color: var(--line-strong);
 }
 
-/* view label: a solid (not blurred) bar over the frame — technical instrument
-   style, no glass */
 .view__label {
-  position: absolute;
-  top: 0.55rem;
-  left: 0.55rem;
-  right: 0.55rem;
-  z-index: 2;
   display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  font-size: 0.82rem;
-  color: var(--text);
-  background: rgba(8, 9, 12, 0.85);
-  border: 1px solid rgba(51, 54, 63, 0.8);
-  padding: 0.28rem 0.55rem;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--text-dim);
 }
 .view__compass {
-  font-weight: 700;
-  font-size: 0.78rem;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
   color: var(--text);
-  min-width: 1ch;
-}
-.view__dir {
-  color: var(--text-dim);
-  font-size: 0.8rem;
 }
 .view__bearing {
-  margin-left: auto;
   color: var(--text-faint);
   font-size: 0.75rem;
-  letter-spacing: 0.04em;
+}
+/* The per-direction note: why this particular elevation is qualified. */
+.view__note {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--text-faint);
+}
+.view__retry {
+  align-self: flex-start;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--line-strong);
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0 0 0.15rem;
+  cursor: pointer;
+}
+.view__retry:hover {
+  color: var(--text);
+  border-bottom-color: var(--text);
 }
 
 /* ---- Imagery attribution (required by Map Tiles API policies) ---- */
 .attribution {
-  margin: 0.9rem 0 0;
+  margin: 1.25rem 0 0;
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  flex-wrap: wrap;
   font-size: 0.85rem;
   color: var(--text-dim);
   line-height: 1.5;
 }
+.attribution__line {
+  margin: 0;
+}
 .attribution strong {
   color: var(--text);
   font-weight: 600;
+}
+.btn--quiet {
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.4rem 0.8rem;
+  border-color: var(--line-strong);
+  color: var(--text-dim);
 }
 
 /* ---- No-imagery-source / no-data states ---- */

@@ -1,4 +1,5 @@
-// Frugal 3D-tile renderer: capture four static frames from ONE Cesium session.
+// Frugal 3D-tile renderer: capture four static frames from ONE Cesium session,
+// and hand each one over the moment it exists.
 //
 // Cost discipline (see README "Cost-cap notes"): Google Photorealistic 3D Tiles
 // is the only metered resource (~1,000 tile-events/mo free). A live, always-on
@@ -7,6 +8,20 @@
 // four facade vantages, wait for tiles to settle, capture a static PNG per
 // view, then tear the viewer down. Four still captures per address, then the
 // viewer is gone — no ongoing tile traffic.
+//
+// The billable unit is the **session** (one root tileset request), not the
+// frame: "Timed session tokens allow for up to three hours of renderer tile
+// requests from a single root tileset request", and "Tile requests for
+// Photorealistic 3D Tiles don't impact your daily quota" (Map Tiles usage &
+// billing, re-read 2026-08-05). So a re-capture of one direction inside a
+// still-open session is free, and a re-capture after teardown costs exactly as
+// much as re-rendering all four. That asymmetry is why the UI offers a
+// per-direction retry only while the session is open, and a whole-result
+// re-render afterwards.
+//
+// This module owns Cesium. It does NOT own what happens when a capture fails —
+// that policy lives in renderSession.ts, where it can be tested without a
+// WebGL context, a key, or a provider request.
 //
 // The captures are NOT cached anywhere. Google Maps Platform ToS §3.2.3(b)
 // forbids caching Google Maps Content except where the Maps Service Specific
@@ -26,22 +41,21 @@ import {
   Ion,
   ImageryLayer,
 } from "cesium";
-import type { CameraView, ViewSlot } from "../lib/types";
+// Imported here, not in index.html, so it travels in this lazily-imported
+// chunk. Cesium's widget stylesheet is only meaningful once a `Viewer` exists;
+// vite-plugin-cesium's default is to inject it as a render-blocking <head>
+// link on every page load, which a visitor who never runs a lookup should not
+// pay for. See the `lazyCesium` comment in vite.config.ts.
+import "cesium/Build/Cesium/Widgets/widgets.css";
+import type { CameraView, RenderSession } from "../lib/types";
 import { applyCameraView } from "./cesiumCamera";
-
-export interface CaptureResult {
-  slot: ViewSlot;
-  /** data: URL PNG of the rendered frame, with attribution baked along the bottom. */
-  dataUrl: string;
-  /**
-   * The data attributions Google returned for the tiles actually displayed in
-   * this frame (e.g. ["Google", "Vexcel Imaging US, Inc."]). Kept as separate
-   * credits rather than one joined string so they can be de-duplicated across
-   * frames without splitting on a comma that belongs inside a company name.
-   * Map Tiles API policies require these to be displayed with the imagery.
-   */
-  attribution: string[];
-}
+import { describeError } from "../lib/redact";
+import {
+  CaptureFailedError,
+  createRenderSession,
+  type FrameSource,
+  type RenderSessionOptions,
+} from "./renderSession";
 
 /** Text we are required to show alongside the imagery (policy: logo or the words). */
 const GOOGLE_ATTRIBUTION = "Google Maps";
@@ -72,6 +86,23 @@ class RenderAbortedError extends Error {
   }
 }
 
+/** How `waitForTiles` ended. */
+export interface SettleOutcome {
+  /**
+   * True when tile activity went quiet and the settle grace elapsed; false
+   * when the hard timeout fired first, or the caller aborted.
+   *
+   * This distinction used to be discarded — both terminators resolved the same
+   * void promise — which meant the app could not tell "this capture finished
+   * refining" from "we gave up waiting after 16 s". It is the only honest basis
+   * for the "still sharpening" note, and it is a statement about **our own
+   * render loop**, not about the picture. See lib/confidence.ts on why the
+   * distinction between those two matters here.
+   */
+  settled: boolean;
+  waitedMs: number;
+}
+
 /**
  * Wait until the tileset is fully settled for the current view, or a timeout
  * elapses.
@@ -85,7 +116,7 @@ class RenderAbortedError extends Error {
  *
  * 2. Debounce on loadProgress(0,0) — the event fires (0,0) both on startup
  *    (before any tiles are requested) and briefly between tile batches while
- *    the renderer refines the LOD. A 2-second grace period after seeing (0,0)
+ *    the renderer refines the LOD. A 900 ms grace period after seeing (0,0)
  *    lets the second wave of detail tiles start before we declare done.
  *
  * 3. seenNonZero guard — never accept the initial (0,0) firing as "settled".
@@ -95,25 +126,27 @@ function waitForTiles(
   tileset: Cesium3DTileset,
   timeoutMs: number,
   signal?: AbortSignal,
-): Promise<void> {
+): Promise<SettleOutcome> {
   return new Promise((resolve) => {
     let done = false;
     let seenNonZero = false;
     let settleTimer: ReturnType<typeof setTimeout> | null = null;
+    const startedAt = Date.now();
 
-    const finish = () => {
+    const finish = (settled: boolean) => {
       if (done) return;
       done = true;
       cleanup();
-      resolve();
+      resolve({ settled, waitedMs: Date.now() - startedAt });
     };
+    const finishUnsettled = () => finish(false);
 
     if (signal) {
       if (signal.aborted) {
-        finish();
+        finish(false);
         return;
       }
-      signal.addEventListener("abort", finish, { once: true });
+      signal.addEventListener("abort", finishUnsettled, { once: true });
     }
 
     const scheduleSettle = () => {
@@ -125,7 +158,7 @@ function waitForTiles(
       // timeout below in practice. Measured captures at that timeout already
       // look complete, so the grace period only needs to be long enough to
       // not cut off a real burst of new tiles, not to prove total silence.
-      settleTimer = setTimeout(finish, 900);
+      settleTimer = setTimeout(() => finish(true), 900);
     };
 
     const cancelSettle = () => {
@@ -150,7 +183,7 @@ function waitForTiles(
       scheduleSettle();
     });
 
-    const hardTimer = setTimeout(finish, timeoutMs);
+    const hardTimer = setTimeout(finishUnsettled, timeoutMs);
 
     // Drive tile streaming with synchronous viewer.render() so the tile
     // network round-trips advance even when rAF is throttled for offscreen
@@ -171,7 +204,7 @@ function waitForTiles(
       removeLoadProgress();
       removeAllLoaded();
       clearInterval(renderInterval);
-      signal?.removeEventListener("abort", finish);
+      signal?.removeEventListener("abort", finishUnsettled);
     };
 
     viewer.scene.requestRender();
@@ -274,14 +307,23 @@ export function composeAttributedPng(
 }
 
 /**
- * Render the four views for a plan into static PNG data URLs using a single,
- * disposable Cesium session. The offscreen container is created and removed
- * internally so callers just await the captures.
+ * Boot one Cesium session and hand back a `FrameSource` that captures a single
+ * view per call.
+ *
+ * Everything expensive happens here, once: the WebGL context, the root tileset
+ * request (**the billable unit** — one per session, regardless of how many
+ * frames or retries follow), and the 3 s warm-up. `capture()` afterwards only
+ * moves the camera and waits.
+ *
+ * Rejects if the session cannot be established at all (bad key, 403, no WebGL).
+ * That is a whole-result failure and the caller renders the honest "nothing
+ * loaded" state; it never becomes a per-direction failure, because there is no
+ * session in which to retry a direction.
  */
-export async function renderFourViews(
+async function openCesiumFrameSource(
   views: CameraView[],
   opts: RenderOptions,
-): Promise<CaptureResult[]> {
+): Promise<FrameSource> {
   const {
     apiKey,
     width = 800,
@@ -344,6 +386,8 @@ export async function renderFourViews(
     } catch {
       // Already torn down or mid-teardown — nothing more to do.
     }
+    host.remove();
+    signal?.removeEventListener("abort", destroyNow);
   };
   // Belt-and-suspenders: an abort mid-await (tileset creation, the warmup
   // delay) is only caught by checkAborted() at the next checkpoint, which can
@@ -436,46 +480,85 @@ export async function renderFourViews(
     await new Promise<void>((r) => setTimeout(r, 3000));
     checkAborted();
 
-    const captures: CaptureResult[] = [];
-    for (const view of views) {
-      checkAborted();
-      applyCameraView(viewer.camera, view);
-      viewer.scene.requestRender();
-      await waitForTiles(viewer, tileset, settleTimeoutMs, signal);
-      checkAborted();
+    const activeViewer = viewer;
+    return {
+      async capture(view) {
+        checkAborted();
+        if (destroyed) throw new RenderAbortedError();
 
-      // After tiles are settled, give the GPU time to finish uploading textures
-      // before reading back the canvas — a single render() call may fire before
-      // the texture upload queue drains. Two render + 1 s gives textures time.
-      viewer.scene.requestRender();
-      await new Promise<void>((r) => setTimeout(r, 800));
-      viewer.scene.requestRender();
-      await new Promise<void>((r) => setTimeout(r, 200));
-      viewer.render();
+        applyCameraView(activeViewer.camera, view);
+        activeViewer.scene.requestRender();
+        const { settled } = await waitForTiles(
+          activeViewer,
+          tileset,
+          settleTimeoutMs,
+          signal,
+        );
+        checkAborted();
 
-      // Read the attributions Google returned for the tiles in THIS frame.
-      // Cesium rebuilds the credit container each frame from the tiles it just
-      // drew, so this is per-view data, not a constant.
-      const attribution = readAttribution(viewer);
+        // After tiles are settled, give the GPU time to finish uploading
+        // textures before reading back the canvas — a single render() call may
+        // fire before the texture upload queue drains. Two render + 1 s gives
+        // textures time.
+        activeViewer.scene.requestRender();
+        await new Promise<void>((r) => setTimeout(r, 800));
+        activeViewer.scene.requestRender();
+        await new Promise<void>((r) => setTimeout(r, 200));
+        activeViewer.render();
 
-      let dataUrl: string;
-      try {
-        dataUrl = composeAttributedPng(viewer.canvas, attribution);
-      } catch (err) {
-        // SecurityError: WebGL canvas tainted by cross-origin tile textures.
-        // Google Photorealistic 3D Tiles must be served with ACAO headers for
-        // readback to work. If this fires, verify that tile responses include
-        // Access-Control-Allow-Origin (check DevTools Network → tile request
-        // → Response Headers). A CORS proxy is required if headers are absent.
-        const msg = err instanceof Error ? err.message : String(err);
-        throw new Error(`Canvas readback blocked (CORS taint): ${msg}`);
-      }
-      captures.push({ slot: view.slot, dataUrl, attribution });
-    }
-    return captures;
-  } finally {
-    signal?.removeEventListener("abort", destroyNow);
+        // Read the attributions Google returned for the tiles in THIS frame.
+        // Cesium rebuilds the credit container each frame from the tiles it
+        // just drew, so this is per-view data, not a constant.
+        const attribution = readAttribution(activeViewer);
+
+        let dataUrl: string;
+        try {
+          dataUrl = composeAttributedPng(activeViewer.canvas, attribution);
+        } catch (err) {
+          // SecurityError: WebGL canvas tainted by cross-origin tile textures.
+          // Google Photorealistic 3D Tiles must be served with ACAO headers for
+          // readback to work. If this fires, verify that tile responses include
+          // Access-Control-Allow-Origin (check DevTools Network → tile request
+          // → Response Headers). A CORS proxy is required if headers are absent.
+          //
+          // Marked fatal for the session on purpose: the taint is a property of
+          // the WebGL context, not of this direction, so every remaining view
+          // would fail identically 16 s at a time. Before this was modelled,
+          // the throw escaped the whole four-view function and destroyed the
+          // frames that had *already succeeded*.
+          throw new CaptureFailedError({
+            kind: "readback-blocked",
+            detail: `Canvas readback blocked (CORS taint): ${describeError(err)}`,
+            fatalForSession: true,
+          });
+        }
+
+        return {
+          result: { slot: view.slot, dataUrl, attribution },
+          settled,
+        };
+      },
+      close: destroyNow,
+    } satisfies FrameSource;
+  } catch (err) {
+    // Setup failed — tear the context down here, since no session will exist
+    // to close it.
     destroyNow();
-    host.remove();
+    throw err;
   }
+}
+
+/**
+ * Open a streaming render session for a plan's four views.
+ *
+ * The session yields each finished frame the moment it exists rather than
+ * holding all four until the last one lands. See `renderSession.ts` for the
+ * event contract and the retry policy; this function is only the wiring.
+ */
+export async function openRenderSession(
+  views: CameraView[],
+  opts: RenderOptions & RenderSessionOptions,
+): Promise<RenderSession> {
+  const source = await openCesiumFrameSource(views, opts);
+  return createRenderSession(views, source, opts);
 }

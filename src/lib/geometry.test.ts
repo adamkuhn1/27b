@@ -301,6 +301,55 @@ describe("buildCameraViews", () => {
       expect(high[i].headingDeg).toBeCloseTo(low[i].headingDeg, 9);
     }
   });
+
+  it("reports the footprint's rectangularity instead of discarding it", () => {
+    // Computed on every request and previously thrown away except as a boolean
+    // gate. It is a real measurement about an unusual building and the visitor
+    // should be able to see it.
+    expect(buildCameraViews(building, 50, 40).concentration).toBeGreaterThan(0.9);
+    expect(buildCameraViews(esb, 300, 250).concentration).toBeGreaterThan(0.8);
+  });
+
+  it("never needs the placement guard on a concave footprint, because the raycast takes the outermost crossing", () => {
+    // Worth pinning as a property rather than assuming it. The guard loop that
+    // pushes the camera further out if it lands back inside the polygon is a
+    // safety net for pathological rings; for any simple ring — including a C
+    // whose centroid sits in the notch — the outermost-crossing raycast has
+    // already left the polygon for good, so the guard provably never fires.
+    // (An earlier plan for this sprint was to surface "how far the guard had to
+    // push" as a real measurement. It is structurally always zero, so it would
+    // have been a field that could only ever read 0. Removed rather than
+    // shipped.)
+    const m = 1 / 111_320;
+    const c = { lat: 0, lng: 0 };
+    const ring: Array<[number, number]> = [
+      [-50 * m, -50 * m],
+      [50 * m, -50 * m],
+      [50 * m, -30 * m],
+      [-20 * m, -30 * m],
+      [-20 * m, 30 * m],
+      [50 * m, 30 * m],
+      [50 * m, 50 * m],
+      [-50 * m, 50 * m],
+      [-50 * m, -50 * m],
+    ];
+    const concave = {
+      bin: "9",
+      roofHeightM: 40,
+      groundElevationNavd88M: 0,
+      centroid: c,
+      ring,
+    };
+    const { views } = buildCameraViews(concave, 30, 20);
+    const local = ringToLocalMeters(ring, c);
+    for (const v of views) {
+      const p = ringToLocalMeters([[v.lng, v.lat]], c)[0];
+      expect(pointInRingMeters(local, p[0], p[1])).toBe(false);
+      // Exactly the raycast distance plus the fixed offset: no extra push.
+      const wall = facadeDistanceM(ring, c, v.headingDeg);
+      expect(v.standoffM).toBeCloseTo(wall + FACADE_OFFSET_M, 6);
+    }
+  });
 });
 
 describe("polygonCentroid", () => {
