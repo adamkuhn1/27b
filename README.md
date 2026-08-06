@@ -143,6 +143,14 @@ re-capturing *four*, so the per-direction button disappears rather than quietly
 charging for a full render. There is no idle hold on the WebGL context; keeping
 one alive for ~120 s to make later retries free was considered and declined.
 
+**The automatic retry is the mechanism that matters; the button is narrow, and
+that is worth saying out loud.** A failed direction is re-queued once at the
+back of the queue, so a *single* failing direction usually reaches its terminal
+state as the last item in the queue and the session closes immediately after —
+leaving no window. The button is really for the case where two directions have
+trouble, which is also when it is worth the most. Widening the window means the
+idle hold.
+
 ### What the visitor sees while it works
 
 No percentage, no invented stages, no ETA. A progress *bar* is not available
