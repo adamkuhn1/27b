@@ -82,9 +82,6 @@ export function writePlan(address: string, floor: number, plan: ViewPlan): void 
   }
 }
 
-/** Map of view slot -> PNG data URL, held in memory for the current render only. */
-export type CaptureMap = Partial<Record<string, string>>;
-
 /**
  * Remove every 27B key from localStorage, including the retired
  * `27b:captures:*` namespace written by pre-2026-08-04 builds. Anyone who ran
