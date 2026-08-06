@@ -157,6 +157,20 @@ function ViewPane({ plan, view }: { plan: ViewPlan; view: CameraView }) {
       </figcaption>
       <CesiumView view={view} disabled={captures.phase === "idle"} />
       {note && <p className="view__note">{note}</p>}
+      {/*
+        Offered only while the session is open, because that is the only time
+        it is free. Once the session closes, re-capturing one direction costs
+        exactly as much as re-capturing four, and the honest offer is the
+        whole-result button under the attribution line instead.
+
+        Be clear about how narrow that window is. A direction is re-queued
+        automatically once, at the back, so a single failing direction usually
+        reaches its terminal state as the last item in the queue — and the
+        session closes immediately after. This button therefore appears mainly
+        when TWO directions have trouble, which is also when it is worth the
+        most. Widening the window would mean holding the WebGL context open
+        idle after a result, which was considered and declined.
+      */}
       {failed && captures.sessionOpen && (
         <button
           type="button"
