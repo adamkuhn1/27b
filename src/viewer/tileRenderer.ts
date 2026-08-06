@@ -26,6 +26,12 @@ import {
   Ion,
   ImageryLayer,
 } from "cesium";
+// Imported here, not in index.html, so it travels in this lazily-imported
+// chunk. Cesium's widget stylesheet is only meaningful once a `Viewer` exists;
+// vite-plugin-cesium's default is to inject it as a render-blocking <head>
+// link on every page load, which a visitor who never runs a lookup should not
+// pay for. See the `lazyCesium` comment in vite.config.ts.
+import "cesium/Build/Cesium/Widgets/widgets.css";
 import type { CameraView, ViewSlot } from "../lib/types";
 import { applyCameraView } from "./cesiumCamera";
 
