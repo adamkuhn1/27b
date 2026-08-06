@@ -4,15 +4,27 @@
 //   - addresses processed
 //   - GEOMETRY-pipeline latency (geocode -> footprint -> camera math)
 //   - cache hit rate (geometry cache; imagery is never cached — see cache.ts)
+//   - IMAGERY-pipeline latency: per-direction capture time, and time to first
+//     frame
+//   - render sessions opened (the cost meter)
 //
-// Naming precision matters here. This module measures the geometry pipeline,
-// NOT the imagery pipeline. The 3D-tile render is 35-65 s and dominates
-// end-to-end time (measured 2026-08-04: 53.9 s / 37.1 s / 50.0 s / 62.1 s
-// across four real runs), while the geometry pipeline is ~1 s. The UI panel
-// says so explicitly rather than letting a sub-second number imply the app is
-// fast. Imagery latency is currently measured only by the proof harnesses
-// (proof/evidence/summary-*.json), not surfaced in-app — a real instrumentation
-// gap, recorded rather than papered over.
+// Naming precision matters here. Two different pipelines are measured and they
+// differ by two orders of magnitude: the geometry pipeline is ~1 s, while the
+// 3D-tile render is 35-65 s and dominates end-to-end time (measured 2026-08-04:
+// 53.9 s / 37.1 s / 50.0 s / 62.1 s across four real runs). Reporting one
+// number for "latency" would be misleading either way, so they are separate
+// fields with separate names.
+//
+// `sessionsOpened` is the only cost-shaped counter. The billable unit for
+// Photorealistic 3D Tiles is the root tileset request — one per session, not
+// one per frame and not one per in-session retry — so counting frames would
+// produce a number that does not correspond to the bill.
+//
+// TREAT EVERY NUMBER HERE AS A DRAFT ESTIMATE. The imagery counters have not
+// yet been exercised against a real render: doing so costs a root tileset
+// request, which is not authorized this sprint. They are exercised against
+// stubs in metrics.test.ts, which proves the arithmetic and nothing about the
+// wall-clock values.
 //
 // Deliberately dependency-free and honest: it counts real events the pipeline
 // emits, computes derived rates on read, and treats every number as a draft
@@ -33,6 +45,24 @@ export interface MetricsSnapshot {
   avgLatencyMs: number;
   /** Most recent pipeline latency (ms); 0 when none. */
   lastLatencyMs: number;
+  /**
+   * Render sessions opened. This is the COST meter: the billable unit for
+   * Photorealistic 3D Tiles is the root tileset request, i.e. one per session,
+   * however many frames or in-session retries follow. Counting frames would
+   * produce a number that does not correspond to the bill.
+   */
+  sessionsOpened: number;
+  /** Frames captured. Not a cost figure — see `sessionsOpened`. */
+  capturesCompleted: number;
+  /** Mean per-direction capture latency (ms); 0 when none. */
+  avgCaptureLatencyMs: number;
+  /**
+   * Time from opening a session to its first frame (ms), most recent session.
+   * The number the progressive-render work exists to move: it used to be
+   * indistinguishable from the whole-session time because nothing was shown
+   * until all four finished.
+   */
+  lastTimeToFirstFrameMs: number;
 }
 
 interface MetricsState {
@@ -42,6 +72,11 @@ interface MetricsState {
   plansProduced: number;
   unavailable: number;
   latencySamples: number[];
+  sessionsOpened: number;
+  captureLatencySamples: number[];
+  /** performance.now() at the most recent session open, or null. */
+  sessionOpenedAt: number | null;
+  lastTimeToFirstFrameMs: number;
 }
 
 function emptyState(): MetricsState {
@@ -52,7 +87,15 @@ function emptyState(): MetricsState {
     plansProduced: 0,
     unavailable: 0,
     latencySamples: [],
+    sessionsOpened: 0,
+    captureLatencySamples: [],
+    sessionOpenedAt: null,
+    lastTimeToFirstFrameMs: 0,
   };
+}
+
+function nowMs(): number {
+  return typeof performance !== "undefined" ? performance.now() : Date.now();
 }
 
 /**
@@ -101,14 +144,35 @@ export class Metrics {
     }
   }
 
+  /**
+   * Record that a render session opened. One session = one root tileset
+   * request = one billable unit, regardless of how many frames follow.
+   */
+  recordSessionOpened(): void {
+    this.state.sessionsOpened += 1;
+    this.state.sessionOpenedAt = nowMs();
+    this.emit();
+  }
+
+  /** Record one per-direction capture latency (ms), as reported by the session. */
+  recordCaptureLatency(ms: number): void {
+    if (!Number.isFinite(ms) || ms < 0) return;
+    this.state.captureLatencySamples.push(ms);
+    if (this.state.sessionOpenedAt !== null) {
+      // First frame of this session: the gap the progressive work targets.
+      this.state.lastTimeToFirstFrameMs = nowMs() - this.state.sessionOpenedAt;
+      this.state.sessionOpenedAt = null;
+    }
+    this.emit();
+  }
+
   snapshot(): MetricsSnapshot {
     if (this._cache) return this._cache;
-    const { cacheHits, cacheMisses, latencySamples } = this.state;
+    const { cacheHits, cacheMisses, latencySamples, captureLatencySamples } =
+      this.state;
     const lookups = cacheHits + cacheMisses;
-    const avg =
-      latencySamples.length === 0
-        ? 0
-        : latencySamples.reduce((a, b) => a + b, 0) / latencySamples.length;
+    const mean = (xs: number[]) =>
+      xs.length === 0 ? 0 : xs.reduce((a, b) => a + b, 0) / xs.length;
     this._cache = {
       addressesProcessed: this.state.addressesProcessed,
       cacheHits,
@@ -116,8 +180,12 @@ export class Metrics {
       cacheHitRate: lookups === 0 ? 0 : cacheHits / lookups,
       plansProduced: this.state.plansProduced,
       unavailable: this.state.unavailable,
-      avgLatencyMs: avg,
+      avgLatencyMs: mean(latencySamples),
       lastLatencyMs: latencySamples.at(-1) ?? 0,
+      sessionsOpened: this.state.sessionsOpened,
+      capturesCompleted: captureLatencySamples.length,
+      avgCaptureLatencyMs: mean(captureLatencySamples),
+      lastTimeToFirstFrameMs: this.state.lastTimeToFirstFrameMs,
     };
     return this._cache;
   }
