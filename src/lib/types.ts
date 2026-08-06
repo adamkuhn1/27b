@@ -83,6 +83,27 @@ export interface BuildingFootprint {
 }
 
 /**
+ * A neighbouring building, from the same NYC Open Data Building Footprints
+ * dataset as the subject. Free, keyless, and ours to query — it carries no
+ * provider restriction of any kind, which is exactly why the confidence layer
+ * is built on it (see lib/confidence.ts).
+ */
+export interface NeighborBuilding {
+  bin: string;
+  /** Outer footprint ring as [lng, lat] pairs. */
+  ring: Array<[number, number]>;
+  /** HEIGHTROOF: roof height above its own ground, metres. */
+  roofHeightM: number;
+  /**
+   * GROUNDELEV in metres (NAVD88), or `null` when the field is absent from the
+   * record. Absent is common enough to matter and is NOT the same as zero:
+   * defaulting to 0 understates a building's top by up to ~60 m in the Bronx
+   * and Staten Island.
+   */
+  groundElevationNavd88M: number | null;
+}
+
+/**
  * The resolved camera vantage for one view. This is the geometry the Cesium
  * viewer consumes verbatim — real coordinates, real elevation, a real bearing.
  * No scene data is implied.
@@ -108,6 +129,48 @@ export interface CameraView {
 }
 
 /**
+ * How enclosed one direction is, from neighbouring building geometry.
+ *
+ * Derived **only** from NYC Open Data footprints and our own arithmetic. No
+ * pixel of provider imagery is examined and no ray is cast against the provider
+ * mesh — see the header of `lib/confidence.ts` for why that is not a stylistic
+ * choice.
+ */
+export type EnclosureBand = "open" | "partly-enclosed" | "enclosed";
+
+export interface DirectionConfidence {
+  slot: ViewSlot;
+  band: EnclosureBand;
+  /**
+   * Greatest angle above the camera's eye line subtended by a neighbouring
+   * roof inside the view cone, in degrees. Negative means nothing within the
+   * search radius reaches the eye line at all; the sentinel `-90` means no
+   * neighbouring building fell inside the cone at all.
+   */
+  maxObstructionAngleDeg: number;
+  /**
+   * Horizontal distance to the nearest neighbour that rises above the eye
+   * line, in metres. `null` when nothing inside the search radius does.
+   */
+  firstBlockingM: number | null;
+}
+
+/** The per-plan result of the confidence pass. */
+export interface ConfidenceReport {
+  bySlot: Partial<Record<ViewSlot, DirectionConfidence>>;
+  /**
+   * True when at least one neighbour inside the search area had no roof height
+   * on file and was therefore skipped. A skipped building is an unknown, so the
+   * UI says the notes may miss an obstruction rather than implying open sky.
+   */
+  neighborDataIncomplete: boolean;
+  /** How many neighbouring buildings contributed to the assessment. */
+  neighborsConsidered: number;
+  /** Horizontal search radius used, metres. */
+  searchRadiusM: number;
+}
+
+/**
  * Everything the geometry half produces for a request. This object is fully
  * derived from real data; it is the contract handed to the renderer.
  */
@@ -126,7 +189,21 @@ export interface ViewPlan {
   floorClampedToRoof: boolean;
   /** How the four bearings were chosen — surfaced in the UI, never implied. */
   basis: ViewBasis;
+  /**
+   * Length-weighted orientation concentration of the footprint, 0..1 (see
+   * `principalFacadeAxis`). 1.0 = a perfect rectangle; the Flatiron measures
+   * 0.60. Carried through because "how well do four bearings actually fit this
+   * building" is a real measurement about an unusual building, and the visitor
+   * never used to see it.
+   */
+  facadeConcentration: number;
   views: CameraView[];
+  /**
+   * Per-direction enclosure assessment, or `null` when the neighbour lookup
+   * failed or timed out. `null` means "no notes available" — never a missing
+   * result and never an assumed-open view.
+   */
+  confidence: ConfidenceReport | null;
 }
 
 /** Discriminated result of the geometry pipeline. */
@@ -144,3 +221,111 @@ export type UnavailableReason =
   | "geocode-failed" // address could not be resolved
   | "no-footprint" // no building footprint/height record found
   | "network-error"; // upstream data service failed
+
+// ---------------------------------------------------------------------------
+// Render session — the streaming contract between the Cesium renderer and the UI
+// ---------------------------------------------------------------------------
+
+/** One finished frame. */
+export interface CaptureResult {
+  slot: ViewSlot;
+  /** data: URL PNG of the rendered frame, with attribution baked along the bottom. */
+  dataUrl: string;
+  /**
+   * The data attributions Google returned for the tiles actually displayed in
+   * this frame (e.g. ["Google", "Vexcel Imaging US, Inc."]). Kept as separate
+   * credits rather than one joined string so they can be de-duplicated across
+   * frames without splitting on a comma that belongs inside a company name.
+   * Map Tiles API policies require these to be displayed with the imagery.
+   */
+  attribution: string[];
+}
+
+/**
+ * Why one capture failed.
+ *
+ * `fatalForSession` is the load-bearing field: a canvas-readback taint will
+ * fail identically for every remaining direction, so retrying it is a waste of
+ * the visitor's time, whereas a single view that never settled might well work
+ * on a second pass.
+ */
+export interface RenderFailure {
+  kind: "capture-failed" | "readback-blocked";
+  /**
+   * Operator diagnostic with any `key=` query parameter redacted. Goes to the
+   * console; it is never rendered on screen.
+   */
+  detail: string;
+  fatalForSession: boolean;
+}
+
+/**
+ * Events a render session emits, in order.
+ *
+ * An async iterable of these rather than a `Promise<CaptureResult[]>` is what
+ * makes partial success expressible *in the type*: "three landed, one didn't"
+ * is a sequence of events, not a rejected promise or a convention about a
+ * short array.
+ */
+export type CaptureEvent =
+  | {
+      kind: "session-open";
+      /**
+       * Root tileset requests this session has cost. Exactly 1: the billable
+       * unit for Photorealistic 3D Tiles is the session, not the frame, so
+       * every capture and every in-session retry below is free. Asserted in
+       * renderSession.test.ts rather than trusted.
+       */
+      rootRequests: number;
+    }
+  | { kind: "view-started"; slot: ViewSlot; attempt: number }
+  | {
+      kind: "view-captured";
+      result: CaptureResult;
+      /**
+       * True when the capture ended because tile activity went quiet, false
+       * when the hard timeout fired first. This is our own render loop's
+       * telemetry — whether *our capture* finished refining — not an
+       * observation about what the picture contains.
+       */
+      settled: boolean;
+      elapsedMs: number;
+      attempt: number;
+    }
+  | {
+      kind: "view-failed";
+      slot: ViewSlot;
+      failure: RenderFailure;
+      attempt: number;
+      /** True when the session has automatically re-queued this direction. */
+      willRetry: boolean;
+    }
+  | { kind: "session-closed"; reason: SessionCloseReason };
+
+export type SessionCloseReason =
+  /** Every direction reached a terminal state. */
+  | "complete"
+  /** The caller aborted (superseded search, unmount, StrictMode double-invoke). */
+  | "aborted"
+  /** A failure that would repeat for every remaining direction. */
+  | "fatal";
+
+/** A live render session. Closing it destroys the WebGL context. */
+export interface RenderSession {
+  events: AsyncIterable<CaptureEvent>;
+  /**
+   * Re-capture one direction inside the still-open session.
+   *
+   * Costs **zero** new billable requests: "Timed session tokens allow for up to
+   * three hours of renderer tile requests from a single root tileset request"
+   * (Map Tiles usage & billing, read 2026-08-05). Resolves with the resulting
+   * `view-captured` or `view-failed` event, which is also emitted on `events`.
+   */
+  recapture(slot: ViewSlot): Promise<CaptureEvent>;
+  /** False once the WebGL context is gone; `recapture` is unavailable then. */
+  readonly isOpen: boolean;
+  close(): void;
+}
+
+/** Per-slot UI phase. */
+export type SlotPhase = "queued" | "capturing" | "ready" | "failed";

@@ -25,9 +25,9 @@
 
 import type { ViewPlan } from "./types";
 
-const NAMESPACE = "27b:cache:v3";
+const NAMESPACE = "27b:cache:v4";
 /** Bump when the ViewPlan shape or geometry math changes. */
-const SCHEMA_VERSION = 3;
+const SCHEMA_VERSION = 4;
 
 interface CacheEnvelope {
   v: number;
@@ -81,9 +81,6 @@ export function writePlan(address: string, floor: number, plan: ViewPlan): void 
     // Quota exceeded or private mode — acceptable to skip caching.
   }
 }
-
-/** Map of view slot -> PNG data URL, held in memory for the current render only. */
-export type CaptureMap = Partial<Record<string, string>>;
 
 /**
  * Remove every 27B key from localStorage, including the retired

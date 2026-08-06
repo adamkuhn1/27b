@@ -1,14 +1,23 @@
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type ReactNode,
 } from "react";
-import type { CaptureMap } from "../lib/cache";
 import { googleMapsKey } from "../lib/config";
-import type { ViewPlan } from "../lib/types";
+import { metrics } from "../lib/metrics";
+import { describeError } from "../lib/redact";
+import type {
+  CaptureEvent,
+  RenderSession,
+  SlotPhase,
+  ViewPlan,
+  ViewSlot,
+} from "../lib/types";
 
 // The four captures are produced ONCE per plan (a single Cesium session, four
 // static frames) and shared across the four CesiumView frames via context. That
@@ -22,27 +31,71 @@ import type { ViewPlan } from "../lib/types";
 // caching Google Maps Content except where the Maps Service Specific Terms
 // allow it, and those terms contain no Map Tiles allowance. So captures live in
 // this component's state for as long as the result is on screen, and no longer.
+//
+// WHAT CHANGED, AND WHY IT MATTERED
+//
+// This provider used to `await renderFourViews(...)` once and call `setCaptures`
+// once. Every frame was complete in hand inside that call — the first at roughly
+// 10-16 s — and none of them reached the screen until the fourth finished, at
+// 37-62 s. Now it consumes the session's event stream and commits each frame as
+// it arrives, so a direction appears the moment it exists.
+//
+// There are no fake stages and no percentage. What is displayed is what the app
+// actually knows: which direction is being captured right now (the loop index),
+// how many of four have landed (a count of completed work), and nothing else.
+// A progress *bar* is not available honestly — the capture ends on either a
+// quiet period or a hard timeout, and neither is a fraction of a known total.
 
-type CaptureState = "idle" | "loading" | "ready" | "error";
-
-interface TileCaptures {
-  state: CaptureState;
-  bySlot: CaptureMap;
-  /** Aggregated Google data attribution for the frames on screen. */
-  attribution?: string;
-  /** Human-readable diagnostic when state === "error". */
-  errorMsg?: string;
+/** Per-direction state, including the frame once there is one. */
+export interface SlotState {
+  phase: SlotPhase;
+  /** Present only when `phase === "ready"`. Real capture, or nothing. */
+  dataUrl?: string;
+  /** Whether OUR CAPTURE finished refining. Not a claim about the picture. */
+  settled?: boolean;
+  /** How many attempts this direction has had in this session. */
+  attempts: number;
 }
 
-const CapturesContext = createContext<TileCaptures>({
-  state: "idle",
+/** Whole-result state. */
+export type SessionPhase =
+  /** No key, or rendering suppressed. */
+  | "idle"
+  /** A session is open and directions are still arriving. */
+  | "running"
+  /** The session finished. Some, all or none of the directions may have landed. */
+  | "settled"
+  /** No session could be established at all. Nothing rendered, nothing faked. */
+  | "failed";
+
+export interface TileCaptures {
+  phase: SessionPhase;
+  bySlot: Partial<Record<ViewSlot, SlotState>>;
+  /** Aggregated Google data attribution for the frames on screen. */
+  attribution?: string;
+  /** True while the WebGL session is alive, so a free per-direction retry exists. */
+  sessionOpen: boolean;
+  /** Request one direction again inside the open session. Zero billable cost. */
+  retrySlot: (slot: ViewSlot) => void;
+}
+
+const IDLE: TileCaptures = {
+  phase: "idle",
   bySlot: {},
-  errorMsg: undefined,
-});
+  sessionOpen: false,
+  retrySlot: () => {},
+};
+
+const CapturesContext = createContext<TileCaptures>(IDLE);
+
+/** Count of directions that have produced a real frame. */
+export function readyCount(bySlot: TileCaptures["bySlot"]): number {
+  return Object.values(bySlot).filter((s) => s?.phase === "ready").length;
+}
 
 /**
- * Provider that renders the four captures for a plan (or loads them from cache)
- * and exposes them to descendant CesiumView frames.
+ * Provider that opens a render session for a plan and reveals each direction as
+ * it lands.
  *
  * `disabled` short-circuits everything: with no imagery key, this never imports
  * or invokes the tile renderer, so the metered path is unreachable without a key.
@@ -56,98 +109,191 @@ export function TileCapturesProvider({
   disabled?: boolean;
   children: ReactNode;
 }) {
-  const [captures, setCaptures] = useState<TileCaptures>({
-    state: disabled ? "idle" : "loading",
-    bySlot: {},
-  });
+  const [phase, setPhase] = useState<SessionPhase>(disabled ? "idle" : "running");
+  const [bySlot, setBySlot] = useState<TileCaptures["bySlot"]>({});
+  const [attribution, setAttribution] = useState<string | undefined>();
+  const [sessionOpen, setSessionOpen] = useState(false);
+
   // Guard against double-run (React 18 StrictMode) and stale plan updates.
   const runIdRef = useRef(0);
+  const sessionRef = useRef<RenderSession | null>(null);
+  const creditsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
+    creditsRef.current = new Set();
+    setBySlot({});
+    setAttribution(undefined);
+    setSessionOpen(false);
+
     if (disabled) {
-      setCaptures({ state: "idle", bySlot: {} });
+      setPhase("idle");
       return;
     }
 
     const key = googleMapsKey();
     if (!key) {
       // Belt-and-suspenders: no key => never touch the renderer.
-      setCaptures({ state: "idle", bySlot: {} });
+      setPhase("idle");
       return;
     }
 
     const runId = ++runIdRef.current;
-
-    setCaptures({ state: "loading", bySlot: {} });
+    setPhase("running");
+    // Every direction is known and correctly labelled from the instant the plan
+    // resolves — the bearings come from the geometry pipeline, not the imagery.
+    // So the grid is real, specific content immediately; frames land into it.
+    setBySlot(
+      Object.fromEntries(
+        plan.views.map((v) => [v.slot, { phase: "queued", attempts: 0 }]),
+      ),
+    );
 
     // Ties the Cesium session's lifetime to this effect. Without this, React
     // 18 StrictMode's double-invoke (or a plan change) leaves the first run's
     // viewer alive in the background — a second real WebGL context — and the
     // two fight over the GPU instead of the first one being torn down.
     const controller = new AbortController();
+    const current = () => runId === runIdRef.current;
 
-    // Lazily import the heavy Cesium renderer only on the real render path.
     (async () => {
+      let session: RenderSession;
       try {
-        const { renderFourViews } = await import("./tileRenderer");
-        const results = await renderFourViews(plan.views, {
+        // Lazily import the heavy Cesium renderer only on the real render path.
+        const { openRenderSession } = await import("./tileRenderer");
+        session = await openRenderSession(plan.views, {
           apiKey: key,
           signal: controller.signal,
         });
-        if (runId !== runIdRef.current) return; // superseded
-        const map: CaptureMap = {};
-        for (const r of results) map[r.slot] = r.dataUrl;
-        // Union of the per-frame credits, sorted — the Map Tiles policy asks for
-        // all attributions for displayed tiles, aggregated and sorted, in a line.
-        const attribution = Array.from(
-          new Set(results.flatMap((r) => r.attribution).filter(Boolean)),
-        )
-          .sort()
-          .join(", ");
-        setCaptures({ state: "ready", bySlot: map, attribution });
       } catch (err) {
-        if (runId !== runIdRef.current) return; // superseded — includes our own abort
-        // Cesium tile-load errors can embed the failing request URL, and the
-        // Map Tiles key rides in that URL's query string. The key is already
-        // public in the built bundle, but there's no reason to additionally
-        // put it in an error message a user might screenshot or paste into a
-        // bug report -- strip any `key=...` query param before it's ever
-        // stored or rendered. Same principle as proof/run-proof.mjs's
-        // "never log the key" query-string strip.
-        const rawMsg = err instanceof Error ? err.message : String(err);
-        const raw = rawMsg.replace(/([?&]key=)[^&\s"']+/gi, "$1[redacted]");
-        // Cesium errors may be RequestErrorEvent objects with a statusCode field
-        // rather than standard Errors, so check both paths.
-        const status = (err as { statusCode?: unknown }).statusCode;
-        const is403 = status === 403 || /403|Forbidden/i.test(raw);
-        // The specific cause is an operator diagnostic, not visitor copy — it
-        // goes to the console (and the README's troubleshooting note covers
-        // the 403 case), never onto the screen. The on-screen message stays
-        // generic and honest: nothing rendered, and nothing was faked either.
-        console.error(
-          is403
-            ? "[27b] Map Tiles API returned 403 — check the key is enabled for the Map Tiles API and has no HTTP-referrer restriction blocking this origin."
-            : "[27b] tile render failed:",
-          raw && raw !== "[object Object]" ? raw : err,
-        );
-        // Honest failure: an empty/error frame, never a fabricated scene.
-        setCaptures({ state: "error", bySlot: {} });
+        if (!current() || controller.signal.aborted) return; // superseded
+        reportSessionFailure(err);
+        // Honest failure: empty frames, never a fabricated scene.
+        setPhase("failed");
+        return;
+      }
+
+      if (!current()) {
+        session.close();
+        return;
+      }
+      sessionRef.current = session;
+      setSessionOpen(true);
+      metrics.recordSessionOpened();
+
+      for await (const event of session.events) {
+        if (!current()) break;
+        applyEvent(event);
+      }
+      if (current()) {
+        setSessionOpen(false);
+        setPhase("settled");
       }
     })();
 
-    return () => controller.abort();
+    function applyEvent(event: CaptureEvent) {
+      switch (event.kind) {
+        case "session-open":
+          return;
+        case "view-started":
+          setBySlot((prev) => ({
+            ...prev,
+            [event.slot]: {
+              ...(prev[event.slot] ?? { attempts: 0 }),
+              phase: "capturing",
+              attempts: event.attempt,
+            },
+          }));
+          return;
+        case "view-captured": {
+          const { result } = event;
+          metrics.recordCaptureLatency(event.elapsedMs);
+          // The Map Tiles policy asks for all attributions for displayed tiles,
+          // aggregated and sorted, in a line. Recomputed per arrival now rather
+          // than once at the end, so the credit line is correct for whatever is
+          // actually on screen at any moment.
+          for (const credit of result.attribution) {
+            if (credit) creditsRef.current.add(credit);
+          }
+          setAttribution(Array.from(creditsRef.current).sort().join(", "));
+          setBySlot((prev) => ({
+            ...prev,
+            [result.slot]: {
+              phase: "ready",
+              dataUrl: result.dataUrl,
+              settled: event.settled,
+              attempts: event.attempt,
+            },
+          }));
+          return;
+        }
+        case "view-failed":
+          // The specific cause is an operator diagnostic, not visitor copy — it
+          // goes to the console, never onto the screen.
+          console.error(
+            `[27b] direction ${event.slot} failed (attempt ${event.attempt}):`,
+            event.failure.detail,
+          );
+          setBySlot((prev) => ({
+            ...prev,
+            [event.slot]: {
+              // A direction that is going to be retried is still in flight, not
+              // finished. Showing it as failed and then un-failing it would be
+              // a state the app invented.
+              phase: event.willRetry ? "queued" : "failed",
+              attempts: event.attempt,
+            },
+          }));
+          return;
+        case "session-closed":
+          sessionRef.current = null;
+          setSessionOpen(false);
+          return;
+      }
+    }
+
+    return () => {
+      controller.abort();
+      sessionRef.current?.close();
+      sessionRef.current = null;
+    };
   }, [plan, disabled]);
 
+  const retrySlot = useCallback((slot: ViewSlot) => {
+    const session = sessionRef.current;
+    if (!session || !session.isOpen) return;
+    void session.recapture(slot);
+  }, []);
+
+  const value = useMemo<TileCaptures>(
+    () => ({ phase, bySlot, attribution, sessionOpen, retrySlot }),
+    [phase, bySlot, attribution, sessionOpen, retrySlot],
+  );
+
   return (
-    <CapturesContext.Provider value={captures}>
-      {children}
-    </CapturesContext.Provider>
+    <CapturesContext.Provider value={value}>{children}</CapturesContext.Provider>
+  );
+}
+
+/**
+ * Diagnose a session that never opened. Console only — the on-screen message
+ * stays generic and honest: nothing rendered, and nothing was faked either.
+ * The README's troubleshooting note covers the 403 case for an operator.
+ */
+function reportSessionFailure(err: unknown): void {
+  const detail = describeError(err);
+  const status = (err as { statusCode?: unknown }).statusCode;
+  const is403 = status === 403 || /403|Forbidden/i.test(detail);
+  console.error(
+    is403
+      ? "[27b] Map Tiles API returned 403 — check the key is enabled for the Map Tiles API and has no HTTP-referrer restriction blocking this origin."
+      : "[27b] render session could not be opened:",
+    detail,
   );
 }
 
 /** Read the shared capture state for the current view frame. */
 export function useTileCaptures(disabled?: boolean): TileCaptures {
   const ctx = useContext(CapturesContext);
-  if (disabled) return { state: "idle", bySlot: {} };
+  if (disabled) return IDLE;
   return ctx;
 }

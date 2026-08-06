@@ -100,6 +100,12 @@ function BuildingPresets({ onSelect, busy }: BuildingPresetsProps) {
 export default function App() {
   const [ui, setUi] = useState<UiState>({ kind: "idle" });
   const abortRef = useRef<AbortController | null>(null);
+  // Changing this remounts the result, which opens a new render session. It is
+  // the only way to re-render after a session has closed, and it costs one root
+  // tileset request — the same as re-rendering all four directions, which is
+  // why the UI never offers a cheaper-looking per-direction retry once the
+  // session is gone.
+  const [renderAttempt, setRenderAttempt] = useState(0);
   const imagerySource = hasImagerySource();
 
   // Portfolio embed contract (apps/portfolio/src/lib/embedProtocol.ts): once
@@ -123,6 +129,7 @@ export default function App() {
     abortRef.current?.abort();
     const ac = new AbortController();
     abortRef.current = ac;
+    setRenderAttempt(0);
 
     setUi({ kind: "loading" });
     try {
@@ -165,12 +172,10 @@ export default function App() {
         />
 
         <p className="framing">
-          These are <strong>approximately what you'd see</strong>, not your
-          exact view. Floor height is estimated from building footprint data
-          (NYC doesn't publish per-floor heights), and the four bearings come
-          from the building's footprint, not from a floor plan, so the vantage
-          is close but not precise. The imagery is always real, never
-          substituted.
+          <strong>Approximately what you'd see</strong>, not your exact view.
+          NYC publishes no per-floor heights, so floor height is estimated and
+          the four bearings come from the building's footprint rather than a
+          floor plan. The imagery is always real, or absent.
         </p>
 
         {ui.kind === "loading" && <LoadingState />}
@@ -185,7 +190,11 @@ export default function App() {
         {ui.kind === "result" &&
           ui.result.ok &&
           (imagerySource ? (
-            <ResultView result={ui.result} />
+            <ResultView
+              key={renderAttempt}
+              result={ui.result}
+              onRenderAgain={() => setRenderAttempt((n) => n + 1)}
+            />
           ) : (
             <>
               <ResultView result={ui.result} renderDisabled />
