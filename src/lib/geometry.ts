@@ -316,10 +316,10 @@ export function buildCameraViews(
   footprint: BuildingFootprint,
   eyeElevationEllipsoidalM: number,
   eyeAboveGroundM: number,
-): { views: CameraView[]; basis: ViewBasis } {
+): { views: CameraView[]; basis: ViewBasis; concentration: number } {
   // -3 deg at ground level -> -9 deg at 200 m+, clamped; keeps sky in the top third.
   const pitchDeg = Math.max(-9, -(3 + eyeAboveGroundM / 33));
-  const { basis, bearingsDeg } = viewBearings(footprint);
+  const { basis, bearingsDeg, axis } = viewBearings(footprint);
   const localRing = ringToLocalMeters(footprint.ring, footprint.centroid);
 
   const views = bearingsDeg.map((headingDeg, i) => {
@@ -332,6 +332,13 @@ export function buildCameraViews(
 
     // Verify the camera is genuinely outside the footprint; push out in
     // FACADE_OFFSET_M steps if a pathological ring puts it back inside.
+    //
+    // For any simple ring this loop provably never runs: `facadeDistanceM`
+    // returns the OUTERMOST boundary crossing, past which the ray has left the
+    // polygon for good, so `wallDist + 6 m` is already outside — even for a C
+    // whose centroid sits in the notch (pinned in geometry.test.ts). It stays
+    // as a guard against self-intersecting or otherwise malformed source rings,
+    // where even-odd parity can disagree with the raycast.
     const dirX = Math.sin(toRad(headingDeg));
     const dirY = Math.cos(toRad(headingDeg));
     for (let guard = 0; guard < 8; guard++) {
@@ -361,7 +368,7 @@ export function buildCameraViews(
     } satisfies CameraView;
   });
 
-  return { views, basis };
+  return { views, basis, concentration: axis.concentration };
 }
 
 /**

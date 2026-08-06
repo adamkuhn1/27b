@@ -9,9 +9,14 @@
 import { geocodeAddress, GeocodeError } from "../lib/geocode";
 import { fetchFootprintByBin, FootprintError } from "../lib/footprint";
 import { estimateFloorElevation, buildCameraViews } from "../lib/geometry";
+import { fetchNeighbors } from "../lib/neighbors";
+import { assessConfidence, SEARCH_RADIUS_M } from "../lib/confidence";
 import { readPlan, writePlan } from "../lib/cache";
 import { metrics } from "../lib/metrics";
 import type {
+  BuildingFootprint,
+  CameraView,
+  ConfidenceReport,
   ViewPlan,
   ViewPlanResult,
   UnavailableReason,
@@ -21,14 +26,25 @@ import type {
 export interface PlanDeps {
   geocode: typeof geocodeAddress;
   fetchFootprint: typeof fetchFootprintByBin;
+  fetchNeighbors: typeof fetchNeighbors;
   now: () => number;
 }
 
 const defaultDeps: PlanDeps = {
   geocode: geocodeAddress,
   fetchFootprint: fetchFootprintByBin,
+  fetchNeighbors,
   now: () => (typeof performance !== "undefined" ? performance.now() : Date.now()),
 };
+
+/**
+ * How long the neighbour lookup gets before the plan goes out without it.
+ *
+ * The measured query is ~0.6-1.3 s. The enclosure notes are worth roughly a
+ * second of the ~1 s geometry pipeline, but they are an annotation on the
+ * result, not the result — so a slow open-data service delays nothing.
+ */
+const NEIGHBOR_TIMEOUT_MS = 4000;
 
 function unavailable(
   reason: UnavailableReason,
@@ -80,10 +96,22 @@ export async function planView(
     // 4. Geometry math (pure, real): elevation (both datums) + four cameras
     //    aimed along the building's own facades where the footprint supports it.
     const elevation = estimateFloorElevation(footprint, floor);
-    const { views, basis } = buildCameraViews(
+    const { views, basis, concentration } = buildCameraViews(
       footprint,
       elevation.eyeElevationEllipsoidalM,
       elevation.eyeElevationNavd88M - footprint.groundElevationNavd88M,
+    );
+
+    // 5. Per-direction enclosure, from neighbouring footprints. Degrades to
+    //    null — "no notes available" — and never to a missing or altered
+    //    result. Never to "open", either: an unknown surroundings is not an
+    //    open view, and the UI says nothing rather than implying either.
+    const confidence = await resolveConfidence(
+      d,
+      footprint,
+      views,
+      elevation.eyeElevationNavd88M,
+      signal,
     );
 
     const plan: ViewPlan = {
@@ -96,7 +124,9 @@ export async function planView(
       geoidHeightM: elevation.geoidHeightM,
       floorClampedToRoof: elevation.clampedToRoof,
       basis,
+      facadeConcentration: concentration,
       views,
+      confidence,
     };
 
     metrics.recordLatency(d.now() - started);
@@ -121,5 +151,50 @@ export async function planView(
       "network-error",
       "Something went wrong resolving this address. Please try again.",
     );
+  }
+}
+
+/**
+ * Fetch neighbours and measure enclosure, or return `null`.
+ *
+ * Everything here is best-effort by design: the four camera vantages are the
+ * result, and the enclosure notes are an annotation on them. A failed,
+ * timed-out or empty neighbour lookup therefore costs the visitor the notes and
+ * nothing else. An abort propagates, because an aborted plan should not
+ * continue at all.
+ */
+async function resolveConfidence(
+  d: PlanDeps,
+  footprint: BuildingFootprint,
+  views: CameraView[],
+  eyeElevationNavd88M: number,
+  signal?: AbortSignal,
+): Promise<ConfidenceReport | null> {
+  const timeout = new AbortController();
+  const timer = setTimeout(() => timeout.abort(), NEIGHBOR_TIMEOUT_MS);
+  const onOuterAbort = () => timeout.abort();
+  signal?.addEventListener("abort", onOuterAbort, { once: true });
+
+  try {
+    const { neighbors, incomplete } = await d.fetchNeighbors(
+      footprint.centroid.lat,
+      footprint.centroid.lng,
+      SEARCH_RADIUS_M,
+      timeout.signal,
+    );
+    return assessConfidence({
+      views,
+      eyeElevationNavd88M,
+      subjectBin: footprint.bin,
+      subjectGroundElevationNavd88M: footprint.groundElevationNavd88M,
+      neighbors,
+      neighborDataIncomplete: incomplete,
+    });
+  } catch (err) {
+    if (signal?.aborted) throw err; // the whole request was superseded
+    return null;
+  } finally {
+    clearTimeout(timer);
+    signal?.removeEventListener("abort", onOuterAbort);
   }
 }

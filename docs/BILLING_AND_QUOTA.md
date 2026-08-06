@@ -26,6 +26,26 @@ four views. A root tileset request buys up to three hours of renderer tile
 requests, but 27B tears the session down after four captures, so the practical
 mapping is 1 lookup → 1 request.
 
+**A per-direction retry inside a still-open session is free** — it is a
+renderer tile request, not a new root tileset request. That is why the app
+retries a failed direction automatically before the session closes, and why it
+offers a per-direction retry button *only while the session is open*. Once the
+session is gone, re-capturing one direction costs exactly as much as
+re-capturing four, so the UI switches to a whole-result "Render all four
+again" rather than offering a cheap-looking button that quietly costs a full
+render.
+
+Holding the session open idle for a bounded window (~120 s) after the last
+capture would make a later per-direction retry free as well. It was
+**considered and declined** for this sprint: it costs a live WebGL context and
+its GPU memory for two minutes after every result. So there is no idle hold,
+and `renderSession.ts` closes the moment its queue drains.
+
+**Count sessions, not frames.** Under the streaming design one session yields
+up to four frames and a retry may yield more, all on one root tileset request.
+`lib/metrics.ts` therefore keeps `sessionsOpened` (the cost meter) separate
+from `capturesCompleted` (not a cost figure).
+
 **The load-bearing consequence:** imagery caching is contractually prohibited
 (§4), so there is no way to make a repeat visit to the same address cheaper. A
 public 27B is an open meter: 1,000 free lookups/month, then $0.006 each. Every
@@ -71,16 +91,19 @@ do not build it for a private portfolio behind an access gate. Revisit only if
 Four layers, cheapest first. None of these exist today.
 
 1. **Per-session limit — 10 renders per browser session.** Enforced client-side
-   (session counter), which stops accidental loops and ordinary curiosity, not a
-   determined attacker. Cheap and honest about its own weakness.
-2. **Per-user/day limit — 25 renders per day per client.** Same enforcement
-   caveat.
-3. **Global daily cap — 40 root tileset requests/day.** 40 × 30 = 1,200/month,
-   which slightly exceeds the 1,000 free allotment, so pair it with §4's monthly
-   budget alert; or set 30/day for a hard fit inside the free tier. Enforce at
-   the provider: Google Cloud Console → APIs & Services → Map Tiles API →
-   Quotas → *requests per day*. **This is the only limit in this document that
-   an attacker cannot bypass**, because it is enforced by Google, not by us.
+   by counting **sessions opened**, not frames captured (see §1). Stops
+   accidental loops and ordinary curiosity, not a determined attacker. Cheap
+   and honest about its own weakness.
+2. **Per-user/day limit — 25 renders per day per client.** Same unit, same
+   enforcement caveat.
+3. **Global daily cap — 25 root tileset requests/day.** 25 × 30 = 750/month, a
+   hard fit inside the 1,000 free allotment with headroom. (An earlier draft of
+   this file said 30–40/day; 40 × 30 = 1,200 exceeds the free allotment, which
+   made the cap depend on a budget *alert* to catch it — and an alert is not a
+   cap.) Enforce at the provider: Google Cloud Console → APIs & Services → Map
+   Tiles API → Quotas → *requests per day*. **This is the only limit in this
+   document that an attacker cannot bypass**, because it is enforced by Google,
+   not by us.
 4. **Global cost kill-switch.** Two mechanisms, both needed:
    - *Provider-side*: set the daily quota (above) to **0** to stop all billable
      traffic immediately. Takes effect without a redeploy.
@@ -183,6 +206,12 @@ deployed. **Before any public deploy:** set `frame-ancestors` to the portfolio
 origin, and set the HTTP-referrer restriction (§2) to match. The referrer
 restriction alone does not close it, because a framed page sends its own origin
 as the referrer.
+
+The host, the header file and the pre-deploy checklist are worked out in
+[`DEPLOYMENT.md`](DEPLOYMENT.md). The proposed `_headers` file is deliberately
+**not** in the repo: it carries an unresolved origin placeholder and has never
+been loaded in a browser, and a CSP nobody has tested is worse than none
+because it looks like a control.
 
 ---
 
