@@ -220,7 +220,7 @@ because it looks like a control.
 - [ ] Production key restricted by HTTP referrer to deploy origins only
 - [ ] Production key restricted to the Map Tiles API only
 - [ ] Separate development key, localhost-restricted
-- [ ] Map Tiles API daily quota set (recommend 30–40/day; 0 to kill)
+- [ ] Map Tiles API daily quota set (**25/day**, per §3; 0 to kill)
 - [ ] Cloud Billing budget alert set (recommend $1/month) — a notification, not a cap
 - [ ] `Content-Security-Policy: frame-ancestors <portfolio-origin>` on the 27B origin
 - [ ] Kill-switch flag wired to the existing "imagery not configured" state (and *only* to it)

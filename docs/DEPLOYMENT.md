@@ -36,9 +36,12 @@ is the requirement, not indexing hygiene.
 > created without his say-so. Everything below assumes one; none of it has
 > been exercised.
 
-At the current build (12 MB of static assets per cold visit, of which 4.1 MB
-is the lazy renderer chunk most visitors never fetch) Netlify's 100 GB/month
-would be roughly 7,000 cold loads. Bandwidth is not the deciding factor;
+At the current build a cold visit fetches about **187 kB** — `dist/` totals
+12 MB, but almost all of that is the lazy renderer chunk and Cesium's assets,
+which a visitor who never runs a lookup does not request (traced: 7 requests,
+none of them `tileRenderer-*`, `cesium/`, or a provider host). So Netlify's
+100 GB/month is on the order of hundreds of thousands of cold loads, not
+thousands. Bandwidth is not the deciding factor;
 access control is.
 
 ## 2. Response headers
