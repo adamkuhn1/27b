@@ -469,3 +469,16 @@ describe("party walls in the real fixtures", () => {
     expect(inside(E79, 18)).toEqual([]);
   });
 });
+
+describe("counting directions that were actually requested", () => {
+  it("excludes party walls, so a complete result is not reported as partial", () => {
+    // Regression guard for a defect the live verification caught: 425 E 79th
+    // at floor 10 has one shared wall, so three directions are requested and
+    // three arrive. Counting against four facades reported "3 of 4 directions
+    // loaded", which reads as a failure when nothing failed.
+    const { views, report } = assess(E79, 10);
+    const requested = views.filter((v) => isRenderableDirection(v.slot, report));
+    expect(views).toHaveLength(4);
+    expect(requested).toHaveLength(3);
+  });
+});

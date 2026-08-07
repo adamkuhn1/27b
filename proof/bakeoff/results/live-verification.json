@@ -1,0 +1,264 @@
+{
+  "generatedAt": "2026-08-07T02:30:53.761Z",
+  "results": [
+    {
+      "id": "live-e79-fl10",
+      "address": "425 E 79th St, Manhattan",
+      "floor": 10,
+      "ready": true,
+      "wallMs": 26018,
+      "net": {
+        "rootTileset": 1,
+        "rendererTiles": 2687
+      },
+      "observed": {
+        "attribution": "Imagery: Google Maps · Data SIO, NOAA, U.S. Navy, NGA, GEBCO, Google, IBCAO, Landsat / Copernicus, Vexcel Imaging US, Inc.",
+        "frameLine": "Approximate view · floor 10",
+        "subLine": "Where a window on this side would be — not a specific apartment.",
+        "notes": [],
+        "panes": [
+          {
+            "compass": "NNE",
+            "bearing": "29° true",
+            "phase": "ready",
+            "hasImage": true,
+            "natural": [
+              800,
+              623
+            ],
+            "boxCss": [
+              338,
+              263.7
+            ],
+            "alt": "Approximately the view facing NNE (29 degrees) from this floor",
+            "note": "Another building stands about 12 m from this side.",
+            "attributionVisible": {
+              "croppedCssPx": -0.44
+            }
+          },
+          {
+            "compass": "ESE",
+            "bearing": "119° true",
+            "phase": "no-window",
+            "hasImage": false,
+            "natural": null,
+            "boxCss": [
+              338,
+              253.5
+            ],
+            "alt": "No window facing ESE — this wall is shared with the building next door",
+            "note": "This wall is shared with the building next door — no window on this side.",
+            "attributionVisible": null
+          },
+          {
+            "compass": "SSW",
+            "bearing": "209° true",
+            "phase": "ready",
+            "hasImage": true,
+            "natural": [
+              800,
+              623
+            ],
+            "boxCss": [
+              338,
+              263.7
+            ],
+            "alt": "Approximately the view facing SSW (209 degrees) from this floor",
+            "note": "Another building stands about 24 m from this side.",
+            "attributionVisible": {
+              "croppedCssPx": -0.44
+            }
+          },
+          {
+            "compass": "WNW",
+            "bearing": "299° true",
+            "phase": "ready",
+            "hasImage": true,
+            "natural": [
+              800,
+              623
+            ],
+            "boxCss": [
+              338,
+              263.7
+            ],
+            "alt": "Approximately the view facing WNW (299 degrees) from this floor",
+            "note": "This side looks into nearby buildings rather than out over the city.",
+            "attributionVisible": {
+              "croppedCssPx": -0.44
+            }
+          }
+        ],
+        "persistedKeys": [
+          "27b:cache:v4:425 e 79th st, manhattan::10"
+        ],
+        "plan": {
+          "basis": "facade",
+          "eyeNavd88": 42.492000000000004,
+          "eyeWgs84": 10.832375219799246,
+          "views": [
+            {
+              "slot": "V1",
+              "headingDeg": 29.088757333342926,
+              "standoffM": 15.768296717420975
+            },
+            {
+              "slot": "V2",
+              "headingDeg": 119.08875733334293,
+              "standoffM": 48.136535063631285
+            },
+            {
+              "slot": "V3",
+              "headingDeg": 209.08875733334298,
+              "standoffM": 17.950411876823154
+            },
+            {
+              "slot": "V4",
+              "headingDeg": 299.088757333343,
+              "standoffM": 27.600466402051882
+            }
+          ],
+          "insideNeighborByM": {
+            "V1": null,
+            "V2": 7.54092,
+            "V3": null,
+            "V4": null
+          }
+        }
+      }
+    },
+    {
+      "id": "live-dakota-fl3",
+      "address": "1 W 72nd St, Manhattan",
+      "floor": 3,
+      "ready": true,
+      "wallMs": 35592,
+      "net": {
+        "rootTileset": 1,
+        "rendererTiles": 3060
+      },
+      "observed": {
+        "attribution": "Imagery: Google Maps · Data SIO, NOAA, U.S. Navy, NGA, GEBCO, Google, IBCAO, Landsat / Copernicus, Vexcel Imaging US, Inc.",
+        "frameLine": "Approximate view · floor 3",
+        "subLine": "Where a window on this side would be — not a specific apartment.",
+        "notes": [
+          "At this height you're looking across the street, not over the city."
+        ],
+        "panes": [
+          {
+            "compass": "NNE",
+            "bearing": "29° true",
+            "phase": "ready",
+            "hasImage": true,
+            "natural": [
+              800,
+              623
+            ],
+            "boxCss": [
+              338,
+              263.7
+            ],
+            "alt": "Approximately the view facing NNE (29 degrees) from this floor",
+            "note": "Another building stands about 12 m from this side.",
+            "attributionVisible": {
+              "croppedCssPx": -0.44
+            }
+          },
+          {
+            "compass": "ESE",
+            "bearing": "119° true",
+            "phase": "ready",
+            "hasImage": true,
+            "natural": [
+              800,
+              623
+            ],
+            "boxCss": [
+              338,
+              263.7
+            ],
+            "alt": "Approximately the view facing ESE (119 degrees) from this floor",
+            "note": null,
+            "attributionVisible": {
+              "croppedCssPx": -0.44
+            }
+          },
+          {
+            "compass": "SSW",
+            "bearing": "209° true",
+            "phase": "ready",
+            "hasImage": true,
+            "natural": [
+              800,
+              623
+            ],
+            "boxCss": [
+              338,
+              263.7
+            ],
+            "alt": "Approximately the view facing SSW (209 degrees) from this floor",
+            "note": "Another building stands about 24 m from this side.",
+            "attributionVisible": {
+              "croppedCssPx": -0.44
+            }
+          },
+          {
+            "compass": "WNW",
+            "bearing": "299° true",
+            "phase": "ready",
+            "hasImage": true,
+            "natural": [
+              800,
+              623
+            ],
+            "boxCss": [
+              338,
+              263.7
+            ],
+            "alt": "Approximately the view facing WNW (299 degrees) from this floor",
+            "note": "Another building stands about 8 m from this side.",
+            "attributionVisible": {
+              "croppedCssPx": -0.44
+            }
+          }
+        ],
+        "persistedKeys": [
+          "27b:cache:v4:1 w 72nd st, manhattan::3"
+        ],
+        "plan": {
+          "basis": "facade",
+          "eyeNavd88": 34.7224,
+          "eyeWgs84": 3.011081768298464,
+          "views": [
+            {
+              "slot": "V1",
+              "headingDeg": 29.20261120138531,
+              "standoffM": 37.52411729059031
+            },
+            {
+              "slot": "V2",
+              "headingDeg": 119.20261120138531,
+              "standoffM": 36.62406653302867
+            },
+            {
+              "slot": "V3",
+              "headingDeg": 209.20261120138525,
+              "standoffM": 37.724465296330095
+            },
+            {
+              "slot": "V4",
+              "headingDeg": 299.20261120138525,
+              "standoffM": 34.494218492188814
+            }
+          ],
+          "insideNeighborByM": {
+            "V1": null,
+            "V2": null,
+            "V3": null,
+            "V4": null
+          }
+        }
+      }
+    }
+  ]
+}

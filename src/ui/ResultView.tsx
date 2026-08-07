@@ -61,15 +61,25 @@ function ResultBody({
   const aboveGroundM =
     plan.eyeElevationNavd88M - plan.footprint.groundElevationNavd88M;
 
+  // The denominator is the number of directions we ASKED the provider for, not
+  // the number of facades. A wall shared with the building next door was never
+  // requested, and counting it here would report "3 of 4 directions loaded" —
+  // which reads as one having failed when nothing did.
+  const requested = plan.views.filter((v) =>
+    isRenderableDirection(v.slot, plan.confidence),
+  ).length;
+
   const notes = planNotes(plan, {
     loadedCount: loaded,
-    totalCount: plan.views.length,
+    totalCount: requested,
     imageryUnavailable: captures.phase === "failed",
   });
 
   const phaseBySlot: Partial<Record<ViewSlot, SlotPhase>> = {};
   for (const view of plan.views) {
-    phaseBySlot[view.slot] = captures.bySlot[view.slot]?.phase ?? "queued";
+    phaseBySlot[view.slot] = isRenderableDirection(view.slot, plan.confidence)
+      ? captures.bySlot[view.slot]?.phase ?? "queued"
+      : "no-window";
   }
 
   return (

@@ -1,0 +1,1074 @@
+{
+  "planId": "stage234-res-lod-projection",
+  "note": "Stages 2 (resolution), 3 (LOD + settling) and 4 (projection), all at dakota-low on the two most enclosed directions V1 and V4. Offset stays at the shipped 6 m because Stage 1 found no improvement below it and a hard regression at 1.5 m. Each case is one delta from the shipped configuration so the deltas are attributable.",
+  "generatedAt": "2026-08-07T02:12:21.518Z",
+  "chrome": "Chrome/151.0.7922.76",
+  "gpu": {
+    "webgl": true,
+    "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+    "vendor": "Google Inc. (Apple)",
+    "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M2, Unspecified Version)",
+    "maxTextureSize": 16384,
+    "maxRenderbufferSize": 16384
+  },
+  "cesiumDefaults": {
+    "cesiumVersion": "1.143.0",
+    "frustum": {
+      "fovDeg": 60,
+      "fovyDeg": 32.204,
+      "near": 0.1,
+      "far": 10000000000,
+      "aspectRatio": 2
+    },
+    "viewer": {
+      "useBrowserRecommendedResolution": true,
+      "resolutionScale": 1
+    },
+    "scene": {
+      "msaaSamples": 4,
+      "fxaaEnabled": false
+    },
+    "canvas": {
+      "width": 300,
+      "height": 150
+    },
+    "devicePixelRatio": 1
+  },
+  "billableSessions": 9,
+  "estimatedUsd": 0.054,
+  "results": [
+    {
+      "kind": "render",
+      "id": "res-1.5x",
+      "address": "1 W 72nd St, Manhattan",
+      "floor": 3,
+      "offsetM": 6,
+      "slots": [
+        "V1",
+        "V4"
+      ],
+      "render": {
+        "superSample": 1.5
+      },
+      "wallMs": 19781,
+      "net": {
+        "rootTileset": 1,
+        "rendererTiles": 2305,
+        "otherTileHost": 0,
+        "bytes": 129932794
+      },
+      "consoleErrors": [],
+      "result": {
+        "ok": true,
+        "address": "1 W 72nd St, Manhattan",
+        "floor": 3,
+        "offsetM": 6,
+        "render": {
+          "superSample": 1.5
+        },
+        "openedMs": 3185,
+        "totalMs": 14559,
+        "surface": null,
+        "perf": {
+          "usedJSHeapMB": 439.2
+        },
+        "devicePixelRatio": 1,
+        "views": [
+          {
+            "slot": "V1",
+            "headingDeg": 29.20261120138531,
+            "compass": "NNE",
+            "standoffM": 37.52411729059031,
+            "heightM": 3.011081768298464,
+            "pitchDeg": -3.2393939393939393
+          },
+          {
+            "slot": "V4",
+            "headingDeg": 299.20261120138525,
+            "compass": "WNW",
+            "standoffM": 34.494218492188814,
+            "heightM": 3.011081768298464,
+            "pitchDeg": -3.2393939393939393
+          }
+        ],
+        "frames": [
+          {
+            "slot": "V1",
+            "attribution": [
+              "Data LDEO-Columbia, NSF, NOAA",
+              "Data SIO, NOAA, U.S. Navy, NGA, GEBCO",
+              "Google",
+              "IBCAO",
+              "Landsat / Copernicus",
+              "U.S. Geological Survey"
+            ],
+            "settled": true,
+            "elapsedMs": 4051,
+            "attempt": 1,
+            "bytes": 1158886,
+            "file": "apps/27b/proof/bakeoff/out/frames/res-1.5x--V1.png"
+          },
+          {
+            "slot": "V4",
+            "attribution": [
+              "Data SIO, NOAA, U.S. Navy, NGA, GEBCO",
+              "Google",
+              "IBCAO",
+              "Landsat / Copernicus",
+              "Vexcel Imaging US, Inc."
+            ],
+            "settled": true,
+            "elapsedMs": 6747,
+            "attempt": 1,
+            "bytes": 1921174,
+            "file": "apps/27b/proof/bakeoff/out/frames/res-1.5x--V4.png"
+          }
+        ],
+        "events": [
+          {
+            "kind": "session-open"
+          },
+          {
+            "kind": "view-started"
+          },
+          {
+            "kind": "view-captured",
+            "slot": "V1",
+            "settled": true,
+            "elapsedMs": 4050.5
+          },
+          {
+            "kind": "view-started"
+          },
+          {
+            "kind": "view-captured",
+            "slot": "V4",
+            "settled": true,
+            "elapsedMs": 6746.899999976158
+          },
+          {
+            "kind": "session-closed"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "render",
+      "id": "res-2x",
+      "address": "1 W 72nd St, Manhattan",
+      "floor": 3,
+      "offsetM": 6,
+      "slots": [
+        "V1",
+        "V4"
+      ],
+      "render": {
+        "superSample": 2
+      },
+      "wallMs": 29108,
+      "net": {
+        "rootTileset": 1,
+        "rendererTiles": 2408,
+        "otherTileHost": 0,
+        "bytes": 4294302
+      },
+      "consoleErrors": [],
+      "result": {
+        "ok": true,
+        "address": "1 W 72nd St, Manhattan",
+        "floor": 3,
+        "offsetM": 6,
+        "render": {
+          "superSample": 2
+        },
+        "openedMs": 3079,
+        "totalMs": 26061,
+        "surface": null,
+        "perf": {
+          "usedJSHeapMB": 433.1
+        },
+        "devicePixelRatio": 1,
+        "views": [
+          {
+            "slot": "V1",
+            "headingDeg": 29.20261120138531,
+            "compass": "NNE",
+            "standoffM": 37.52411729059031,
+            "heightM": 3.011081768298464,
+            "pitchDeg": -3.2393939393939393
+          },
+          {
+            "slot": "V4",
+            "headingDeg": 299.20261120138525,
+            "compass": "WNW",
+            "standoffM": 34.494218492188814,
+            "heightM": 3.011081768298464,
+            "pitchDeg": -3.2393939393939393
+          }
+        ],
+        "frames": [
+          {
+            "slot": "V1",
+            "attribution": [
+              "Data LDEO-Columbia, NSF, NOAA",
+              "Data SIO, NOAA, U.S. Navy, NGA, GEBCO",
+              "Google",
+              "IBCAO",
+              "Landsat / Copernicus",
+              "U.S. Geological Survey"
+            ],
+            "settled": false,
+            "elapsedMs": 17121,
+            "attempt": 1,
+            "bytes": 1792794,
+            "file": "apps/27b/proof/bakeoff/out/frames/res-2x--V1.png"
+          },
+          {
+            "slot": "V4",
+            "attribution": [
+              "Data SIO, NOAA, U.S. Navy, NGA, GEBCO",
+              "Google",
+              "IBCAO",
+              "Landsat / Copernicus",
+              "Vexcel Imaging US, Inc."
+            ],
+            "settled": true,
+            "elapsedMs": 5241,
+            "attempt": 1,
+            "bytes": 3027570,
+            "file": "apps/27b/proof/bakeoff/out/frames/res-2x--V4.png"
+          }
+        ],
+        "events": [
+          {
+            "kind": "session-open"
+          },
+          {
+            "kind": "view-started"
+          },
+          {
+            "kind": "view-captured",
+            "slot": "V1",
+            "settled": false,
+            "elapsedMs": 17121
+          },
+          {
+            "kind": "view-started"
+          },
+          {
+            "kind": "view-captured",
+            "slot": "V4",
+            "settled": true,
+            "elapsedMs": 5241.400000035763
+          },
+          {
+            "kind": "session-closed"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "render",
+      "id": "sse-8",
+      "address": "1 W 72nd St, Manhattan",
+      "floor": 3,
+      "offsetM": 6,
+      "slots": [
+        "V1",
+        "V4"
+      ],
+      "render": {
+        "maximumScreenSpaceError": 8
+      },
+      "wallMs": 17504,
+      "net": {
+        "rootTileset": 1,
+        "rendererTiles": 2799,
+        "otherTileHost": 0,
+        "bytes": 30863911
+      },
+      "consoleErrors": [],
+      "result": {
+        "ok": true,
+        "address": "1 W 72nd St, Manhattan",
+        "floor": 3,
+        "offsetM": 6,
+        "render": {
+          "maximumScreenSpaceError": 8
+        },
+        "openedMs": 3104,
+        "totalMs": 14125,
+        "surface": null,
+        "perf": {
+          "usedJSHeapMB": 523.8
+        },
+        "devicePixelRatio": 1,
+        "views": [
+          {
+            "slot": "V1",
+            "headingDeg": 29.20261120138531,
+            "compass": "NNE",
+            "standoffM": 37.52411729059031,
+            "heightM": 3.011081768298464,
+            "pitchDeg": -3.2393939393939393
+          },
+          {
+            "slot": "V4",
+            "headingDeg": 299.20261120138525,
+            "compass": "WNW",
+            "standoffM": 34.494218492188814,
+            "heightM": 3.011081768298464,
+            "pitchDeg": -3.2393939393939393
+          }
+        ],
+        "frames": [
+          {
+            "slot": "V1",
+            "attribution": [
+              "Data LDEO-Columbia, NSF, NOAA",
+              "Data SIO, NOAA, U.S. Navy, NGA, GEBCO",
+              "Google",
+              "IBCAO",
+              "Landsat / Copernicus",
+              "U.S. Geological Survey"
+            ],
+            "settled": true,
+            "elapsedMs": 3531,
+            "attempt": 1,
+            "bytes": 627490,
+            "file": "apps/27b/proof/bakeoff/out/frames/sse-8--V1.png"
+          },
+          {
+            "slot": "V4",
+            "attribution": [
+              "Data SIO, NOAA, U.S. Navy, NGA, GEBCO",
+              "Google",
+              "IBCAO",
+              "Landsat / Copernicus",
+              "Vexcel Imaging US, Inc."
+            ],
+            "settled": true,
+            "elapsedMs": 6835,
+            "attempt": 1,
+            "bytes": 1014342,
+            "file": "apps/27b/proof/bakeoff/out/frames/sse-8--V4.png"
+          }
+        ],
+        "events": [
+          {
+            "kind": "session-open"
+          },
+          {
+            "kind": "view-started"
+          },
+          {
+            "kind": "view-captured",
+            "slot": "V1",
+            "settled": true,
+            "elapsedMs": 3531.400000035763
+          },
+          {
+            "kind": "view-started"
+          },
+          {
+            "kind": "view-captured",
+            "slot": "V4",
+            "settled": true,
+            "elapsedMs": 6835.400000035763
+          },
+          {
+            "kind": "session-closed"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "render",
+      "id": "sse-6",
+      "address": "1 W 72nd St, Manhattan",
+      "floor": 3,
+      "offsetM": 6,
+      "slots": [
+        "V1",
+        "V4"
+      ],
+      "render": {
+        "maximumScreenSpaceError": 6
+      },
+      "wallMs": 22254,
+      "net": {
+        "rootTileset": 1,
+        "rendererTiles": 3937,
+        "otherTileHost": 0,
+        "bytes": 60351445
+      },
+      "consoleErrors": [],
+      "result": {
+        "ok": true,
+        "address": "1 W 72nd St, Manhattan",
+        "floor": 3,
+        "offsetM": 6,
+        "render": {
+          "maximumScreenSpaceError": 6
+        },
+        "openedMs": 3168,
+        "totalMs": 18965,
+        "surface": null,
+        "perf": {
+          "usedJSHeapMB": 659.1
+        },
+        "devicePixelRatio": 1,
+        "views": [
+          {
+            "slot": "V1",
+            "headingDeg": 29.20261120138531,
+            "compass": "NNE",
+            "standoffM": 37.52411729059031,
+            "heightM": 3.011081768298464,
+            "pitchDeg": -3.2393939393939393
+          },
+          {
+            "slot": "V4",
+            "headingDeg": 299.20261120138525,
+            "compass": "WNW",
+            "standoffM": 34.494218492188814,
+            "heightM": 3.011081768298464,
+            "pitchDeg": -3.2393939393939393
+          }
+        ],
+        "frames": [
+          {
+            "slot": "V1",
+            "attribution": [
+              "Data LDEO-Columbia, NSF, NOAA",
+              "Data SIO, NOAA, U.S. Navy, NGA, GEBCO",
+              "Google",
+              "IBCAO",
+              "Landsat / Copernicus",
+              "U.S. Geological Survey"
+            ],
+            "settled": true,
+            "elapsedMs": 5288,
+            "attempt": 1,
+            "bytes": 627490,
+            "file": "apps/27b/proof/bakeoff/out/frames/sse-6--V1.png"
+          },
+          {
+            "slot": "V4",
+            "attribution": [
+              "Data SIO, NOAA, U.S. Navy, NGA, GEBCO",
+              "Google",
+              "IBCAO",
+              "Landsat / Copernicus",
+              "Vexcel Imaging US, Inc."
+            ],
+            "settled": true,
+            "elapsedMs": 9659,
+            "attempt": 1,
+            "bytes": 1014342,
+            "file": "apps/27b/proof/bakeoff/out/frames/sse-6--V4.png"
+          }
+        ],
+        "events": [
+          {
+            "kind": "session-open"
+          },
+          {
+            "kind": "view-started"
+          },
+          {
+            "kind": "view-captured",
+            "slot": "V1",
+            "settled": true,
+            "elapsedMs": 5288.199999988079
+          },
+          {
+            "kind": "view-started"
+          },
+          {
+            "kind": "view-captured",
+            "slot": "V4",
+            "settled": true,
+            "elapsedMs": 9659.299999952316
+          },
+          {
+            "kind": "session-closed"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "render",
+      "id": "settle-28",
+      "address": "1 W 72nd St, Manhattan",
+      "floor": 3,
+      "offsetM": 6,
+      "slots": [
+        "V1",
+        "V4"
+      ],
+      "render": {
+        "settleTimeoutMs": 28000
+      },
+      "wallMs": 36738,
+      "net": {
+        "rootTileset": 1,
+        "rendererTiles": 2186,
+        "otherTileHost": 0,
+        "bytes": 4015
+      },
+      "consoleErrors": [],
+      "result": {
+        "ok": true,
+        "address": "1 W 72nd St, Manhattan",
+        "floor": 3,
+        "offsetM": 6,
+        "render": {
+          "settleTimeoutMs": 28000
+        },
+        "openedMs": 3091,
+        "totalMs": 36447,
+        "surface": null,
+        "perf": {
+          "usedJSHeapMB": 539.6
+        },
+        "devicePixelRatio": 1,
+        "views": [
+          {
+            "slot": "V1",
+            "headingDeg": 29.20261120138531,
+            "compass": "NNE",
+            "standoffM": 37.52411729059031,
+            "heightM": 3.011081768298464,
+            "pitchDeg": -3.2393939393939393
+          },
+          {
+            "slot": "V4",
+            "headingDeg": 299.20261120138525,
+            "compass": "WNW",
+            "standoffM": 34.494218492188814,
+            "heightM": 3.011081768298464,
+            "pitchDeg": -3.2393939393939393
+          }
+        ],
+        "frames": [
+          {
+            "slot": "V1",
+            "attribution": [
+              "Data LDEO-Columbia, NSF, NOAA",
+              "Data SIO, NOAA, U.S. Navy, NGA, GEBCO",
+              "Google",
+              "IBCAO",
+              "Landsat / Copernicus",
+              "U.S. Geological Survey"
+            ],
+            "settled": false,
+            "elapsedMs": 29037,
+            "attempt": 1,
+            "bytes": 627490,
+            "file": "apps/27b/proof/bakeoff/out/frames/settle-28--V1.png"
+          },
+          {
+            "slot": "V4",
+            "attribution": [
+              "Data SIO, NOAA, U.S. Navy, NGA, GEBCO",
+              "Google",
+              "IBCAO",
+              "Landsat / Copernicus",
+              "Vexcel Imaging US, Inc."
+            ],
+            "settled": true,
+            "elapsedMs": 3789,
+            "attempt": 1,
+            "bytes": 1014342,
+            "file": "apps/27b/proof/bakeoff/out/frames/settle-28--V4.png"
+          }
+        ],
+        "events": [
+          {
+            "kind": "session-open"
+          },
+          {
+            "kind": "view-started"
+          },
+          {
+            "kind": "view-captured",
+            "slot": "V1",
+            "settled": false,
+            "elapsedMs": 29037.099999964237
+          },
+          {
+            "kind": "view-started"
+          },
+          {
+            "kind": "view-captured",
+            "slot": "V4",
+            "settled": true,
+            "elapsedMs": 3788.800000011921
+          },
+          {
+            "kind": "session-closed"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "render",
+      "id": "stationary",
+      "address": "1 W 72nd St, Manhattan",
+      "floor": 3,
+      "offsetM": 6,
+      "slots": [
+        "V1",
+        "V4"
+      ],
+      "render": {
+        "stationaryLoading": true
+      },
+      "wallMs": 27680,
+      "net": {
+        "rootTileset": 1,
+        "rendererTiles": 2186,
+        "otherTileHost": 0,
+        "bytes": 4015
+      },
+      "consoleErrors": [],
+      "result": {
+        "ok": true,
+        "address": "1 W 72nd St, Manhattan",
+        "floor": 3,
+        "offsetM": 6,
+        "render": {
+          "stationaryLoading": true
+        },
+        "openedMs": 3103,
+        "totalMs": 24842,
+        "surface": null,
+        "perf": {
+          "usedJSHeapMB": 341.4
+        },
+        "devicePixelRatio": 1,
+        "views": [
+          {
+            "slot": "V1",
+            "headingDeg": 29.20261120138531,
+            "compass": "NNE",
+            "standoffM": 37.52411729059031,
+            "heightM": 3.011081768298464,
+            "pitchDeg": -3.2393939393939393
+          },
+          {
+            "slot": "V4",
+            "headingDeg": 299.20261120138525,
+            "compass": "WNW",
+            "standoffM": 34.494218492188814,
+            "heightM": 3.011081768298464,
+            "pitchDeg": -3.2393939393939393
+          }
+        ],
+        "frames": [
+          {
+            "slot": "V1",
+            "attribution": [
+              "Data LDEO-Columbia, NSF, NOAA",
+              "Data SIO, NOAA, U.S. Navy, NGA, GEBCO",
+              "Google",
+              "IBCAO",
+              "Landsat / Copernicus",
+              "U.S. Geological Survey"
+            ],
+            "settled": false,
+            "elapsedMs": 17042,
+            "attempt": 1,
+            "bytes": 627490,
+            "file": "apps/27b/proof/bakeoff/out/frames/stationary--V1.png"
+          },
+          {
+            "slot": "V4",
+            "attribution": [
+              "Data SIO, NOAA, U.S. Navy, NGA, GEBCO",
+              "Google",
+              "IBCAO",
+              "Landsat / Copernicus",
+              "Vexcel Imaging US, Inc."
+            ],
+            "settled": true,
+            "elapsedMs": 4166,
+            "attempt": 1,
+            "bytes": 1014342,
+            "file": "apps/27b/proof/bakeoff/out/frames/stationary--V4.png"
+          }
+        ],
+        "events": [
+          {
+            "kind": "session-open"
+          },
+          {
+            "kind": "view-started"
+          },
+          {
+            "kind": "view-captured",
+            "slot": "V1",
+            "settled": false,
+            "elapsedMs": 17042.30000001192
+          },
+          {
+            "kind": "view-started"
+          },
+          {
+            "kind": "view-captured",
+            "slot": "V4",
+            "settled": true,
+            "elapsedMs": 4166.300000011921
+          },
+          {
+            "kind": "session-closed"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "render",
+      "id": "fov-75",
+      "address": "1 W 72nd St, Manhattan",
+      "floor": 3,
+      "offsetM": 6,
+      "slots": [
+        "V1",
+        "V4"
+      ],
+      "render": {
+        "fovDeg": 75
+      },
+      "wallMs": 25018,
+      "net": {
+        "rootTileset": 1,
+        "rendererTiles": 1717,
+        "otherTileHost": 0,
+        "bytes": 8197334
+      },
+      "consoleErrors": [],
+      "result": {
+        "ok": true,
+        "address": "1 W 72nd St, Manhattan",
+        "floor": 3,
+        "offsetM": 6,
+        "render": {
+          "fovDeg": 75
+        },
+        "openedMs": 3054,
+        "totalMs": 24797,
+        "surface": null,
+        "perf": {
+          "usedJSHeapMB": 387.7
+        },
+        "devicePixelRatio": 1,
+        "views": [
+          {
+            "slot": "V1",
+            "headingDeg": 29.20261120138531,
+            "compass": "NNE",
+            "standoffM": 37.52411729059031,
+            "heightM": 3.011081768298464,
+            "pitchDeg": -3.2393939393939393
+          },
+          {
+            "slot": "V4",
+            "headingDeg": 299.20261120138525,
+            "compass": "WNW",
+            "standoffM": 34.494218492188814,
+            "heightM": 3.011081768298464,
+            "pitchDeg": -3.2393939393939393
+          }
+        ],
+        "frames": [
+          {
+            "slot": "V1",
+            "attribution": [
+              "Data SIO, NOAA, U.S. Navy, NGA, GEBCO",
+              "Google",
+              "IBCAO",
+              "Landsat / Copernicus",
+              "Vexcel Imaging US, Inc."
+            ],
+            "settled": false,
+            "elapsedMs": 17049,
+            "attempt": 1,
+            "bytes": 651498,
+            "file": "apps/27b/proof/bakeoff/out/frames/fov-75--V1.png"
+          },
+          {
+            "slot": "V4",
+            "attribution": [
+              "Data SIO, NOAA, U.S. Navy, NGA, GEBCO",
+              "Google",
+              "IBCAO",
+              "Landsat / Copernicus",
+              "Vexcel Imaging US, Inc."
+            ],
+            "settled": true,
+            "elapsedMs": 4197,
+            "attempt": 1,
+            "bytes": 1058010,
+            "file": "apps/27b/proof/bakeoff/out/frames/fov-75--V4.png"
+          }
+        ],
+        "events": [
+          {
+            "kind": "session-open"
+          },
+          {
+            "kind": "view-started"
+          },
+          {
+            "kind": "view-captured",
+            "slot": "V1",
+            "settled": false,
+            "elapsedMs": 17049
+          },
+          {
+            "kind": "view-started"
+          },
+          {
+            "kind": "view-captured",
+            "slot": "V4",
+            "settled": true,
+            "elapsedMs": 4197
+          },
+          {
+            "kind": "session-closed"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "render",
+      "id": "fov-90",
+      "address": "1 W 72nd St, Manhattan",
+      "floor": 3,
+      "offsetM": 6,
+      "slots": [
+        "V1",
+        "V4"
+      ],
+      "render": {
+        "fovDeg": 90
+      },
+      "wallMs": 27877,
+      "net": {
+        "rootTileset": 1,
+        "rendererTiles": 1349,
+        "otherTileHost": 0,
+        "bytes": 5684217
+      },
+      "consoleErrors": [],
+      "result": {
+        "ok": true,
+        "address": "1 W 72nd St, Manhattan",
+        "floor": 3,
+        "offsetM": 6,
+        "render": {
+          "fovDeg": 90
+        },
+        "openedMs": 3072,
+        "totalMs": 24893,
+        "surface": null,
+        "perf": {
+          "usedJSHeapMB": 237.2
+        },
+        "devicePixelRatio": 1,
+        "views": [
+          {
+            "slot": "V1",
+            "headingDeg": 29.20261120138531,
+            "compass": "NNE",
+            "standoffM": 37.52411729059031,
+            "heightM": 3.011081768298464,
+            "pitchDeg": -3.2393939393939393
+          },
+          {
+            "slot": "V4",
+            "headingDeg": 299.20261120138525,
+            "compass": "WNW",
+            "standoffM": 34.494218492188814,
+            "heightM": 3.011081768298464,
+            "pitchDeg": -3.2393939393939393
+          }
+        ],
+        "frames": [
+          {
+            "slot": "V1",
+            "attribution": [
+              "Data SIO, NOAA, U.S. Navy, NGA, GEBCO",
+              "Google",
+              "IBCAO",
+              "Landsat / Copernicus",
+              "Vexcel Imaging US, Inc."
+            ],
+            "settled": false,
+            "elapsedMs": 17186,
+            "attempt": 1,
+            "bytes": 741366,
+            "file": "apps/27b/proof/bakeoff/out/frames/fov-90--V1.png"
+          },
+          {
+            "slot": "V4",
+            "attribution": [
+              "Data SIO, NOAA, U.S. Navy, NGA, GEBCO",
+              "Google",
+              "IBCAO",
+              "Landsat / Copernicus",
+              "Vexcel Imaging US, Inc."
+            ],
+            "settled": true,
+            "elapsedMs": 4229,
+            "attempt": 1,
+            "bytes": 1084950,
+            "file": "apps/27b/proof/bakeoff/out/frames/fov-90--V4.png"
+          }
+        ],
+        "events": [
+          {
+            "kind": "session-open"
+          },
+          {
+            "kind": "view-started"
+          },
+          {
+            "kind": "view-captured",
+            "slot": "V1",
+            "settled": false,
+            "elapsedMs": 17185.80000001192
+          },
+          {
+            "kind": "view-started"
+          },
+          {
+            "kind": "view-captured",
+            "slot": "V4",
+            "settled": true,
+            "elapsedMs": 4228.599999964237
+          },
+          {
+            "kind": "session-closed"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "render",
+      "id": "near-1.0",
+      "address": "1 W 72nd St, Manhattan",
+      "floor": 3,
+      "offsetM": 6,
+      "slots": [
+        "V1",
+        "V4"
+      ],
+      "render": {
+        "nearPlaneM": 1
+      },
+      "wallMs": 28587,
+      "net": {
+        "rootTileset": 1,
+        "rendererTiles": 2186,
+        "otherTileHost": 0,
+        "bytes": 4015
+      },
+      "consoleErrors": [],
+      "result": {
+        "ok": true,
+        "address": "1 W 72nd St, Manhattan",
+        "floor": 3,
+        "offsetM": 6,
+        "render": {
+          "nearPlaneM": 1
+        },
+        "openedMs": 3061,
+        "totalMs": 25227,
+        "surface": null,
+        "perf": {
+          "usedJSHeapMB": 369
+        },
+        "devicePixelRatio": 1,
+        "views": [
+          {
+            "slot": "V1",
+            "headingDeg": 29.20261120138531,
+            "compass": "NNE",
+            "standoffM": 37.52411729059031,
+            "heightM": 3.011081768298464,
+            "pitchDeg": -3.2393939393939393
+          },
+          {
+            "slot": "V4",
+            "headingDeg": 299.20261120138525,
+            "compass": "WNW",
+            "standoffM": 34.494218492188814,
+            "heightM": 3.011081768298464,
+            "pitchDeg": -3.2393939393939393
+          }
+        ],
+        "frames": [
+          {
+            "slot": "V1",
+            "attribution": [
+              "Data LDEO-Columbia, NSF, NOAA",
+              "Data SIO, NOAA, U.S. Navy, NGA, GEBCO",
+              "Google",
+              "IBCAO",
+              "Landsat / Copernicus",
+              "U.S. Geological Survey"
+            ],
+            "settled": false,
+            "elapsedMs": 17044,
+            "attempt": 1,
+            "bytes": 627538,
+            "file": "apps/27b/proof/bakeoff/out/frames/near-1.0--V1.png"
+          },
+          {
+            "slot": "V4",
+            "attribution": [
+              "Data SIO, NOAA, U.S. Navy, NGA, GEBCO",
+              "Google",
+              "IBCAO",
+              "Landsat / Copernicus",
+              "Vexcel Imaging US, Inc."
+            ],
+            "settled": true,
+            "elapsedMs": 4554,
+            "attempt": 1,
+            "bytes": 1013882,
+            "file": "apps/27b/proof/bakeoff/out/frames/near-1.0--V4.png"
+          }
+        ],
+        "events": [
+          {
+            "kind": "session-open"
+          },
+          {
+            "kind": "view-started"
+          },
+          {
+            "kind": "view-captured",
+            "slot": "V1",
+            "settled": false,
+            "elapsedMs": 17044.099999964237
+          },
+          {
+            "kind": "view-started"
+          },
+          {
+            "kind": "view-captured",
+            "slot": "V4",
+            "settled": true,
+            "elapsedMs": 4554.199999988079
+          },
+          {
+            "kind": "session-closed"
+          }
+        ]
+      }
+    }
+  ]
+}
