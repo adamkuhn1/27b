@@ -153,6 +153,20 @@ export interface DirectionConfidence {
    * line, in metres. `null` when nothing inside the search radius does.
    */
   firstBlockingM: number | null;
+  /**
+   * Metres of a neighbouring building standing above the eye **at the camera's
+   * own position** — i.e. the camera is inside that building's footprint and
+   * below its roof. `null` in the ordinary case.
+   *
+   * This is the party-wall condition, and in NYC it is common rather than
+   * exotic: row and infill buildings share lot lines, so one to three of a
+   * building's four "facades" can be solid wall buried in the building next
+   * door. There is no window there, so there is no view — and a camera placed
+   * six metres beyond such a facade is not outdoors, it is inside the
+   * neighbour's mesh. The renderer skips these directions rather than
+   * capturing the inside of a building and presenting it as a view.
+   */
+  insideNeighborByM: number | null;
 }
 
 /** The per-plan result of the confidence pass. */

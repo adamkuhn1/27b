@@ -11,8 +11,10 @@ import {
   bearingDeltaDeg,
   classifyBand,
   CONE_HALF_ANGLE_DEG,
+  isRenderableDirection,
   SEARCH_RADIUS_M,
 } from "./confidence";
+import { RENDER_TUNING } from "../viewer/renderTuning";
 import { loadCase, type RawFixture } from "./__fixtures__/loader";
 import type { CameraView, NeighborBuilding } from "./types";
 import esbRaw from "./__fixtures__/esb.json";
@@ -346,5 +348,124 @@ describe("missing neighbour data", () => {
     });
     expect(report.neighborDataIncomplete).toBe(true);
     expect(report.neighborsConsidered).toBe(0);
+  });
+});
+
+describe("the view cone tracks the renderer's real field of view", () => {
+  it("is exactly half the horizontal FOV the renderer ships", () => {
+    // Not a tautology worth skipping: these two numbers live in different
+    // modules and used to be independent, with the cone hard-coded at 30 while
+    // the frustum defaulted to 60. The moment the renderer's FOV moved, a cone
+    // that did not follow would let a direction be described as open while the
+    // frame visibly contained a wall.
+    expect(CONE_HALF_ANGLE_DEG).toBe(RENDER_TUNING.fovDeg / 2);
+  });
+});
+
+describe("a facade shared with the building next door", () => {
+  // The camera sits at the local origin in every case below.
+  const around = (halfWidth: number, halfDepth: number) =>
+    boxAt(CAMERA, 0, 0, halfWidth, halfDepth);
+
+  it("reports how far below the neighbour's roof the camera is embedded", () => {
+    // Eye at 20 m NAVD88, a neighbour whose roof is at 60 m enclosing the
+    // camera's own position: the camera is 40 m inside solid building.
+    const c = measure([
+      { bin: "ABUT", ring: around(15, 15), roofHeightM: 60, groundElevationNavd88M: 0 },
+    ]);
+    expect(c.insideNeighborByM).toBeCloseTo(40, 6);
+    expect(isRenderableDirection("V1", { bySlot: { V1: c }, neighborDataIncomplete: false, neighborsConsidered: 1, searchRadiusM: SEARCH_RADIUS_M })).toBe(false);
+  });
+
+  it("does NOT fire when the camera is over a lower neighbour's roof", () => {
+    // Same footprint, but the building is only 8 m tall and the eye is at 20 m.
+    // Looking out across a shorter neighbour's roof is an ordinary NYC vantage,
+    // not a fault, and it must keep rendering.
+    const c = measure([
+      { bin: "LOWER", ring: around(15, 15), roofHeightM: 8, groundElevationNavd88M: 0 },
+    ]);
+    expect(c.insideNeighborByM).toBeNull();
+  });
+
+  it("tolerates a roofline within the source data's own margin of error", () => {
+    // Eye 20 m, neighbour roof 21 m: one metre is inside the slop of a single
+    // HEIGHTROOF value for a building with parapets, so this must NOT be
+    // called a party wall. At 21 m the depth is 1 m, below ABUTTING_MIN_DEPTH_M.
+    const shallow = measure([
+      { bin: "EDGE", ring: around(15, 15), roofHeightM: 21, groundElevationNavd88M: 0 },
+    ]);
+    expect(shallow.insideNeighborByM).toBeNull();
+
+    // Three metres under is not slop.
+    const real = measure([
+      { bin: "EDGE", ring: around(15, 15), roofHeightM: 23, groundElevationNavd88M: 0 },
+    ]);
+    expect(real.insideNeighborByM).toBeCloseTo(3, 6);
+  });
+
+  it("ignores a tall neighbour that does not contain the camera", () => {
+    const c = measure([
+      { bin: "ACROSS", ring: boxAt(CAMERA, 0, 40, 15, 15), roofHeightM: 90, groundElevationNavd88M: 0 },
+    ]);
+    expect(c.insideNeighborByM).toBeNull();
+    // It is still an obstruction — this rule is about placement, not enclosure.
+    expect(c.band).toBe("enclosed");
+  });
+
+  it("reports the deepest containing neighbour when footprints overlap", () => {
+    const c = measure([
+      { bin: "A", ring: around(20, 20), roofHeightM: 30, groundElevationNavd88M: 0 },
+      { bin: "B", ring: around(12, 12), roofHeightM: 70, groundElevationNavd88M: 0 },
+    ]);
+    expect(c.insideNeighborByM).toBeCloseTo(50, 6);
+  });
+
+  it("never fires for the subject building itself", () => {
+    // The subject's own footprint contains nothing here, but the filter that
+    // drops it runs before this measurement and must keep doing so — otherwise
+    // every camera would be "inside" the building it belongs to whenever the
+    // 6 m offset lands within its own polygon.
+    const c = measure([
+      { bin: "SUBJECT", ring: around(30, 30), roofHeightM: 100, groundElevationNavd88M: 0 },
+    ]);
+    expect(c.insideNeighborByM).toBeNull();
+  });
+});
+
+describe("party walls in the real fixtures", () => {
+  const inside = (raw: RawFixture, floor: number) => {
+    const { views, report } = assess(raw, floor);
+    return views
+      .filter((v) => report.bySlot[v.slot]!.insideNeighborByM != null)
+      .map((v) => v.slot);
+  };
+
+  it("finds none at the Empire State Building, the Flatiron or the Dakota", () => {
+    // Three free-standing buildings. A rule that fired here would be wrong, and
+    // would silently remove a direction that really does have a window.
+    for (const floor of [3, 6, 8, 10, 18]) {
+      expect(inside(ESB, floor)).toEqual([]);
+      expect(inside(FLATIRON, floor)).toEqual([]);
+      expect(inside(DAKOTA, floor)).toEqual([]);
+    }
+  });
+
+  it("finds the abutting wall at 425 E 79th St, and only below the neighbour's roof", () => {
+    // This is the building whose four frames the release-candidate report
+    // described as "a melted grey landscape" and attributed to mesh quality.
+    // One of its cameras is inside the building next door: at floor 10 the eye
+    // sits 7.5 m below that neighbour's roof. The imagery was never the problem
+    // in that direction — the camera placement was.
+    expect(inside(E79, 10)).toEqual(["V2"]);
+
+    const { views, report } = assess(E79, 10);
+    const v2 = report.bySlot[views.find((v) => v.slot === "V2")!.slot]!;
+    expect(v2.insideNeighborByM).toBeGreaterThan(5);
+    expect(v2.insideNeighborByM).toBeLessThan(10);
+
+    // Depth shrinks as the camera climbs, and the direction becomes renderable
+    // again once the eye clears that neighbour's roof.
+    expect(inside(E79, 3)).toContain("V2");
+    expect(inside(E79, 18)).toEqual([]);
   });
 });
