@@ -342,4 +342,18 @@ export interface RenderSession {
 }
 
 /** Per-slot UI phase. */
-export type SlotPhase = "queued" | "capturing" | "ready" | "failed";
+/**
+ * Per-direction UI phase.
+ *
+ * `no-window` is not a stage of loading and never becomes one: the facade is
+ * shared with the building next door, so nothing was requested for it and
+ * nothing will arrive. It is separate from `failed` because nothing failed, and
+ * separate from `queued` because a queued direction is one the app is still
+ * working on. See DirectionConfidence.insideNeighborByM.
+ */
+export type SlotPhase =
+  | "queued"
+  | "capturing"
+  | "ready"
+  | "failed"
+  | "no-window";

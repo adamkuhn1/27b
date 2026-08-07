@@ -25,7 +25,7 @@ import { tmpdir } from "node:os";
 import { attachToPage, sleep } from "../../../portfolio/qa/cdp.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const OUT = join(HERE, "out");
+const OUT = join(HERE, "results");
 const BASE_URL = process.env.BAKEOFF_URL ?? "http://localhost:5174/";
 const USD_PER_ROOT_REQUEST = 0.006;
 
