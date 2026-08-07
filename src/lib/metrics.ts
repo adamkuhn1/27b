@@ -26,10 +26,12 @@
 // stubs in metrics.test.ts, which proves the arithmetic and nothing about the
 // wall-clock values.
 //
-// Deliberately dependency-free and honest: it counts real events the pipeline
-// emits, computes derived rates on read, and treats every number as a draft
-// estimate (the plan's instruction), surfaced in a small dev panel. A subscribe
-// hook lets the UI re-render when metrics change without a state library.
+// NOT SURFACED IN THE UI. Nothing reads a snapshot at runtime; the counters are
+// recorded by the pipeline and read in tests and from a console. This module
+// used to carry a subscribe hook and a referentially-stable snapshot cache,
+// both justified in a comment by "a small dev panel" that was never built. They
+// are gone. Keep this module as narrow as its actual callers: if a panel is
+// ever built, an observable is four lines to add back.
 
 export interface MetricsSnapshot {
   addressesProcessed: number;
@@ -99,48 +101,37 @@ function nowMs(): number {
 }
 
 /**
- * A tiny observable metrics store. One instance is shared app-wide (see the
- * default export), but the class is exported so tests get a clean instance.
+ * The metrics store. One instance is shared app-wide (see the default export),
+ * but the class is exported so tests get a clean instance.
  */
 export class Metrics {
   private state = emptyState();
-  private listeners = new Set<() => void>();
-  // Cached snapshot: same reference is returned until emit() invalidates it.
-  // Required by useSyncExternalStore — getSnapshot must be referentially stable
-  // between mutations or React triggers an infinite update loop.
-  private _cache: MetricsSnapshot | null = null;
 
   /** Record that a new address request started. */
   recordAddress(): void {
     this.state.addressesProcessed += 1;
-    this.emit();
   }
 
   recordCacheHit(): void {
     this.state.cacheHits += 1;
-    this.emit();
   }
 
   recordCacheMiss(): void {
     this.state.cacheMisses += 1;
-    this.emit();
   }
 
   recordPlanProduced(): void {
     this.state.plansProduced += 1;
-    this.emit();
   }
 
   recordUnavailable(): void {
     this.state.unavailable += 1;
-    this.emit();
   }
 
   /** Record one end-to-end pipeline latency sample (ms). */
   recordLatency(ms: number): void {
     if (Number.isFinite(ms) && ms >= 0) {
       this.state.latencySamples.push(ms);
-      this.emit();
     }
   }
 
@@ -151,7 +142,6 @@ export class Metrics {
   recordSessionOpened(): void {
     this.state.sessionsOpened += 1;
     this.state.sessionOpenedAt = nowMs();
-    this.emit();
   }
 
   /** Record one per-direction capture latency (ms), as reported by the session. */
@@ -163,17 +153,15 @@ export class Metrics {
       this.state.lastTimeToFirstFrameMs = nowMs() - this.state.sessionOpenedAt;
       this.state.sessionOpenedAt = null;
     }
-    this.emit();
   }
 
   snapshot(): MetricsSnapshot {
-    if (this._cache) return this._cache;
     const { cacheHits, cacheMisses, latencySamples, captureLatencySamples } =
       this.state;
     const lookups = cacheHits + cacheMisses;
     const mean = (xs: number[]) =>
       xs.length === 0 ? 0 : xs.reduce((a, b) => a + b, 0) / xs.length;
-    this._cache = {
+    return {
       addressesProcessed: this.state.addressesProcessed,
       cacheHits,
       cacheMisses,
@@ -187,23 +175,10 @@ export class Metrics {
       avgCaptureLatencyMs: mean(captureLatencySamples),
       lastTimeToFirstFrameMs: this.state.lastTimeToFirstFrameMs,
     };
-    return this._cache;
-  }
-
-  /** Subscribe to changes; returns an unsubscribe fn (React-friendly). */
-  subscribe(listener: () => void): () => void {
-    this.listeners.add(listener);
-    return () => this.listeners.delete(listener);
   }
 
   reset(): void {
     this.state = emptyState();
-    this.emit();
-  }
-
-  private emit(): void {
-    this._cache = null; // invalidate so next snapshot() recomputes
-    this.listeners.forEach((l) => l());
   }
 }
 

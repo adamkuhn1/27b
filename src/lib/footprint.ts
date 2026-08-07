@@ -11,32 +11,28 @@
 // dataset metadata says "Based on the North American Vertical Datum of 1988").
 // They are NOT WGS84 ellipsoidal heights; lib/geoid.ts does that conversion.
 //
-// Note: the previous dataset `nqwf-w8eh` was retired by NYC; `5zhs-2jue` is
-// the current Building Footprints dataset with renamed fields.
+// If a record is missing or lacks usable height, we surface "no-footprint" ->
+// the honest unavailable state, never a guessed building.
 //
-// Height fields in the published dataset are in US survey feet; we convert to
-// meters so all downstream math is metric. If a record is missing or lacks
-// usable height, we surface "no-footprint" -> the honest unavailable state,
-// never a guessed building.
-//
-// Metadata: https://github.com/CityOfNewYork/nyc-geo-metadata/blob/main/Metadata/Metadata_BuildingFootprints.md
+// The endpoint, the foot->metre factor and the ring extractor are shared with
+// `neighbors.ts`, which reads the same dataset; see `lib/soda.ts`.
 
 import type { BuildingFootprint } from "./types";
 import { polygonCentroid } from "./geometry";
-
-const SODA_URL = "https://data.cityofnewyork.us/resource/5zhs-2jue.json";
-
-const FEET_TO_METERS = 0.3048;
+import {
+  FEET_TO_METERS,
+  SODA_URL,
+  firstRing,
+  num,
+  type SodaGeometry,
+} from "./soda";
 
 /** Raw SODA record shape (only the fields we read). */
 interface SodaFootprint {
   bin?: string;
   height_roof?: string;
   ground_elevation?: string;
-  the_geom?: {
-    type: string;
-    coordinates: number[][][] | number[][][][];
-  };
+  the_geom?: SodaGeometry;
 }
 
 export class FootprintError extends Error {
@@ -47,33 +43,6 @@ export class FootprintError extends Error {
     super(message);
     this.name = "FootprintError";
   }
-}
-
-/**
- * Extract the outer ring ([lng,lat] pairs) from a SODA geometry, handling both
- * Polygon and MultiPolygon. Returns null if no usable ring exists.
- */
-function firstRing(
-  geom: SodaFootprint["the_geom"],
-): Array<[number, number]> | null {
-  if (!geom || !Array.isArray(geom.coordinates)) return null;
-  // Polygon: coordinates[0] is the outer ring.
-  // MultiPolygon: coordinates[0][0] is the first polygon's outer ring.
-  let ring: unknown =
-    geom.type === "MultiPolygon"
-      ? (geom.coordinates as number[][][][])[0]?.[0]
-      : (geom.coordinates as number[][][])[0];
-  if (!Array.isArray(ring) || ring.length === 0) return null;
-  const typed = ring as Array<[number, number]>;
-  if (!Array.isArray(typed[0]) || typed[0].length < 2) return null;
-  return typed;
-}
-
-/** Parse a numeric SODA field that may be a string or missing. */
-function num(v: string | undefined): number | null {
-  if (v == null) return null;
-  const n = Number.parseFloat(v);
-  return Number.isFinite(n) ? n : null;
 }
 
 /**

@@ -59,14 +59,4 @@ describe("Metrics", () => {
     expect(new Metrics().snapshot().lastTimeToFirstFrameMs).toBe(0);
   });
 
-  it("notifies subscribers on change and stops after unsubscribe", () => {
-    const m = new Metrics();
-    let calls = 0;
-    const unsub = m.subscribe(() => (calls += 1));
-    m.recordAddress();
-    expect(calls).toBe(1);
-    unsub();
-    m.recordAddress();
-    expect(calls).toBe(1);
-  });
 });
