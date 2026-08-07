@@ -1,0 +1,17 @@
+{
+  "id": "e1-capture-resolution",
+  "note": "E1: capture resolution matched to the new hero display size. The result view now shows ONE direction at 752 CSS px (measured from the live DOM, see proof/screenshots/*-measurements.json), which is 1504 device px at DPR 2 against an 800 px capture. Supersampling was rejected in the earlier bake-off, and that rejection explicitly said to revisit it 'alongside a layout that actually shows a frame large' — this is that layout, and it is the only new reason. Four building types, two slots each (cost is per session, so slot count is free), baseline vs 1600x1200. Lead approved 2026-08-07 with a 16-session ceiling; E2 (FOV near 75) was declined as a re-run of a settled parameter. 8 sessions = 8 root tileset requests = $0.048 at full price.",
+  "cases": [
+    { "kind": "render", "id": "esb-f80-baseline", "address": "350 5th Ave, Manhattan", "floor": 80, "offsetM": 6, "slots": ["V1", "V2"], "render": {} },
+    { "kind": "render", "id": "esb-f80-1600", "address": "350 5th Ave, Manhattan", "floor": 80, "offsetM": 6, "slots": ["V1", "V2"], "render": { "width": 1600, "height": 1200 } },
+
+    { "kind": "render", "id": "e79-f10-baseline", "address": "425 E 79th St, Manhattan", "floor": 10, "offsetM": 6, "slots": ["V1", "V3"], "render": {} },
+    { "kind": "render", "id": "e79-f10-1600", "address": "425 E 79th St, Manhattan", "floor": 10, "offsetM": 6, "slots": ["V1", "V3"], "render": { "width": 1600, "height": 1200 } },
+
+    { "kind": "render", "id": "dakota-f3-baseline", "address": "1 W 72nd St, Manhattan", "floor": 3, "offsetM": 6, "slots": ["V1", "V4"], "render": {} },
+    { "kind": "render", "id": "dakota-f3-1600", "address": "1 W 72nd St, Manhattan", "floor": 3, "offsetM": 6, "slots": ["V1", "V4"], "render": { "width": 1600, "height": 1200 } },
+
+    { "kind": "render", "id": "flatiron-f18-baseline", "address": "175 5th Ave, Manhattan", "floor": 18, "offsetM": 6, "slots": ["V1", "V2"], "render": {} },
+    { "kind": "render", "id": "flatiron-f18-1600", "address": "175 5th Ave, Manhattan", "floor": 18, "offsetM": 6, "slots": ["V1", "V2"], "render": { "width": 1600, "height": 1200 } }
+  ]
+}

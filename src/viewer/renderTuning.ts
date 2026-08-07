@@ -15,7 +15,12 @@
 // drives the shipped code path rather than a copy of it.
 
 export const RENDER_TUNING = {
-  /** Capture size in CSS pixels (see `superSample` for the backing store). */
+  /**
+   * Capture size in CSS pixels (see `superSample` for the backing store).
+   *
+   * Left at 800x600, and this is now a MEASURED choice rather than an
+   * unexamined default. See `superSample` below for the experiment.
+   */
   width: 800,
   height: 600,
   /**
@@ -27,11 +32,48 @@ export const RENDER_TUNING = {
    * this is ordinary supersampling of our own render surface. It adds raster
    * resolution; it cannot and does not add scene content.
    *
-   * Left at 1. The bake-off measured the on-screen pane at 338 CSS px — 676
-   * device pixels on a 2x display — so an 800 px capture is already finer than
-   * the box it is shown in. 1.5x and 2x were captured and produce no visible
-   * improvement at that size, at 2.25x and 4x the pixels and memory. Raise this
-   * only alongside a layout that actually shows a frame large.
+   * Left at 1, and capture size left at 800x600, on evidence that contradicts
+   * the obvious expectation. Read this before raising either.
+   *
+   * The earlier bake-off rejected supersampling on the grounds that the pane
+   * was 338 CSS px, so an 800 px capture was already finer than the box it was
+   * shown in — and said to revisit "only alongside a layout that actually shows
+   * a frame large". The result view now shows one direction at a measured
+   * **752 CSS px**, which is **1504 device px at DPR 2** against an 800 px
+   * capture. So the stated precondition was met and the experiment was re-run,
+   * with the lead's approval, at a cost of 8 sessions / $0.048
+   * (`proof/bakeoff/plan-e1-resolution.json`).
+   *
+   * IT DID NOT WORK. Frames were compared **blinded** — both variants resampled
+   * to the 1504 px they are actually displayed at, shuffled, scored, and the
+   * key read only after the verdict was written
+   * (`proof/bakeoff/results/blind-e1-capture-resolution/VERDICT.md`). In three
+   * of the four groups scored, the **800x600 baseline looked SHARPER** than
+   * 1600x1200. Only the Empire State Building at floor 80 — a long-range vista
+   * over open Midtown — improved, and there it improved clearly.
+   *
+   * The cost of the change was not marginal either: 1600x1200 took 2.3-3.3x the
+   * renderer tile requests (1,436 -> 4,742 at the ESB; 2,031 -> 5,577 at the
+   * Flatiron), roughly double the bytes, and 2.5-3.2x the wall clock
+   * (10-12 s -> 27-34 s per session).
+   *
+   * The most likely mechanism, stated as the hypothesis it is: `maximumScreen-
+   * SpaceError` is a SCREEN-space metric, so doubling the canvas makes Cesium
+   * demand a finer tile level everywhere. When those extra tiles have not all
+   * arrived by the time the capture settles, the frame is a coarser texture
+   * magnified over twice as many pixels — softer, not sharper. This was NOT
+   * isolated experimentally; a capture-size sweep against a raised settle
+   * budget would be needed to confirm it, and that was not spent.
+   *
+   * The conclusion that IS supported: at these standoffs the provider's mesh is
+   * the limiting factor, not our raster. The one direction that gained is the
+   * one with real distant structure to resolve. Sampling a collapsed mesh more
+   * finely returns a slightly sharper picture of a collapsed mesh.
+   *
+   * The honest consequence for the layout: a 752 CSS px hero at DPR 2 IS
+   * under-sampled by an 800 px capture, and this does not fix it. The frame is
+   * shown at the size that makes it readable, and the resolution it is shown at
+   * is the provider's, not a number we can raise.
    */
   superSample: 1,
   /**

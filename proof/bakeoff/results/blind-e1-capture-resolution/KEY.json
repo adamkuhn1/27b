@@ -1,0 +1,23 @@
+{
+  "run": "e1-capture-resolution",
+  "note": "Answer key. Do not read before writing VERDICT.md — see blind.mjs. Frames resampled to 1504px (the measured hero size at DPR 2) and cropped to 1504x1050 so neither dimension identifies a variant.",
+  "displayWidthPx": 1504,
+  "mapping": {
+    "01.png": "dakota-f3-1600--V1.png",
+    "02.png": "flatiron-f18-1600--V2.png",
+    "03.png": "flatiron-f18-baseline--V1.png",
+    "04.png": "flatiron-f18-1600--V1.png",
+    "05.png": "dakota-f3-baseline--V1.png",
+    "06.png": "esb-f80-1600--V2.png",
+    "07.png": "e79-f10-baseline--V1.png",
+    "08.png": "dakota-f3-baseline--V4.png",
+    "09.png": "flatiron-f18-baseline--V2.png",
+    "10.png": "esb-f80-baseline--V2.png",
+    "11.png": "e79-f10-1600--V1.png",
+    "12.png": "esb-f80-1600--V1.png",
+    "13.png": "esb-f80-baseline--V1.png",
+    "14.png": "e79-f10-baseline--V3.png",
+    "15.png": "e79-f10-1600--V3.png",
+    "16.png": "dakota-f3-1600--V4.png"
+  }
+}
