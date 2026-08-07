@@ -69,11 +69,24 @@ export function directionNote(
  * Copy for a wall that is shared with the building next door.
  *
  * Deliberately about the building, not about us: nothing failed and nothing is
- * missing. There is no window on that side, so there is nothing to show. Said
- * without hedging, because the footprint data says it plainly.
+ * missing.
+ *
+ * The wording states what the test actually establishes, and no more. The
+ * predicate asks whether the camera — placed FACADE_OFFSET_M beyond the wall —
+ * lands inside a neighbour that rises above the eye. That is not the same as a
+ * shared wall, and an earlier version of this string said it was: at
+ * 425 E 79th St the flagged side has a measured 4.4 m gap to its neighbour, so
+ * "this wall is shared with the building next door" was asserted as plain fact
+ * about a building where it is false.
+ *
+ * KNOWN LIMITATION, deliberately not papered over by the rewording: because the
+ * predicate keys on the offset camera rather than on ring-to-ring adjacency, a
+ * direction across a light court or side lot narrower than the offset is
+ * suppressed even though a real window there has a real (close) view. Fixing
+ * that means measuring subject ring to neighbour ring; see the review findings.
  */
 export const ABUTTING_NOTE =
-  "This wall is shared with the building next door — no window on this side.";
+  "At this height this side faces the building next door.";
 
 /** Copy for a direction whose imagery did not arrive. */
 export const NO_IMAGERY_NOTE = "This direction didn't load.";
