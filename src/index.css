@@ -452,10 +452,33 @@ body {
 .view__canvas,
 .view canvas {
   width: 100%;
-  aspect-ratio: 4 / 3;
   display: block;
   border: 1px solid var(--line);
-  object-fit: cover;
+}
+/* An empty pane holds the 4:3 box so the grid does not jump as frames land. */
+.view__canvas--empty,
+.view canvas {
+  aspect-ratio: 4 / 3;
+}
+/*
+  A LOADED FRAME IS NEVER CROPPED. This used to be `aspect-ratio: 4/3` plus
+  `object-fit: cover` for every pane, including the <img>. The captured PNG is
+  the 800x600 render with Google's attribution bar appended BELOW it, so it is
+  800x623 (or 800x638 when the credits wrap to two lines) — not 4:3. `cover`
+  therefore scaled to fill and cropped 11.5 source pixels off the top and the
+  bottom, which took out half of a one-line credit bar and an entire line of a
+  two-line one. The bar is baked into the pixels precisely so the attribution
+  can never be separated from the imagery, and the stylesheet was quietly
+  cutting it in half on screen. Measured, before and after, in
+  docs/repair/portfolio-suite-product-sprint/27b/REPORT.md.
+
+  The cost is that panes are ~3% taller than 4:3 and can differ by a line
+  between directions. That is the correct trade: a required credit is not a
+  layout detail.
+*/
+img.view__canvas {
+  height: auto;
+  object-fit: fill;
 }
 /* A pane with no imagery is EMPTY. Not a gradient, not a silhouette, not a
    "representative" image — the ground the whole page sits on, behind a rule.

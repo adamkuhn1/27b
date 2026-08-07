@@ -1,0 +1,10 @@
+{
+  "id": "stageF-validation",
+  "note": "Validation of the only delta that showed a visible improvement in stages 1-4: field of view 60 -> 75 degrees. All four buildings, all four directions, everything else at the shipped configuration. Compare frame-for-frame against stageA-baseline, which used identical geometry at fov 60.",
+  "cases": [
+    { "kind": "render", "id": "final-dakota-low", "address": "1 W 72nd St, Manhattan", "floor": 3, "offsetM": 6, "render": { "fovDeg": 75 } },
+    { "kind": "render", "id": "final-dakota-high", "address": "1 W 72nd St, Manhattan", "floor": 8, "offsetM": 6, "render": { "fovDeg": 75 } },
+    { "kind": "render", "id": "final-e79", "address": "425 E 79th St, Manhattan", "floor": 8, "offsetM": 6, "render": { "fovDeg": 75 } },
+    { "kind": "render", "id": "final-control", "address": "310 E 23rd St, Manhattan", "floor": 6, "offsetM": 6, "render": { "fovDeg": 75 } }
+  ]
+}

@@ -7,6 +7,7 @@
 
 import { describe, it, expect } from "vitest";
 import {
+  ABUTTING_NOTE,
   LOW_VANTAGE_M,
   NO_IMAGERY_NOTE,
   RENDER_ALL_AGAIN,
@@ -63,6 +64,7 @@ const conf = (c: Partial<DirectionConfidence>): DirectionConfidence => ({
   band: "open",
   maxObstructionAngleDeg: -20,
   firstBlockingM: null,
+  insideNeighborByM: null,
   ...c,
 });
 
@@ -254,6 +256,7 @@ describe("nothing this module can say is a claim the data doesn't support", () =
         imageryUnavailable: true,
       }).map((n) => n.text),
       NO_IMAGERY_NOTE,
+      ABUTTING_NOTE,
       RETRY_THIS_DIRECTION,
       RENDER_ALL_AGAIN,
     );
@@ -286,3 +289,27 @@ function report(overrides: Partial<ConfidenceReport> = {}): ConfidenceReport {
     ...overrides,
   };
 }
+
+describe("a wall shared with the building next door", () => {
+  it("says there is no window there, and says it instead of an enclosure note", () => {
+    // The enclosure fields are populated and would otherwise produce "another
+    // building stands about 9 m from this side" — true, but beside the point
+    // when the wall in question has no window in it at all.
+    expect(
+      directionNote(conf({ band: "enclosed", firstBlockingM: 9, insideNeighborByM: 21 })),
+    ).toBe(ABUTTING_NOTE);
+  });
+
+  it("outranks the still-sharpening note, because nothing was ever captured", () => {
+    expect(
+      directionNote(conf({ insideNeighborByM: 40 }), { settled: false }),
+    ).toBe(ABUTTING_NOTE);
+  });
+
+  it("never appears for an ordinary direction", () => {
+    expect(directionNote(conf({ band: "open" }))).toBeNull();
+    expect(directionNote(conf({ band: "enclosed", firstBlockingM: 9 }))).not.toBe(
+      ABUTTING_NOTE,
+    );
+  });
+});

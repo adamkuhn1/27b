@@ -1,4 +1,5 @@
 import type { CameraView, SlotPhase, ViewPlan, ViewSlot } from "../lib/types";
+import { isRenderableDirection } from "../lib/confidence";
 import { CesiumView } from "../viewer/CesiumView";
 import {
   TileCapturesProvider,
@@ -138,7 +139,11 @@ function ViewPane({ plan, view }: { plan: ViewPlan; view: CameraView }) {
   const captures = useTileCaptures();
   const slot = captures.bySlot[view.slot];
   const sessionFailed = captures.phase === "failed";
-  const failed = slot?.phase === "failed" || sessionFailed;
+  // A wall shared with the neighbouring building is never captured, so it can
+  // never be "failed" or "still loading" either — it is simply a side with no
+  // window, and it says so from the moment the plan resolves.
+  const noWindow = !isRenderableDirection(view.slot, plan.confidence);
+  const failed = !noWindow && (slot?.phase === "failed" || sessionFailed);
   // When the whole session failed, the reason is stated once at the head
   // instead of four identical times under four empty frames.
   const note = failed
@@ -150,12 +155,21 @@ function ViewPane({ plan, view }: { plan: ViewPlan; view: CameraView }) {
       });
 
   return (
-    <figure className="view" data-phase={failed ? "failed" : slot?.phase ?? "queued"}>
+    <figure
+      className="view"
+      data-phase={
+        noWindow ? "no-window" : failed ? "failed" : slot?.phase ?? "queued"
+      }
+    >
       <figcaption className="view__label">
         <span className="view__compass">{view.compass}</span>
         <span className="view__bearing">{view.headingDeg.toFixed(0)}° true</span>
       </figcaption>
-      <CesiumView view={view} disabled={captures.phase === "idle"} />
+      <CesiumView
+        view={view}
+        disabled={captures.phase === "idle"}
+        noWindow={noWindow}
+      />
       {note && <p className="view__note">{note}</p>}
       {/*
         Offered only while the session is open, because that is the only time

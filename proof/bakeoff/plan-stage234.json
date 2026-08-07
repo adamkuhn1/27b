@@ -1,0 +1,15 @@
+{
+  "id": "stage234-res-lod-projection",
+  "note": "Stages 2 (resolution), 3 (LOD + settling) and 4 (projection), all at dakota-low on the two most enclosed directions V1 and V4. Offset stays at the shipped 6 m because Stage 1 found no improvement below it and a hard regression at 1.5 m. Each case is one delta from the shipped configuration so the deltas are attributable.",
+  "cases": [
+    { "kind": "render", "id": "res-1.5x", "address": "1 W 72nd St, Manhattan", "floor": 3, "offsetM": 6, "slots": ["V1", "V4"], "render": { "superSample": 1.5 } },
+    { "kind": "render", "id": "res-2x", "address": "1 W 72nd St, Manhattan", "floor": 3, "offsetM": 6, "slots": ["V1", "V4"], "render": { "superSample": 2 } },
+    { "kind": "render", "id": "sse-8", "address": "1 W 72nd St, Manhattan", "floor": 3, "offsetM": 6, "slots": ["V1", "V4"], "render": { "maximumScreenSpaceError": 8 } },
+    { "kind": "render", "id": "sse-6", "address": "1 W 72nd St, Manhattan", "floor": 3, "offsetM": 6, "slots": ["V1", "V4"], "render": { "maximumScreenSpaceError": 6 } },
+    { "kind": "render", "id": "settle-28", "address": "1 W 72nd St, Manhattan", "floor": 3, "offsetM": 6, "slots": ["V1", "V4"], "render": { "settleTimeoutMs": 28000 } },
+    { "kind": "render", "id": "stationary", "address": "1 W 72nd St, Manhattan", "floor": 3, "offsetM": 6, "slots": ["V1", "V4"], "render": { "stationaryLoading": true } },
+    { "kind": "render", "id": "fov-75", "address": "1 W 72nd St, Manhattan", "floor": 3, "offsetM": 6, "slots": ["V1", "V4"], "render": { "fovDeg": 75 } },
+    { "kind": "render", "id": "fov-90", "address": "1 W 72nd St, Manhattan", "floor": 3, "offsetM": 6, "slots": ["V1", "V4"], "render": { "fovDeg": 90 } },
+    { "kind": "render", "id": "near-1.0", "address": "1 W 72nd St, Manhattan", "floor": 3, "offsetM": 6, "slots": ["V1", "V4"], "render": { "nearPlaneM": 1.0 } }
+  ]
+}

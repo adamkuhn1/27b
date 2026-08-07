@@ -90,7 +90,8 @@ import type {
   NeighborBuilding,
   ViewSlot,
 } from "./types";
-import { ringToLocalMeters } from "./geometry";
+import { ringToLocalMeters, pointInRingMeters } from "./geometry";
+import { RENDER_TUNING } from "../viewer/renderTuning";
 
 /**
  * Horizontal search radius, metres.
@@ -103,12 +104,36 @@ import { ringToLocalMeters } from "./geometry";
 export const SEARCH_RADIUS_M = 220;
 
 /**
- * Half-angle of the view cone, degrees. ±30° approximates the horizontal extent
- * of the captured frame. It is not derived from the Cesium camera's actual
- * frustum — that would be a better number and is worth revisiting once a live
- * render is authorized and the real horizontal FOV can be measured.
+ * Half-angle of the view cone, degrees.
+ *
+ * This is now derived from the renderer's actual horizontal field of view
+ * rather than approximating it. The previous comment here asked for exactly
+ * that, "once a live render is authorized and the real horizontal FOV can be
+ * measured" — it has been. Measured 2026-08-06 from a live Cesium session:
+ * `PerspectiveFrustum.fov` applies to the wider viewport dimension, so at a
+ * 4:3 capture the horizontal field of view *is* `fov`. The renderer ships
+ * `RENDER_TUNING.fovDeg = 75`, so the cone is ±37.5°.
+ *
+ * The two must stay in step: if the cone is narrower than the frame, the notes
+ * under a direction can say "open" about a frame that visibly contains a wall.
+ * `confidence.test.ts` pins the relationship. The import is type-only at
+ * runtime cost of nothing — `RENDER_TUNING` is a plain object in a module this
+ * one does not otherwise depend on, and pulling the number across is cheaper
+ * than letting the two drift.
  */
-export const CONE_HALF_ANGLE_DEG = 30;
+export const CONE_HALF_ANGLE_DEG = RENDER_TUNING.fovDeg / 2;
+
+/**
+ * How far below an abutting building's roof the eye must sit before we call a
+ * direction windowless, metres.
+ *
+ * Not zero, because two independent source errors point the same way: footprint
+ * polygons on a shared lot line can overlap by a metre or so, and `HEIGHTROOF`
+ * is a single number for a building with parapets and bulkheads. A camera a
+ * few centimetres under a neighbour's nominal roofline is a measurement
+ * artefact; one two metres under it is inside the building next door.
+ */
+export const ABUTTING_MIN_DEPTH_M = 2;
 
 /** Spacing for sampling along a footprint edge, metres. */
 export const EDGE_SAMPLE_STEP_M = 2;
@@ -208,6 +233,21 @@ export function assessConfidence(input: ConfidenceInput): ConfidenceReport {
   };
 }
 
+/**
+ * Directions worth asking the provider for.
+ *
+ * One predicate, used by both the renderer (which must not open a capture for a
+ * direction with no window) and the UI (which must say why the pane is empty).
+ * Two callers agreeing by construction is the point; the alternative is a
+ * renderer that skips a slot and a UI that shows it as still loading, forever.
+ */
+export function isRenderableDirection(
+  slot: ViewSlot,
+  confidence: ConfidenceReport | null | undefined,
+): boolean {
+  return confidence?.bySlot[slot]?.insideNeighborByM == null;
+}
+
 function assessDirection(
   view: CameraView,
   neighbors: NeighborBuilding[],
@@ -216,6 +256,7 @@ function assessDirection(
   const origin = { lat: view.lat, lng: view.lng };
   let maxAngle = -90;
   let firstBlocking: number | null = null;
+  let insideNeighborByM: number | null = null;
 
   for (const n of neighbors) {
     const top =
@@ -224,6 +265,18 @@ function assessDirection(
     const rise = top - input.eyeElevationNavd88M;
 
     const pts = ringToLocalMeters(n.ring, origin);
+
+    // Is the camera *inside* this neighbour's mass? The ring is already local
+    // to the camera, so the camera is the origin. Height matters: a camera on
+    // the 8th floor over a 4-storey neighbour is above its roof, which is an
+    // ordinary NYC vantage, not a fault.
+    if (
+      rise >= ABUTTING_MIN_DEPTH_M &&
+      rise > (insideNeighborByM ?? -Infinity) &&
+      pointInRingMeters(pts, 0, 0)
+    ) {
+      insideNeighborByM = rise;
+    }
     for (let i = 0; i < pts.length; i++) {
       const a = pts[i];
       const b = pts[(i + 1) % pts.length];
@@ -265,6 +318,7 @@ function assessDirection(
     band: classifyBand(maxAngle, firstBlocking),
     maxObstructionAngleDeg: maxAngle,
     firstBlockingM: firstBlocking,
+    insideNeighborByM,
   };
 }
 

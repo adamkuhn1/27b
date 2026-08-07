@@ -5,6 +5,12 @@ interface CesiumViewProps {
   view: CameraView;
   /** True when no imagery key is configured — render nothing (no fake scene). */
   disabled?: boolean;
+  /**
+   * True when this facade is shared with the building next door. Nothing was
+   * requested for it and nothing will arrive; the pane is empty on purpose and
+   * the label says why.
+   */
+  noWindow?: boolean;
 }
 
 /**
@@ -21,11 +27,21 @@ interface CesiumViewProps {
  * 3D Tiles, with Google's per-frame data attribution composited along its
  * bottom edge.
  */
-export function CesiumView({ view, disabled }: CesiumViewProps) {
+export function CesiumView({ view, disabled, noWindow }: CesiumViewProps) {
   const captures = useTileCaptures(disabled);
 
   if (disabled) {
     return <div className="view__canvas view__canvas--empty" aria-hidden="true" />;
+  }
+
+  if (noWindow) {
+    return (
+      <div
+        className="view__canvas view__canvas--empty"
+        role="img"
+        aria-label={`No window facing ${view.compass} — this wall is shared with the building next door`}
+      />
+    );
   }
 
   const slot = captures.bySlot[view.slot];

@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { googleMapsKey } from "../lib/config";
+import { isRenderableDirection } from "../lib/confidence";
 import { metrics } from "../lib/metrics";
 import { describeError } from "../lib/redact";
 import type {
@@ -139,14 +140,32 @@ export function TileCapturesProvider({
 
     const runId = ++runIdRef.current;
     setPhase("running");
+
+    // A facade on a shared lot line has no window, and a camera six metres
+    // beyond it is inside the building next door rather than outdoors. Those
+    // directions are not captured at all: the provider would return the
+    // interior of a neighbouring mesh, which looks exactly like the "melted
+    // grey landscape" this project must never present as a view. The pane says
+    // so instead. See DirectionConfidence.insideNeighborByM.
+    const renderable = plan.views.filter((v) =>
+      isRenderableDirection(v.slot, plan.confidence),
+    );
+
     // Every direction is known and correctly labelled from the instant the plan
     // resolves — the bearings come from the geometry pipeline, not the imagery.
     // So the grid is real, specific content immediately; frames land into it.
     setBySlot(
       Object.fromEntries(
-        plan.views.map((v) => [v.slot, { phase: "queued", attempts: 0 }]),
+        renderable.map((v) => [v.slot, { phase: "queued", attempts: 0 }]),
       ),
     );
+
+    if (renderable.length === 0) {
+      // Nothing to ask the provider for. Not a failure — a building whose every
+      // facade abuts another. Zero billable requests.
+      setPhase("settled");
+      return;
+    }
 
     // Ties the Cesium session's lifetime to this effect. Without this, React
     // 18 StrictMode's double-invoke (or a plan change) leaves the first run's
@@ -160,7 +179,7 @@ export function TileCapturesProvider({
       try {
         // Lazily import the heavy Cesium renderer only on the real render path.
         const { openRenderSession } = await import("./tileRenderer");
-        session = await openRenderSession(plan.views, {
+        session = await openRenderSession(renderable, {
           apiKey: key,
           signal: controller.signal,
         });
