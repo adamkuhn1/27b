@@ -44,6 +44,7 @@ export function directionNote(
   opts: { settled?: boolean } = {},
 ): string | null {
   if (confidence?.insideNeighborByM != null) return ABUTTING_NOTE;
+  if (confidence?.courtWidthM != null) return courtNote(confidence.courtWidthM);
   if (opts.settled === false) return "Still sharpening when this frame was captured.";
   if (!confidence) return null;
 
@@ -66,27 +67,34 @@ export function directionNote(
 }
 
 /**
- * Copy for a wall that is shared with the building next door.
+ * Copy for a wall that is inside the building next door.
  *
  * Deliberately about the building, not about us: nothing failed and nothing is
  * missing.
  *
- * The wording states what the test actually establishes, and no more. The
- * predicate asks whether the camera — placed FACADE_OFFSET_M beyond the wall —
- * lands inside a neighbour that rises above the eye. That is not the same as a
- * shared wall, and an earlier version of this string said it was: at
- * 425 E 79th St the flagged side has a measured 4.4 m gap to its neighbour, so
- * "this wall is shared with the building next door" was asserted as plain fact
- * about a building where it is false.
- *
- * KNOWN LIMITATION, deliberately not papered over by the rewording: because the
- * predicate keys on the offset camera rather than on ring-to-ring adjacency, a
- * direction across a light court or side lot narrower than the offset is
- * suppressed even though a real window there has a real (close) view. Fixing
- * that means measuring subject ring to neighbour ring; see the review findings.
+ * The predicate now tests the WALL rather than the camera six metres beyond it,
+ * so this string is finally saying what the measurement establishes. The older,
+ * looser test also caught every facade across a light court narrower than the
+ * camera offset — a real window with a real close view — and the note said
+ * "faces the building next door" about them. At 425 E 79th St that suppressed
+ * the ESE facade across a measured 4.4 m court. Those directions now get
+ * `courtNote` and a camera placed inside the court instead.
  */
 export const ABUTTING_NOTE =
   "At this height this side faces the building next door.";
+
+/**
+ * Copy for a facade across a light court or narrow side lot.
+ *
+ * Both clauses are measurements from NYC Open Data footprints, not observations
+ * about the frame. The width is rounded to the metre because the underlying
+ * polygons are not surveyed to better than that.
+ */
+export function courtNote(courtWidthM: number): string {
+  return `A light court about ${Math.round(
+    courtWidthM,
+  )} m wide — the building opposite is very close.`;
+}
 
 /** Copy for a direction whose imagery did not arrive. */
 export const NO_IMAGERY_NOTE = "This direction didn't load.";

@@ -90,7 +90,12 @@ import type {
   NeighborBuilding,
   ViewSlot,
 } from "./types";
-import { ringToLocalMeters, pointInRingMeters } from "./geometry";
+import {
+  ringToLocalMeters,
+  pointInRingMeters,
+  rayFirstCrossingM,
+  FACADE_OFFSET_M,
+} from "./geometry";
 import { RENDER_TUNING } from "../viewer/renderTuning";
 
 /**
@@ -245,7 +250,92 @@ export function isRenderableDirection(
   slot: ViewSlot,
   confidence: ConfidenceReport | null | undefined,
 ): boolean {
-  return confidence?.bySlot[slot]?.insideNeighborByM == null;
+  const d = confidence?.bySlot[slot];
+  if (!d) return true;
+  if (d.insideNeighborByM != null) return false;
+  // A court wide enough to stand in is a view, however close. One too narrow
+  // has no camera position that is both outside our own wall and outside the
+  // one opposite, so there is nothing to ask the provider for.
+  if (d.courtWidthM != null && courtStandoffM(d.courtWidthM) === null) {
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Smallest standoff that still clears the subject building's own mesh, metres.
+ *
+ * The municipal footprint and the photogrammetric mesh do not coincide, which
+ * is most of what the default 6 m offset buys. Below about a metre and a half
+ * the camera is inside our own building's reconstruction and the frame is the
+ * inside of a wall — the same failure the party-wall suppression exists to
+ * prevent, arrived at from the other side.
+ */
+export const COURT_MIN_STANDOFF_M = 1.5;
+
+/**
+ * Where to put the camera in a light court of a given width, or `null` when the
+ * court is too narrow to hold one.
+ *
+ * Mid-court. It is the position that maximises clearance from both meshes at
+ * once, and there is no better rule available: which of the two walls the
+ * reconstruction handles worse is a fact about the imagery, and this codebase
+ * does not read the imagery.
+ *
+ * NOT VERIFIED AGAINST A REAL RENDER. The arithmetic is right and the camera is
+ * outdoors, but what a 2 m standoff looks like in Google's mesh is a question
+ * only a capture can answer. The UI therefore presents these directions as
+ * close-range and never promotes one to the main view.
+ */
+export function courtStandoffM(courtWidthM: number): number | null {
+  const half = courtWidthM / 2;
+  if (half < COURT_MIN_STANDOFF_M) return null;
+  return Math.min(half, FACADE_OFFSET_M);
+}
+
+/**
+ * Reduced facade offsets for the directions that need one, keyed by slot.
+ *
+ * Empty for the overwhelming majority of buildings, in which case the caller
+ * skips the second placement pass entirely.
+ */
+export function courtOffsets(
+  report: ConfidenceReport,
+): Partial<Record<ViewSlot, number>> {
+  const out: Partial<Record<ViewSlot, number>> = {};
+  for (const [slot, d] of Object.entries(report.bySlot)) {
+    if (!d || d.courtWidthM == null) continue;
+    const standoff = courtStandoffM(d.courtWidthM);
+    if (standoff !== null) out[slot as ViewSlot] = standoff;
+  }
+  return out;
+}
+
+/**
+ * Merge a re-assessment made from the moved cameras with the court widths that
+ * justified moving them.
+ *
+ * The second pass measures a camera that is now standing IN the court, so it no
+ * longer sees the condition that put it there — `courtWidthM` would come back
+ * null and the UI would present a 2 m standoff as an ordinary view. The width
+ * is a property of the building, not of where the camera ended up, so it is
+ * carried across; the bands and distances are properties of the camera, so they
+ * come from the second pass.
+ */
+export function mergeCourtFindings(
+  first: ConfidenceReport,
+  second: ConfidenceReport,
+): ConfidenceReport {
+  const bySlot: Partial<Record<ViewSlot, DirectionConfidence>> = {};
+  for (const [slot, d] of Object.entries(second.bySlot)) {
+    if (!d) continue;
+    const wasCourt = first.bySlot[slot as ViewSlot]?.courtWidthM ?? null;
+    bySlot[slot as ViewSlot] =
+      wasCourt !== null && d.courtWidthM == null
+        ? { ...d, courtWidthM: wasCourt }
+        : d;
+  }
+  return { ...second, bySlot };
 }
 
 function assessDirection(
@@ -257,6 +347,17 @@ function assessDirection(
   let maxAngle = -90;
   let firstBlocking: number | null = null;
   let insideNeighborByM: number | null = null;
+  let courtWidthM: number | null = null;
+
+  // The window itself, in the camera's local frame. The camera sits
+  // `appliedOffset` metres in front of it along the heading, so the wall is that
+  // far behind the origin. Everything about the party-wall question is decided
+  // at the wall, not at the camera — see below.
+  const appliedOffsetM = view.standoffM - view.wallDistanceM;
+  const dirX = Math.sin((view.headingDeg * Math.PI) / 180);
+  const dirY = Math.cos((view.headingDeg * Math.PI) / 180);
+  const wallX = -appliedOffsetM * dirX;
+  const wallY = -appliedOffsetM * dirY;
 
   for (const n of neighbors) {
     const top =
@@ -266,16 +367,58 @@ function assessDirection(
 
     const pts = ringToLocalMeters(n.ring, origin);
 
-    // Is the camera *inside* this neighbour's mass? The ring is already local
-    // to the camera, so the camera is the origin. Height matters: a camera on
-    // the 8th floor over a 4-storey neighbour is above its roof, which is an
+    // Is the camera inside this neighbour's mass? The ring is already local to
+    // the camera, so the camera is the origin. Height matters: a camera on the
+    // 8th floor over a 4-storey neighbour is above its roof, which is an
     // ordinary NYC vantage, not a fault.
-    if (
-      rise >= ABUTTING_MIN_DEPTH_M &&
-      rise > (insideNeighborByM ?? -Infinity) &&
-      pointInRingMeters(pts, 0, 0)
-    ) {
-      insideNeighborByM = rise;
+    //
+    // A CAMERA INSIDE A NEIGHBOUR IS TWO DIFFERENT SITUATIONS, and this used to
+    // conflate them:
+    //
+    //   1. The WALL is inside the neighbour too. The footprints share a lot
+    //      line (municipal polygons on a party wall commonly overlap slightly).
+    //      There is no window, so there is no view. Suppress the direction.
+    //   2. The wall is outside but the camera is not. There is a gap — a light
+    //      court or a narrow side lot — that is simply narrower than the six
+    //      metres the camera was pushed. There IS a window and it does look at
+    //      something. Suppressing it, as this code did, hid a real view.
+    //
+    // At 425 E 79th St the flagged side has a measured 4.4 m gap, which is case
+    // 2 being reported as case 1. The copy was corrected for that building in an
+    // earlier pass; this is the predicate finally agreeing with it.
+    if (rise >= ABUTTING_MIN_DEPTH_M && pointInRingMeters(pts, 0, 0)) {
+      if (pointInRingMeters(pts, wallX, wallY)) {
+        if (rise > (insideNeighborByM ?? -Infinity)) insideNeighborByM = rise;
+      } else {
+        // How much open ground is there between the window and this building?
+        const gap = rayFirstCrossingM(pts, [wallX, wallY], dirX, dirY);
+
+        // Then CHECK THE ANSWER, because the cheap version of this test is
+        // wrong on the commonest NYC geometry. When the two footprints touch
+        // exactly on a shared lot line, the wall lies ON the neighbour's
+        // boundary, where an even-odd test can report either side. If it
+        // reports "outside", the ray's first crossing ahead is the neighbour's
+        // FAR wall, and its own depth gets reported as a courtyard.
+        //
+        // A real court is open in the middle. Measured at 425 E 79th: the ESE
+        // facade's midpoint is outdoors (a genuine 4.4 m court), the WNW
+        // facade's is inside the neighbour and the 7.7 m "court" was that
+        // building's depth.
+        const openInTheMiddle =
+          gap !== null &&
+          !pointInRingMeters(
+            pts,
+            wallX + (gap / 2) * dirX,
+            wallY + (gap / 2) * dirY,
+          );
+
+        if (openInTheMiddle) {
+          if (gap! < (courtWidthM ?? Infinity)) courtWidthM = gap!;
+        } else if (rise > (insideNeighborByM ?? -Infinity)) {
+          // No open ground ahead: this is a party wall after all.
+          insideNeighborByM = rise;
+        }
+      }
     }
     for (let i = 0; i < pts.length; i++) {
       const a = pts[i];
@@ -319,6 +462,9 @@ function assessDirection(
     maxObstructionAngleDeg: maxAngle,
     firstBlockingM: firstBlocking,
     insideNeighborByM,
+    // A wall genuinely inside the neighbour is not a court. Reporting both
+    // would let the UI describe one facade two contradictory ways.
+    courtWidthM: insideNeighborByM !== null ? null : courtWidthM,
   };
 }
 

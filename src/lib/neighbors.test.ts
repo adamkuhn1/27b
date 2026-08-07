@@ -134,6 +134,7 @@ describe("straddling neighbours are the ones that matter", () => {
     heightM: 40,
     pitchDeg: -3,
     standoffM: 36,
+    wallDistanceM: 30,
   };
 
   function bandWith(bins: (bin: string) => boolean) {

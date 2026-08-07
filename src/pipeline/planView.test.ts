@@ -3,6 +3,7 @@ import { planView } from "./planView";
 import { GeocodeError } from "../lib/geocode";
 import { FootprintError } from "../lib/footprint";
 import { NeighborError } from "../lib/neighbors";
+import { isRenderableDirection } from "../lib/confidence";
 import { clearCache } from "../lib/cache";
 import { metrics } from "../lib/metrics";
 import type {
@@ -263,5 +264,96 @@ describe("planView — metrics", () => {
     const snap = metrics.snapshot();
     expect(snap.addressesProcessed).toBe(1);
     expect(snap.plansProduced).toBe(1);
+  });
+});
+
+describe("planView — a camera that would stand inside the building opposite", () => {
+  /**
+   * A tall slab whose west wall is ~4 m east of the subject's east wall: a
+   * light court narrower than the 6 m the camera is normally pushed out.
+   */
+  const acrossACourt: NeighborBuilding = {
+    bin: "1003003",
+    roofHeightM: 200,
+    groundElevationNavd88M: 8,
+    ring: [
+      [-74.01085, 40.7065],
+      [-74.0106, 40.7065],
+      [-74.0106, 40.7073],
+      [-74.01085, 40.7073],
+      [-74.01085, 40.7065],
+    ],
+  };
+
+  const run = (neighbors: NeighborBuilding[], address: string) =>
+    planView(address, 27, undefined, {
+      geocode: vi.fn().mockResolvedValue(geo),
+      fetchFootprint: vi.fn().mockResolvedValue(footprint),
+      fetchNeighbors: stubNeighbors(neighbors),
+    });
+
+  it("moves that one camera into the court and leaves the others alone", async () => {
+    const open = await run([], "11 Wall St open");
+    const court = await run([acrossACourt], "11 Wall St court");
+    expect(open.ok && court.ok).toBe(true);
+    if (!open.ok || !court.ok) return;
+
+    const bySlot = (r: typeof open) =>
+      Object.fromEntries(r.plan.views.map((v) => [v.slot, v]));
+    const before = bySlot(open);
+    const after = bySlot(court);
+
+    // V2 is the east-facing view, the one across the court.
+    expect(after.V2.standoffM).toBeLessThan(before.V2.standoffM);
+    expect(after.V2.standoffM - after.V2.wallDistanceM).toBeCloseTo(2, 0);
+
+    // The other three keep the full offset: a court is a per-direction fact.
+    for (const slot of ["V1", "V3", "V4"]) {
+      expect(after[slot].standoffM).toBeCloseTo(before[slot].standoffM, 6);
+    }
+  });
+
+  it("still reports the court after re-measuring from inside it", async () => {
+    // The moved camera no longer stands inside the neighbour, so a second pass
+    // that simply overwrote the first would lose the reason it was moved and
+    // present a 2 m standoff as an ordinary view.
+    const res = await run([acrossACourt], "11 Wall St carried");
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+
+    const v2 = res.plan.confidence!.bySlot.V2!;
+    expect(v2.courtWidthM).toBeCloseTo(4, 0);
+    expect(v2.insideNeighborByM).toBeNull();
+  });
+
+  it("keeps the direction renderable — the window is real", async () => {
+    // The whole point of the change. Before it, this facade was deleted from
+    // the result as though it were a party wall.
+    const res = await run([acrossACourt], "11 Wall St renderable");
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+
+    expect(isRenderableDirection("V2", res.plan.confidence)).toBe(true);
+    const requested = res.plan.views.filter((v) =>
+      isRenderableDirection(v.slot, res.plan.confidence),
+    );
+    expect(requested).toHaveLength(4);
+  });
+
+  it("does not run a second placement pass when no direction needs one", async () => {
+    // The common case. Cameras must be bit-identical to a single-pass build,
+    // so the two-pass machinery cannot perturb ordinary results.
+    const withTower = await run([blockingNeighbor], "11 Wall St tower");
+    const withNothing = await run([], "11 Wall St nothing");
+    expect(withTower.ok && withNothing.ok).toBe(true);
+    if (!withTower.ok || !withNothing.ok) return;
+
+    for (let i = 0; i < 4; i++) {
+      expect(withTower.plan.views[i].standoffM).toBe(
+        withNothing.plan.views[i].standoffM,
+      );
+      expect(withTower.plan.views[i].lat).toBe(withNothing.plan.views[i].lat);
+      expect(withTower.plan.views[i].lng).toBe(withNothing.plan.views[i].lng);
+    }
   });
 });

@@ -65,6 +65,7 @@ const conf = (c: Partial<DirectionConfidence>): DirectionConfidence => ({
   maxObstructionAngleDeg: -20,
   firstBlockingM: null,
   insideNeighborByM: null,
+  courtWidthM: null,
   ...c,
 });
 

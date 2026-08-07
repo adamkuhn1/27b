@@ -18,6 +18,7 @@ import {
   type BuildingFootprint,
   type CameraView,
   type ViewBasis,
+  type ViewSlot,
 } from "./types";
 import { geoidHeightM } from "./geoid";
 
@@ -233,6 +234,38 @@ export function facadeDistanceM(
   return Number.isFinite(maxT) && maxT > 0 ? maxT : 0;
 }
 
+/**
+ * Distance from `origin` to the FIRST crossing of `ring` along a unit direction,
+ * all in local metres. `null` when the ray never meets the ring.
+ *
+ * The mirror image of `facadeDistanceM`, which takes the outermost crossing
+ * because it is escaping a polygon. This one is entering one, so the nearest
+ * crossing is the answer: it measures how much open ground lies ahead before
+ * the neighbouring building starts. That is the width of a light court or side
+ * lot when the ring belongs to the building across it.
+ */
+export function rayFirstCrossingM(
+  pts: Array<[number, number]>,
+  origin: [number, number],
+  dirX: number,
+  dirY: number,
+): number | null {
+  let best = Infinity;
+  const n = pts.length;
+  for (let i = 0; i < n; i++) {
+    const [ax, ay] = [pts[i][0] - origin[0], pts[i][1] - origin[1]];
+    const [bx, by] = [pts[(i + 1) % n][0] - origin[0], pts[(i + 1) % n][1] - origin[1]];
+    const ex = bx - ax;
+    const ey = by - ay;
+    const denom = dirX * ey - dirY * ex;
+    if (Math.abs(denom) < 1e-9) continue; // ray parallel to edge
+    const t = (ax * ey - ay * ex) / denom;
+    const s = (ax * dirY - ay * dirX) / denom;
+    if (t > 1e-3 && s >= -1e-6 && s <= 1 + 1e-6 && t < best) best = t;
+  }
+  return Number.isFinite(best) ? best : null;
+}
+
 export interface FacadeAxis {
   /** Bearing of the first facade normal, normalized into [0, 90). */
   bearingDeg: number;
@@ -340,6 +373,17 @@ export function buildCameraViews(
    * runs; production callers pass nothing and get the selected default.
    */
   facadeOffsetM: number = FACADE_OFFSET_M,
+  /**
+   * Per-direction replacements for `facadeOffsetM`, keyed by slot.
+   *
+   * Used for exactly one thing: a facade across a light court narrower than the
+   * default offset, where 6 m would put the camera inside the building
+   * opposite. The court is measured from neighbouring footprints AFTER the
+   * first pass of this function, so `pipeline/planView.ts` calls it a second
+   * time with the reduced offsets rather than this module guessing at data it
+   * does not have. See `confidence.courtStandoffM`.
+   */
+  offsetBySlot: Partial<Record<ViewSlot, number>> = {},
 ): { views: CameraView[]; basis: ViewBasis; concentration: number } {
   // -3 deg at ground level -> -9 deg at 200 m+, clamped; keeps sky in the top third.
   const pitchDeg = Math.max(-9, -(3 + eyeAboveGroundM / 33));
@@ -352,7 +396,8 @@ export function buildCameraViews(
       footprint.centroid,
       headingDeg,
     );
-    let standoffM = wallDist + facadeOffsetM;
+    const offsetM = offsetBySlot[VIEW_SLOTS[i]] ?? facadeOffsetM;
+    let standoffM = wallDist + offsetM;
 
     // Verify the camera is genuinely outside the footprint; push out in
     // RESCUE_STEP_M steps if a pathological ring puts it back inside.
@@ -391,6 +436,7 @@ export function buildCameraViews(
       heightM: eyeElevationEllipsoidalM,
       pitchDeg,
       standoffM,
+      wallDistanceM: wallDist,
     } satisfies CameraView;
   });
 

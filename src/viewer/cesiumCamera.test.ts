@@ -12,6 +12,7 @@ function view(headingDeg: number, pitchDeg = 0): CameraView {
     heightM: 50,
     pitchDeg,
     standoffM: 26,
+    wallDistanceM: 20,
   };
 }
 
