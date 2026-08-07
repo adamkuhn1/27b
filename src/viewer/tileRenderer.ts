@@ -530,6 +530,23 @@ async function openCesiumFrameSource(
     // asked for and when. Turning both off costs nothing but wall clock.
     tileset.foveatedScreenSpaceError = !stationaryLoading;
     tileset.progressiveResolutionHeightFraction = stationaryLoading ? 0.0 : 0.3;
+
+    // Take ownership of tile failures, because Cesium's default is to print the
+    // failing URL — and for Photorealistic 3D Tiles that URL carries `key=`.
+    // Cesium only falls back to that default when the event has NO listener:
+    //
+    //   tileFailed.numberOfListeners > 0
+    //     ? tileFailed.raiseEvent({ url, message })
+    //     : (console.log(`A 3D tile failed to load: ${url}`), console.log(...))
+    //
+    // So registering any listener is what suppresses it. redact.ts exists "so a
+    // key never lands in an error message someone screenshots or pastes into a
+    // bug report"; this was the one path in the subsystem that bypassed it,
+    // because the code doing the logging is not ours.
+    tileset.tileFailed.addEventListener((e: { url?: string; message?: string }) => {
+      console.error("[27b] tile failed:", describeError(e?.message ?? e));
+    });
+
     viewer.scene.primitives.add(tileset);
 
     // Position the camera at the first view before warmup so the warm-up
