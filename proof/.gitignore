@@ -16,3 +16,8 @@
 # produces the files, or the first run commits Google Maps Content.
 evidence/*.png
 bakeoff/results/frames/
+# Blinded comparison sets are resampled crops OF those frames, so they are the
+# same Content by another name. The scoring artefacts beside them (VERDICT.md,
+# KEY.json, GROUPS.json) are text and ARE committed — the verdict is the
+# evidence, the pixels were only how it was reached.
+bakeoff/results/blind-*/*.png
