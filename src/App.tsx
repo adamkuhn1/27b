@@ -31,42 +31,39 @@ interface Preset {
   detail: string;
 }
 
+// Mostly buildings people actually live in, because that is what this is for.
+// The two landmarks are here because they are the cases a New Yorker will try
+// first, not because the app is a tour of them.
 const PRESETS: Preset[] = [
   {
-    name: "Empire State Bldg",
-    address: "350 5th Ave, Manhattan, New York, NY 10118",
-    floor: 80,
-    detail: "fl. 80 · Midtown Manhattan",
-  },
-  {
-    name: "One World Trade",
-    address: "285 Fulton St, Manhattan, New York, NY 10007",
-    floor: 100,
-    detail: "fl. 100 · Lower Manhattan",
-  },
-  {
-    name: "432 Park Avenue",
-    address: "432 Park Ave, Manhattan, New York, NY 10022",
-    floor: 80,
-    detail: "fl. 80 · Midtown Manhattan",
-  },
-  {
-    name: "Chrysler Building",
-    address: "405 Lexington Ave, Manhattan, New York, NY 10174",
-    floor: 60,
-    detail: "fl. 60 · Midtown East",
-  },
-  {
-    name: "30 Rockefeller Plaza",
-    address: "30 Rockefeller Plaza, Manhattan, New York, NY 10112",
-    floor: 65,
-    detail: "fl. 65 · Rockefeller Ctr",
+    name: "425 E 79th St",
+    address: "425 E 79th St, Manhattan, New York, NY 10075",
+    floor: 10,
+    detail: "floor 10 · Upper East Side",
   },
   {
     name: "The Dakota",
     address: "1 W 72nd St, Manhattan, New York, NY 10023",
-    floor: 10,
-    detail: "fl. 10 · Upper West Side",
+    floor: 7,
+    detail: "floor 7 · Upper West Side",
+  },
+  {
+    name: "432 Park Ave",
+    address: "432 Park Ave, Manhattan, New York, NY 10022",
+    floor: 80,
+    detail: "floor 80 · Midtown",
+  },
+  {
+    name: "175 Fifth Ave",
+    address: "175 5th Ave, Manhattan, New York, NY 10010",
+    floor: 18,
+    detail: "floor 18 · the Flatiron",
+  },
+  {
+    name: "Empire State Bldg",
+    address: "350 5th Ave, Manhattan, New York, NY 10118",
+    floor: 80,
+    detail: "floor 80 · Midtown",
   },
 ];
 
@@ -78,7 +75,7 @@ interface BuildingPresetsProps {
 function BuildingPresets({ onSelect, busy }: BuildingPresetsProps) {
   return (
     <div className="presets">
-      <span className="presets__label">NYC landmarks</span>
+      <span className="presets__label">Or try one of these</span>
       <div className="presets__row">
         {PRESETS.map((p) => (
           <button
@@ -153,14 +150,21 @@ export default function App() {
     <div className="app">
       <div className="app__inner">
         <header className="masthead">
-          <p className="masthead__tag">Real-geometry floor views, New York City</p>
-          <h1 className="masthead__title">
-            What would you see from <span>floor 27B</span>?
-          </h1>
+          {/*
+            "What would you see from floor 27B?" read as an instruction to type
+            27B into the floor box. 27B is the name of the thing, not a value
+            you enter, and the two inputs are an address and a floor number.
+          */}
+          <p className="masthead__tag">
+            <span className="masthead__mark">27B</span> — New York City only
+          </p>
+          <h1 className="masthead__title">What would you see from that floor?</h1>
           <p className="masthead__sub">
-            Type any NYC address and a floor number. 27B finds the building,
-            estimates the camera height for that floor, and looks out along
-            its four facades using real captured imagery of the city.
+            Before you go and look at an apartment, see roughly what its floor
+            looks out on. Give it a New York address and a floor number: it
+            finds the building, works out how high that floor sits, and looks
+            out along each of the building's walls using real captured imagery
+            of the city.
           </p>
         </header>
 
@@ -172,10 +176,11 @@ export default function App() {
         />
 
         <p className="framing">
-          <strong>Approximately what you'd see</strong>, not your exact view.
-          NYC publishes no per-floor heights, so floor height is estimated and
-          the four bearings come from the building's footprint rather than a
-          floor plan. The imagery is always real, or absent.
+          <strong>Approximately what you'd see</strong>, not the view from a
+          particular apartment. Nobody publishes per-floor heights, so the
+          height of your floor is estimated, and the four directions come from
+          the shape of the building rather than from a floor plan. The imagery
+          is always real, or absent — never a stand-in.
         </p>
 
         {ui.kind === "loading" && <LoadingState />}
