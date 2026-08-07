@@ -50,6 +50,7 @@ import {
 import "cesium/Build/Cesium/Widgets/widgets.css";
 import type { CameraView, RenderSession } from "../lib/types";
 import { RENDER_TUNING } from "./renderTuning";
+import { barMetrics, layoutAttributionBar } from "./attributionBar";
 import { applyCameraView } from "./cesiumCamera";
 import { describeError } from "../lib/redact";
 import {
@@ -191,7 +192,7 @@ function waitForTiles(
           seenNonZero = true;
           cancelSettle(); // tiles still loading — restart the grace window
         } else if (seenNonZero) {
-          scheduleSettle(); // tiles quiesced — start 2 s grace window
+          scheduleSettle(); // tiles quiesced — start the SETTLE_GRACE_MS window
         }
       },
     );
@@ -276,51 +277,43 @@ export function composeAttributedPng(
   source: HTMLCanvasElement,
   attribution: string[],
 ): string {
-  const FONT =
-    "12px system-ui, -apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif";
-  const PAD = 8;
-  const LINE_H = 15;
-
   const text =
     attribution.length > 0
       ? `${GOOGLE_ATTRIBUTION} · ${attribution.join(", ")}`
       : GOOGLE_ATTRIBUTION;
 
-  // Measure first so the bar is tall enough to show the credits IN FULL. The
-  // policy asks for the attributions "in full"; truncating them to fit would be
-  // the wrong trade, so the image grows instead.
+  // Size and wrap first, so the bar is tall enough to show the credits IN FULL
+  // before any pixels are allocated. See `attributionBar.ts` for why the size
+  // is a fraction of the frame rather than a constant.
+  const { fontPx } = barMetrics(source.width);
+  const font = `${fontPx}px system-ui, -apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif`;
+
   const measure = document.createElement("canvas").getContext("2d");
   if (!measure) throw new Error("2D context unavailable for attribution compositing");
-  measure.font = FONT;
-  const maxWidth = source.width - PAD * 2;
-  const lines: string[] = [];
-  let current = "";
-  for (const word of text.split(" ")) {
-    const next = current ? `${current} ${word}` : word;
-    if (measure.measureText(next).width > maxWidth && current) {
-      lines.push(current);
-      current = word;
-    } else {
-      current = next;
-    }
-  }
-  if (current) lines.push(current);
+  measure.font = font;
 
-  const barH = lines.length * LINE_H + PAD;
+  const bar = layoutAttributionBar(source.width, text, (s) =>
+    measure.measureText(s).width,
+  );
+
   const out = document.createElement("canvas");
   out.width = source.width;
-  out.height = source.height + barH;
+  out.height = source.height + bar.heightPx;
   const ctx = out.getContext("2d");
   if (!ctx) throw new Error("2D context unavailable for attribution compositing");
 
   ctx.drawImage(source, 0, 0);
   ctx.fillStyle = "#0b0d10";
-  ctx.fillRect(0, source.height, out.width, barH);
+  ctx.fillRect(0, source.height, out.width, bar.heightPx);
   ctx.fillStyle = "#e8eaed";
-  ctx.font = FONT;
+  ctx.font = font;
   ctx.textBaseline = "top";
-  lines.forEach((line, i) => {
-    ctx.fillText(line, PAD, source.height + PAD / 2 + i * LINE_H);
+  bar.lines.forEach((line, i) => {
+    ctx.fillText(
+      line,
+      bar.padPx,
+      source.height + bar.padPx / 2 + i * bar.lineHeightPx,
+    );
   });
 
   return out.toDataURL("image/png");
@@ -461,9 +454,11 @@ async function openCesiumFrameSource(
     viewer.useBrowserRecommendedResolution = true; // ignore DPR; be explicit
     viewer.resolutionScale = superSample;
 
-    // Projection. Cesium's defaults are fov 60 deg on the wider axis and a
-    // 1 m near plane; both are stated explicitly here because both are part of
-    // what the capture looks like and neither should drift silently.
+    // Projection. Cesium 1.143's PerspectiveFrustum defaults are fov 60 deg on
+    // the wider axis and a near plane of **0.1 m** — not the 1 m this comment
+    // used to claim, which is a figure from older documentation. Measured from
+    // a bare Viewer on 2026-08-06. Both are set explicitly here because both
+    // are part of what the capture looks like and neither should drift.
     const frustum = viewer.camera.frustum as { fov?: number; near?: number };
     if (typeof frustum.fov === "number") {
       frustum.fov = CesiumMath.toRadians(fovDeg);

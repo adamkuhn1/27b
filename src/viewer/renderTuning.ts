@@ -62,8 +62,14 @@ export const RENDER_TUNING = {
    * where this provider's mesh looks worst. At 75 the same capture includes the
    * roofline, the sky above it and the street below, so the frame reads as a
    * view out of a window rather than as a texture. 90 shows more again but with
-   * visible wide-angle stretch at the edges; 75 is roughly a 28 mm lens, which
-   * is what an interior photograph of a view is usually taken with.
+   * visible wide-angle stretch at the edges.
+   *
+   * For scale: 75 deg horizontal on a 36 mm frame is f = 18/tan(37.5 deg) =
+   * 23.5 mm, so this is a 24 mm-class wide angle — wider than the 28 mm this
+   * comment used to claim. The argument for 75 is unaffected (it rests on the
+   * measured captures below, not on the lens number), but 24 mm is the honest
+   * comparison: it is a wide lens chosen because the subject is close, which is
+   * exactly why an interior photograph of a view is usually taken with one.
    *
    * It is also the cheapest setting here: a wider frame needs less angular
    * resolution, so the same scene settles in ~26% fewer renderer tile requests

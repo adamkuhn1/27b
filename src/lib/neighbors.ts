@@ -45,10 +45,13 @@
 //     by treating it as zero-height.
 
 import type { NeighborBuilding } from "./types";
-
-const SODA_URL = "https://data.cityofnewyork.us/resource/5zhs-2jue.json";
-
-const FEET_TO_METERS = 0.3048;
+import {
+  FEET_TO_METERS,
+  SODA_URL,
+  firstRing,
+  num,
+  type SodaGeometry,
+} from "./soda";
 
 /** Metres per degree of latitude (WGS84 mean). */
 const M_PER_DEG_LAT = 111_320;
@@ -71,7 +74,7 @@ interface SodaRow {
   bin?: string;
   height_roof?: string;
   ground_elevation?: string;
-  the_geom?: { type?: string; coordinates?: unknown };
+  the_geom?: SodaGeometry;
 }
 
 /** A WKT axis-aligned box `radiusM` around a point, for `intersects()`. */
@@ -88,26 +91,6 @@ export function wktBox(
   const e = (lng + dLng).toFixed(7);
   // WKT is (x y) = (lng lat), closed ring.
   return `POLYGON((${w} ${s},${e} ${s},${e} ${n},${w} ${n},${w} ${s}))`;
-}
-
-/** Outer ring of a SODA Polygon/MultiPolygon geometry, or null. */
-function firstRing(geom: SodaRow["the_geom"]): Array<[number, number]> | null {
-  const coords = geom?.coordinates;
-  if (!Array.isArray(coords)) return null;
-  const ring =
-    geom?.type === "MultiPolygon"
-      ? (coords as number[][][][])[0]?.[0]
-      : (coords as number[][][])[0];
-  if (!Array.isArray(ring) || ring.length < 3) return null;
-  const typed = ring as Array<[number, number]>;
-  if (!Array.isArray(typed[0]) || typed[0].length < 2) return null;
-  return typed;
-}
-
-function num(v: string | undefined): number | null {
-  if (v == null) return null;
-  const n = Number.parseFloat(v);
-  return Number.isFinite(n) ? n : null;
 }
 
 export interface NeighborSet {

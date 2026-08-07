@@ -259,7 +259,7 @@ and both are contractually closed:
 
 What is left is NYC Open Data — free, keyless, ours, and already the source of
 the subject building's footprint. Per direction: over neighbouring footprints
-inside a ±30° cone and 220 m, the greatest angle above the eye line, and the
+inside a ±37.5° cone and 220 m, the greatest angle above the eye line, and the
 distance to the first thing that rises above it. Both terms stay in NAVD88, the
 datum they arrive in, so the GEOID18 conversion the camera needs cannot
 introduce error here.
