@@ -34,11 +34,29 @@ export const ASSUMED_FLOOR_HEIGHT_M = 3.2;
 export const EYE_ABOVE_FLOOR_M = 1.5;
 
 /**
- * How far outside the facade to push the camera, meters. Enough to clear the
- * building's own mesh so the near geometry doesn't fill the frame, small enough
- * that the vantage is still "from this building."
+ * How far outside the facade to push the camera, meters.
+ *
+ * Every metre here is spent twice: it buys clearance from the subject
+ * building's own photogrammetric mesh (which does not coincide exactly with the
+ * municipal footprint), and it *costs* the same metre of separation from
+ * whatever the camera is looking AT. In a Manhattan side street the opposing
+ * wall is 10-25 m from the subject facade, so a 6 m push removes a quarter to a
+ * half of the only distance the frame has. Detail in the provider mesh is
+ * roughly fixed in metres per texel, so halving the distance to the subject
+ * doubles how much each texel is magnified — which is what "melted" looks like.
+ *
+ * The value below is the one under test in the rendering bake-off; see
+ * docs/repair/portfolio-suite-product-sprint/27b/REPORT.md.
  */
 export const FACADE_OFFSET_M = 6;
+
+/**
+ * Step used by the escape hatch in `buildCameraViews` when a malformed ring
+ * leaves the camera inside the polygon. Deliberately larger than
+ * `FACADE_OFFSET_M`: this loop only ever runs for self-intersecting source
+ * geometry, where the right move is to get clear quickly rather than to creep.
+ */
+const RESCUE_STEP_M = 6;
 
 /**
  * Minimum length-weighted orientation concentration required before we claim a
@@ -316,6 +334,12 @@ export function buildCameraViews(
   footprint: BuildingFootprint,
   eyeElevationEllipsoidalM: number,
   eyeAboveGroundM: number,
+  /**
+   * Override for `FACADE_OFFSET_M`. Exists so the offset can be swept in a
+   * controlled bake-off against real imagery without editing a constant between
+   * runs; production callers pass nothing and get the selected default.
+   */
+  facadeOffsetM: number = FACADE_OFFSET_M,
 ): { views: CameraView[]; basis: ViewBasis; concentration: number } {
   // -3 deg at ground level -> -9 deg at 200 m+, clamped; keeps sky in the top third.
   const pitchDeg = Math.max(-9, -(3 + eyeAboveGroundM / 33));
@@ -328,17 +352,19 @@ export function buildCameraViews(
       footprint.centroid,
       headingDeg,
     );
-    let standoffM = wallDist + FACADE_OFFSET_M;
+    let standoffM = wallDist + facadeOffsetM;
 
     // Verify the camera is genuinely outside the footprint; push out in
-    // FACADE_OFFSET_M steps if a pathological ring puts it back inside.
+    // RESCUE_STEP_M steps if a pathological ring puts it back inside.
     //
     // For any simple ring this loop provably never runs: `facadeDistanceM`
     // returns the OUTERMOST boundary crossing, past which the ray has left the
-    // polygon for good, so `wallDist + 6 m` is already outside — even for a C
-    // whose centroid sits in the notch (pinned in geometry.test.ts). It stays
-    // as a guard against self-intersecting or otherwise malformed source rings,
-    // where even-odd parity can disagree with the raycast.
+    // polygon for good, so `wallDist + anything positive` is already outside —
+    // even for a C whose centroid sits in the notch (pinned in
+    // geometry.test.ts). It stays as a guard against self-intersecting or
+    // otherwise malformed source rings, where even-odd parity can disagree with
+    // the raycast. The step is deliberately independent of `facadeOffsetM`: a
+    // sub-metre offset should not turn the escape hatch into a crawl.
     const dirX = Math.sin(toRad(headingDeg));
     const dirY = Math.cos(toRad(headingDeg));
     for (let guard = 0; guard < 8; guard++) {
@@ -347,7 +373,7 @@ export function buildCameraViews(
       ) {
         break;
       }
-      standoffM += FACADE_OFFSET_M;
+      standoffM += RESCUE_STEP_M;
     }
 
     const { lat, lng } = offsetLatLng(
