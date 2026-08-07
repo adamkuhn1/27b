@@ -108,6 +108,29 @@ export const NO_IMAGERY_AT_ALL_NOTE =
 export const RETRY_THIS_DIRECTION = "Retry this direction";
 export const RENDER_ALL_AGAIN = "Render all four again";
 
+/**
+ * The one-line qualification shown beside a direction's label, or null.
+ *
+ * Said BEFORE the picture rather than under it. A close-range frame that
+ * arrives unannounced reads as a broken render; the same frame introduced as a
+ * light court reads as the answer. `directionNote` still carries the
+ * measurement itself — this is only the heading over it.
+ */
+export function qualityLead(
+  quality: "normal" | "qualified" | "close" | "no-window",
+): string | null {
+  switch (quality) {
+    case "close":
+      return "Close range";
+    case "qualified":
+      return "Enclosed";
+    case "no-window":
+      return "No window on this side";
+    case "normal":
+      return null;
+  }
+}
+
 export interface PlanNote {
   /** Stable key for React and for tests. */
   id: string;

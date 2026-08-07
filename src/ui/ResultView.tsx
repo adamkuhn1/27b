@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import type { CameraView, SlotPhase, ViewPlan, ViewSlot } from "../lib/types";
 import { isRenderableDirection } from "../lib/confidence";
 import { CesiumView } from "../viewer/CesiumView";
@@ -7,6 +8,7 @@ import {
   useTileCaptures,
 } from "../viewer/useTileCaptures";
 import { PlanDiagram } from "./PlanDiagram";
+import { chooseLeadDirection, viewQuality } from "./leadDirection";
 import {
   NO_IMAGERY_NOTE,
   RENDER_ALL_AGAIN,
@@ -14,6 +16,7 @@ import {
   confidenceFor,
   directionNote,
   planNotes,
+  qualityLead,
 } from "./notes";
 
 interface ResultViewProps {
@@ -25,7 +28,16 @@ interface ResultViewProps {
 }
 
 /**
- * Presents a produced ViewPlan as a plan drawing plus four elevations.
+ * Presents a produced ViewPlan as one large view, the other directions beside
+ * it, and a plan drawing showing which way each looks.
+ *
+ * ONE LARGE VIEW, NOT FOUR SMALL ONES. Four panes in a grid gave every
+ * direction 338 CSS px of an 800 px capture — small enough that the picture
+ * could not be read and the baked attribution line came out at 3.7-7.7 device
+ * pixels. It also made the page a specimen sheet: four thumbnails of a building
+ * you were considering living in, all equally unreadable. The four directions
+ * are still all here and still all captured; one of them is simply the size a
+ * photograph should be.
  *
  * The structure is on screen — correctly labelled, with real bearings — from
  * the moment the geometry resolves, roughly a second in. Imagery lands into it
@@ -61,6 +73,14 @@ function ResultBody({
   const aboveGroundM =
     plan.eyeElevationNavd88M - plan.footprint.groundElevationNavd88M;
 
+  // Which direction opens the result, chosen from geometry before any imagery
+  // exists (see leadDirection.ts). Held in state so the reader can change it,
+  // and re-seeded only when the plan itself changes — never when a frame lands.
+  const [selected, setSelected] = useState<ViewSlot | null>(() =>
+    chooseLeadDirection(plan),
+  );
+  useEffect(() => setSelected(chooseLeadDirection(plan)), [plan]);
+
   // The denominator is the number of directions we ASKED the provider for, not
   // the number of facades. A wall shared with the building next door was never
   // requested, and counting it here would report "3 of 4 directions loaded" —
@@ -82,16 +102,15 @@ function ResultBody({
       : "no-window";
   }
 
+  const leadView =
+    plan.views.find((v) => v.slot === selected) ?? plan.views[0] ?? null;
+
   return (
     <>
       <header className="result__head">
         <h2 className="result__addr">{plan.geocode.label}</h2>
-        {/* The approximate/exact distinction, said plainly and kept in view. */}
         <p className="result__frame">
-          Approximate view · floor {plan.floor}
-        </p>
-        <p className="result__sub">
-          Where a window on this side would be — not a specific apartment.
+          Floor {plan.floor} · approximate view, not a specific apartment
         </p>
       </header>
 
@@ -103,15 +122,19 @@ function ResultBody({
         </ul>
       )}
 
-      <div className="result__drawings">
-        <PlanDiagram plan={plan} phaseBySlot={phaseBySlot} />
+      <div className="result__stage">
+        {leadView && <LeadView plan={plan} view={leadView} />}
 
-        <div className="views">
-          {plan.views.map((view) => (
-            <ViewPane key={view.slot} plan={plan} view={view} />
-          ))}
-        </div>
+        <aside className="result__aside">
+          <PlanDiagram plan={plan} phaseBySlot={phaseBySlot} />
+        </aside>
       </div>
+
+      <DirectionStrip
+        plan={plan}
+        selected={leadView?.slot ?? null}
+        onSelect={setSelected}
+      />
 
       <details className="disclosure">
         <summary>How this was placed</summary>
@@ -145,17 +168,24 @@ function ResultBody({
   );
 }
 
-function ViewPane({ plan, view }: { plan: ViewPlan; view: CameraView }) {
+/**
+ * The direction shown large.
+ *
+ * `data-quality` carries what the geometry established about this direction, so
+ * a frame taken from two metres off the wall opposite is announced as one
+ * BEFORE it is looked at. A close-range frame that arrives unlabelled reads as
+ * a broken render; the same frame under "a light court about 4 m wide" reads as
+ * the answer to the question. The app knows which it is, so it says so.
+ */
+function LeadView({ plan, view }: { plan: ViewPlan; view: CameraView }) {
   const captures = useTileCaptures();
   const slot = captures.bySlot[view.slot];
+  const quality = viewQuality(view.slot, plan.confidence);
+  const noWindow = quality === "no-window";
   const sessionFailed = captures.phase === "failed";
-  // A wall shared with the neighbouring building is never captured, so it can
-  // never be "failed" or "still loading" either — it is simply a side with no
-  // window, and it says so from the moment the plan resolves.
-  const noWindow = !isRenderableDirection(view.slot, plan.confidence);
   const failed = !noWindow && (slot?.phase === "failed" || sessionFailed);
-  // When the whole session failed, the reason is stated once at the head
-  // instead of four identical times under four empty frames.
+  const lead = qualityLead(quality);
+
   const note = failed
     ? sessionFailed
       ? null
@@ -166,45 +196,101 @@ function ViewPane({ plan, view }: { plan: ViewPlan; view: CameraView }) {
 
   return (
     <figure
-      className="view"
+      className="lead"
+      data-quality={quality}
       data-phase={
         noWindow ? "no-window" : failed ? "failed" : slot?.phase ?? "queued"
       }
     >
-      <figcaption className="view__label">
-        <span className="view__compass">{view.compass}</span>
-        <span className="view__bearing">{view.headingDeg.toFixed(0)}° true</span>
+      <figcaption className="lead__caption">
+        <span className="lead__compass">Looking {view.compass}</span>
+        <span className="lead__bearing">
+          {view.headingDeg.toFixed(0)}° true
+        </span>
+        {lead && <span className="lead__quality">{lead}</span>}
       </figcaption>
-      <CesiumView
-        view={view}
-        disabled={captures.phase === "idle"}
-        noWindow={noWindow}
-      />
-      {note && <p className="view__note">{note}</p>}
+
+      <CesiumView view={view} disabled={captures.phase === "idle"} noWindow={noWindow} />
+
+      {note && <p className="lead__note">{note}</p>}
+
       {/*
-        Offered only while the session is open, because that is the only time
-        it is free. Once the session closes, re-capturing one direction costs
+        Offered only while the session is open, because that is the only time it
+        is free. Once the session closes, re-capturing one direction costs
         exactly as much as re-capturing four, and the honest offer is the
         whole-result button under the attribution line instead.
-
-        Be clear about how narrow that window is. A direction is re-queued
-        automatically once, at the back, so a single failing direction usually
-        reaches its terminal state as the last item in the queue — and the
-        session closes immediately after. This button therefore appears mainly
-        when TWO directions have trouble, which is also when it is worth the
-        most. Widening the window would mean holding the WebGL context open
-        idle after a result, which was considered and declined.
       */}
       {failed && captures.sessionOpen && (
         <button
           type="button"
-          className="view__retry"
+          className="lead__retry"
           onClick={() => captures.retrySlot(view.slot)}
         >
           {RETRY_THIS_DIRECTION}
         </button>
       )}
     </figure>
+  );
+}
+
+/**
+ * The other directions, as a row of small frames you can promote.
+ *
+ * All four are always listed, in plan order, including the one currently shown
+ * large. Showing only the other three would have saved a slot and cost the
+ * reader a stable row: with three of four rotating through four positions,
+ * every click moves every remaining thumbnail. A fixed row with the current one
+ * marked is the switcher people already know how to use.
+ */
+function DirectionStrip({
+  plan,
+  selected,
+  onSelect,
+}: {
+  plan: ViewPlan;
+  selected: ViewSlot | null;
+  onSelect: (slot: ViewSlot) => void;
+}) {
+  const captures = useTileCaptures();
+
+  return (
+    <div className="thumbs" role="group" aria-label="The four directions">
+      {plan.views.map((view) => {
+        const quality = viewQuality(view.slot, plan.confidence);
+        const noWindow = quality === "no-window";
+        const isSelected = view.slot === selected;
+
+        return (
+          <button
+            key={view.slot}
+            type="button"
+            className="thumb"
+            data-quality={quality}
+            data-selected={isSelected ? "true" : undefined}
+            aria-pressed={isSelected}
+            // A direction with no window has nothing to promote: there is no
+            // frame and there never will be one. It stays in the row, labelled,
+            // because it is still one of the building's four sides.
+            disabled={noWindow}
+            onClick={() => onSelect(view.slot)}
+          >
+            <span className="thumb__frame">
+              <CesiumView
+                view={view}
+                disabled={captures.phase === "idle"}
+                noWindow={noWindow}
+                size="thumb"
+              />
+            </span>
+            <span className="thumb__label">
+              <span className="thumb__compass">{view.compass}</span>
+              {noWindow && <span className="thumb__state">no window</span>}
+              {quality === "close" && <span className="thumb__state">close range</span>}
+            </span>
+          </button>
+        );
+      })}
+    </div>
   );
 }
 

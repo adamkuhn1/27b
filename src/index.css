@@ -100,14 +100,12 @@ body {
   line-height: 1.2;
 }
 
-/* "floor 27B" — the project's one accent mark. Plain colour, no chip, no
-   border, no fill: the whole point is that it's a mark, not a control. */
-/* "floor 27B" — the project's one accent mark. Plain colour in the running
-   typeface: switching to monospace mid-sentence made the token look pasted in
-   from a different document. */
-.masthead__title span {
+/* The project's one accent mark. It used to sit on "floor 27B" inside the
+   headline, which is exactly the conflation that made the headline read as an
+   instruction to type 27B into the floor box. The name belongs on the name. */
+.masthead__mark {
   color: var(--accent);
-  font-weight: 600;
+  letter-spacing: 0.18em;
 }
 
 .masthead__sub {
@@ -273,19 +271,12 @@ body {
   font-size: 1.15rem;
   font-weight: 600;
 }
-/* The approximate/exact distinction, stated where it cannot be missed. */
+/* The approximate/exact distinction, stated where it cannot be missed — as a
+   sentence, not as another tiny uppercase monospace label. */
 .result__frame {
-  margin: 0.35rem 0 0;
-  font-family: var(--mono);
-  font-size: 0.72rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--text-dim);
-}
-.result__sub {
-  margin: 0.2rem 0 0;
+  margin: 0.3rem 0 0;
   font-size: 0.88rem;
-  color: var(--text-faint);
+  color: var(--text-dim);
 }
 
 /* Notes qualifying the whole result. Hairline rule, no box: they are marginalia
@@ -304,17 +295,26 @@ body {
   margin-top: 0.2rem;
 }
 
-/* Plan beside elevations, the way a drawing set is laid out. */
-.result__drawings {
+/* The stage: one large view, with the plan drawing beside it.
+
+   Sizes matter here and are load-bearing. In a 1040 px column with 2 rem of
+   padding the content is 976 px; a 200 px plan column and a 1.5 rem gap leave
+   the lead frame ~752 CSS px. The old four-up grid gave each pane 338. */
+.result__stage {
   display: grid;
-  grid-template-columns: 260px 1fr;
+  grid-template-columns: 1fr 200px;
   gap: 1.5rem;
   align-items: start;
 }
 @media (max-width: 860px) {
-  .result__drawings {
+  .result__stage {
     grid-template-columns: 1fr;
   }
+}
+.result__aside {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 /* ---- Plan diagram ---- */
@@ -403,6 +403,7 @@ body {
   color: var(--text-faint);
   line-height: 1.5;
 }
+
 .result__meta {
   margin: 0.25rem 0 0;
   color: var(--text-dim);
@@ -423,7 +424,7 @@ body {
 /* Restrained disclosure for the placement math (NAVD88/WGS84/geoid, BIN, roof
    height) — real and available, but not primary. Closed by default. */
 .disclosure {
-  margin-top: 1.25rem;
+  margin-top: 1.5rem;
 }
 .disclosure summary {
   cursor: pointer;
@@ -440,93 +441,51 @@ body {
   margin-bottom: 0.5rem;
 }
 
-/* ---- Four elevations ----
-   Each pane is a drawing plate: a caption line above the frame, the frame, and
-   whatever qualifies it below. The caption sits ABOVE rather than over the
-   image, so a pane with no imagery is still a labelled plate rather than an
-   empty box with floating text. */
-.views {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1.25rem 1rem;
-}
-@media (max-width: 560px) {
-  .views {
-    grid-template-columns: 1fr;
-  }
-}
-.view {
+/* ---- The lead view ---- */
+.lead {
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.45rem;
+  min-width: 0;
 }
-.view__canvas,
-.view canvas {
-  width: 100%;
-  display: block;
-  border: 1px solid var(--line);
-}
-/* An empty pane holds the 4:3 box so the grid does not jump as frames land. */
-.view__canvas--empty,
-.view canvas {
-  aspect-ratio: 4 / 3;
-}
-/*
-  A LOADED FRAME IS NEVER CROPPED. This used to be `aspect-ratio: 4/3` plus
-  `object-fit: cover` for every pane, including the <img>. The captured PNG is
-  the 800x600 render with Google's attribution bar appended BELOW it, so it is
-  800x623 (or 800x638 when the credits wrap to two lines) — not 4:3. `cover`
-  therefore scaled to fill and cropped 11.5 source pixels off the top and the
-  bottom, which took out half of a one-line credit bar and an entire line of a
-  two-line one. The bar is baked into the pixels precisely so the attribution
-  can never be separated from the imagery, and the stylesheet was quietly
-  cutting it in half on screen. Measured, before and after, in
-  docs/repair/portfolio-suite-product-sprint/27b/REPORT.md.
-
-  The cost is that panes are ~3% taller than 4:3 and can differ by a line
-  between directions. That is the correct trade: a required credit is not a
-  layout detail.
-*/
-img.view__canvas {
-  height: auto;
-  object-fit: fill;
-}
-/* A pane with no imagery is EMPTY. Not a gradient, not a silhouette, not a
-   "representative" image — the ground the whole page sits on, behind a rule.
-   This declaration is load-bearing for the project's central promise. */
-.view__canvas--empty {
-  background: transparent;
-}
-.view[data-phase="capturing"] .view__canvas--empty {
-  border-color: var(--line-strong);
-}
-
-.view__label {
+.lead__caption {
   display: flex;
   align-items: baseline;
-  gap: 0.5rem;
-  font-size: 0.8rem;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+  font-size: 0.9rem;
   color: var(--text-dim);
 }
-.view__compass {
-  font-family: var(--mono);
-  font-size: 0.72rem;
-  letter-spacing: 0.14em;
+.lead__compass {
   color: var(--text);
+  font-weight: 600;
 }
-.view__bearing {
+.lead__bearing {
   color: var(--text-faint);
-  font-size: 0.75rem;
-}
-/* The per-direction note: why this particular elevation is qualified. */
-.view__note {
-  margin: 0;
   font-size: 0.8rem;
-  line-height: 1.5;
+}
+/* The qualification, said before the picture. A hairline rule to its left, in
+   the running typeface — not a pill, not a badge, not a colour. */
+.lead__quality {
+  margin-left: auto;
+  padding-left: 0.6rem;
+  border-left: 1px solid var(--line-strong);
+  font-size: 0.82rem;
   color: var(--text-faint);
 }
-.view__retry {
+.lead[data-quality="close"] .lead__quality,
+.lead[data-quality="no-window"] .lead__quality {
+  color: var(--text-dim);
+}
+.lead__note {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.55;
+  color: var(--text-faint);
+  max-width: 64ch;
+}
+.lead__retry {
   align-self: flex-start;
   background: transparent;
   border: none;
@@ -539,9 +498,143 @@ img.view__canvas {
   padding: 0 0 0.15rem;
   cursor: pointer;
 }
-.view__retry:hover {
+.lead__retry:hover {
   color: var(--text);
   border-bottom-color: var(--text);
+}
+
+.lead .view__canvas,
+.lead canvas {
+  width: 100%;
+  display: block;
+  border: 1px solid var(--line);
+}
+/* An empty frame holds the 4:3 box so the page does not jump as frames land. */
+.lead .view__canvas--empty,
+.lead canvas {
+  aspect-ratio: 4 / 3;
+}
+/*
+  A LOADED FRAME IS NEVER CROPPED. This used to be `aspect-ratio: 4/3` plus
+  `object-fit: cover` for every pane, including the <img>. The captured PNG is
+  the render with Google's attribution bar appended BELOW it, so it is taller
+  than 4:3 — `cover` therefore scaled to fill and cropped source pixels off the
+  top and the bottom, taking out half of a one-line credit bar and an entire
+  line of a two-line one. The bar is baked into the pixels precisely so the
+  attribution can never be separated from the imagery.
+
+  The cost is that frames are ~3% taller than 4:3 and can differ by a line
+  between directions. That is the correct trade: a required credit is not a
+  layout detail.
+*/
+.lead img.view__canvas {
+  height: auto;
+  object-fit: fill;
+}
+/* A frame with no imagery is EMPTY. Not a gradient, not a silhouette, not a
+   "representative" image — the ground the whole page sits on, behind a rule.
+   This declaration is load-bearing for the project's central promise. */
+.lead .view__canvas--empty {
+  background: transparent;
+}
+.lead[data-phase="capturing"] .view__canvas--empty {
+  border-color: var(--line-strong);
+}
+/* Close range and no-window frames are marked on the frame itself, so the
+   distinction survives someone scrolling past the caption. A doubled inset
+   rule — the drawing convention for "this edge is qualified" — not a tint. */
+.lead[data-quality="close"] .view__canvas,
+.lead[data-quality="close"] img.view__canvas {
+  outline: 1px solid var(--line);
+  outline-offset: 3px;
+}
+
+/* ---- The four directions, as a row you can promote from ---- */
+.thumbs {
+  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+}
+@media (max-width: 560px) {
+  .thumbs {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+.thumb {
+  background: transparent;
+  border: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+  min-width: 0;
+}
+.thumb:disabled {
+  cursor: default;
+}
+.thumb__frame {
+  display: block;
+  aspect-ratio: 4 / 3;
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+.thumb__frame .thumb__img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  /* The only place in this app a frame is cropped, and it is a NAVIGATION
+     control rather than the imagery itself: the full uncropped frame — credit
+     bar included — is one click away in the lead view, and the on-screen
+     attribution line below covers what is displayed either way. */
+  object-fit: cover;
+}
+.thumb__empty {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* Empty means empty — the page's own ground, never a stand-in. */
+  background: transparent;
+}
+/* The current direction. A solid rule against the hairlines of the others —
+   the same language the plan diagram uses for a completed axis. */
+.thumb[data-selected="true"] .thumb__frame {
+  border-color: var(--text);
+}
+.thumb:hover:not(:disabled) .thumb__frame {
+  border-color: var(--text-dim);
+}
+.thumb:focus-visible {
+  outline: 2px solid var(--text-dim);
+  outline-offset: 3px;
+}
+.thumb[data-quality="no-window"] .thumb__frame {
+  opacity: 0.35;
+  border-style: dashed;
+}
+.thumb__label {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  font-size: 0.78rem;
+  color: var(--text-faint);
+}
+.thumb__compass {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  color: var(--text-dim);
+}
+.thumb[data-selected="true"] .thumb__compass {
+  color: var(--text);
+}
+.thumb__state {
+  font-size: 0.72rem;
 }
 
 /* ---- Imagery attribution (required by Map Tiles API policies) ---- */
