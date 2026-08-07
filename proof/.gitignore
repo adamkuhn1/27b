@@ -9,3 +9,4 @@
 # Everything that is safe to keep (camera parameters, request counts, timings,
 # attribution strings) lives in summary.json, which IS committed.
 evidence/*.png
+bakeoff/out/frames/

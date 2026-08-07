@@ -40,6 +40,7 @@ import {
   createGooglePhotorealistic3DTileset,
   Ion,
   ImageryLayer,
+  Math as CesiumMath,
 } from "cesium";
 // Imported here, not in index.html, so it travels in this lazily-imported
 // chunk. Cesium's widget stylesheet is only meaningful once a `Viewer` exists;
@@ -60,14 +61,71 @@ import {
 /** Text we are required to show alongside the imagery (policy: logo or the words). */
 const GOOGLE_ATTRIBUTION = "Google Maps";
 
+/**
+ * The renderer's tuning surface, in one place.
+ *
+ * Every number here was chosen against real captures in the rendering bake-off
+ * recorded in `docs/repair/portfolio-suite-product-sprint/27b/REPORT.md`. They
+ * are grouped so that a reader can see the whole set at once, and so that the
+ * bake-off harness can override exactly these values and nothing else — the
+ * experiment therefore drives the shipped code path rather than a copy of it.
+ */
+export const RENDER_TUNING = {
+  /** Capture size in CSS pixels (see `superSample` for the backing store). */
+  width: 800,
+  height: 600,
+  /**
+   * Cesium renders at CSS resolution by default
+   * (`Viewer.useBrowserRecommendedResolution` defaults to `true`, which
+   * *ignores* devicePixelRatio), so the capture was previously 800x600 real
+   * pixels no matter what display it ran on. `resolutionScale` multiplies the
+   * canvas backing store, and `canvas.toDataURL()` reads the backing store —
+   * so this is ordinary supersampling of our own render surface, downsampled by
+   * the browser at display size. It adds raster resolution; it cannot and does
+   * not add scene content.
+   */
+  superSample: 1,
+  /** Max ms to wait for tiles to settle per view before capturing anyway. */
+  settleTimeoutMs: 16000,
+  /** Cesium's LOD threshold. Lower = finer tiles, more requests, more memory. */
+  maximumScreenSpaceError: 10,
+  /**
+   * Horizontal field of view, degrees. Cesium's `PerspectiveFrustum` defaults
+   * to 60 and applies `fov` to the wider viewport dimension.
+   */
+  fovDeg: 60,
+  /**
+   * Near clip plane, metres. Cesium's default is 1.0 m, which clips anything
+   * closer than a metre — a real constraint once the camera sits close to a
+   * facade.
+   */
+  nearPlaneM: 1.0,
+  /**
+   * Whether to apply the loading options that suit a stationary capture rather
+   * than an interactive globe. See the call site for what they are and why
+   * Cesium's defaults are the wrong ones here.
+   */
+  stationaryLoading: false,
+} as const;
+
 export interface RenderOptions {
   /** Google Map Tiles API key (Photorealistic 3D Tiles). Required. */
   apiKey: string;
-  /** Capture size in device pixels. Small keeps memory + capture cost down. */
+  /** Capture size in CSS pixels. Small keeps memory + capture cost down. */
   width?: number;
   height?: number;
+  /** Supersampling factor for the canvas backing store. See `RENDER_TUNING`. */
+  superSample?: number;
   /** Max ms to wait for tiles to settle per view before capturing anyway. */
   settleTimeoutMs?: number;
+  /** Cesium `Cesium3DTileset.maximumScreenSpaceError`. See `RENDER_TUNING`. */
+  maximumScreenSpaceError?: number;
+  /** Horizontal field of view in degrees. See `RENDER_TUNING`. */
+  fovDeg?: number;
+  /** Near clip plane in metres. See `RENDER_TUNING`. */
+  nearPlaneM?: number;
+  /** Stationary-capture tile loading options. See `RENDER_TUNING`. */
+  stationaryLoading?: boolean;
   /**
    * Aborts the session early (superseded plan, unmount, StrictMode's double
    * effect invocation). Without this, an orphaned run keeps its own Cesium
@@ -85,6 +143,13 @@ class RenderAbortedError extends Error {
     this.name = "RenderAbortedError";
   }
 }
+
+/**
+ * Quiet period after tile activity reaches zero before a capture is called
+ * settled. Long enough not to cut off the next refinement burst, short enough
+ * that a genuinely finished view is not held back.
+ */
+const SETTLE_GRACE_MS = 900;
 
 /** How `waitForTiles` ended. */
 export interface SettleOutcome {
@@ -116,8 +181,9 @@ export interface SettleOutcome {
  *
  * 2. Debounce on loadProgress(0,0) — the event fires (0,0) both on startup
  *    (before any tiles are requested) and briefly between tile batches while
- *    the renderer refines the LOD. A 900 ms grace period after seeing (0,0)
- *    lets the second wave of detail tiles start before we declare done.
+ *    the renderer refines the LOD. A `SETTLE_GRACE_MS` grace period after
+ *    seeing (0,0) lets the second wave of detail tiles start before we declare
+ *    done.
  *
  * 3. seenNonZero guard — never accept the initial (0,0) firing as "settled".
  */
@@ -158,7 +224,7 @@ function waitForTiles(
       // timeout below in practice. Measured captures at that timeout already
       // look complete, so the grace period only needs to be long enough to
       // not cut off a real burst of new tiles, not to prove total silence.
-      settleTimer = setTimeout(() => finish(true), 900);
+      settleTimer = setTimeout(() => finish(true), SETTLE_GRACE_MS);
     };
 
     const cancelSettle = () => {
@@ -326,15 +392,20 @@ async function openCesiumFrameSource(
 ): Promise<FrameSource> {
   const {
     apiKey,
-    width = 800,
-    height = 600,
+    width = RENDER_TUNING.width,
+    height = RENDER_TUNING.height,
+    superSample = RENDER_TUNING.superSample,
     // 9 s was measured to be too short: the last view of a four-view run was
     // still at a coarse LOD when it was captured, which reads as "blocky" —
     // exactly the impression this project must never give, even though the
-    // geometry is real photogrammetry throughout. 16 s lets the mesh refine.
-    // Renderer tile requests inside an open session are unmetered, so the only
-    // cost of waiting longer is wall-clock time.
-    settleTimeoutMs = 16000,
+    // geometry is real photogrammetry throughout. Renderer tile requests inside
+    // an open session are unmetered, so the only cost of waiting longer is
+    // wall-clock time.
+    settleTimeoutMs = RENDER_TUNING.settleTimeoutMs,
+    maximumScreenSpaceError = RENDER_TUNING.maximumScreenSpaceError,
+    fovDeg = RENDER_TUNING.fovDeg,
+    nearPlaneM = RENDER_TUNING.nearPlaneM,
+    stationaryLoading = RENDER_TUNING.stationaryLoading,
     signal,
   } = opts;
 
@@ -427,6 +498,26 @@ async function openCesiumFrameSource(
 
     viewer.scene.globe.show = false; // hide the default ellipsoid globe.
 
+    // Render the backing store larger than the CSS box and let the browser
+    // downsample on display. Cesium ignores devicePixelRatio by default
+    // (`useBrowserRecommendedResolution`), so without this the capture is
+    // exactly `width x height` real pixels regardless of the display. This is
+    // supersampling of our own render surface, nothing more: it changes how
+    // finely the provider's mesh is rasterised, never what the mesh contains.
+    viewer.useBrowserRecommendedResolution = true; // ignore DPR; be explicit
+    viewer.resolutionScale = superSample;
+
+    // Projection. Cesium's defaults are fov 60 deg on the wider axis and a
+    // 1 m near plane; both are stated explicitly here because both are part of
+    // what the capture looks like and neither should drift silently.
+    const frustum = viewer.camera.frustum as { fov?: number; near?: number };
+    if (typeof frustum.fov === "number") {
+      frustum.fov = CesiumMath.toRadians(fovDeg);
+    }
+    if (typeof frustum.near === "number") {
+      frustum.near = nearPlaneM;
+    }
+
     // `showCreditsOnScreen: true` is what Google's own Photorealistic 3D Tiles
     // sample sets, and the docs require "a 3D Tiles renderer that supports the
     // display of copyright attribution". It makes Cesium surface the per-tile
@@ -465,10 +556,26 @@ async function openCesiumFrameSource(
     // Lower the LOD error threshold below Cesium's default (16) to load
     // building-level detail from mid-altitude. 4 was measured to be far too
     // aggressive: one address blew past 11,000 tile requests and took ~4
-    // minutes to settle against the ~1,000/mo free-tier cap this app exists
-    // to respect. 10 is a middle ground — still resolves building facades,
-    // without the runaway refinement cost of the lowest settings.
-    tileset.maximumScreenSpaceError = 10;
+    // minutes to settle. See RENDER_TUNING for the selected value.
+    tileset.maximumScreenSpaceError = maximumScreenSpaceError;
+
+    // Two Cesium defaults that exist to make a *moving* camera feel responsive
+    // and that are simply wrong for a stationary still capture:
+    //
+    //   foveatedScreenSpaceError (default true) deliberately raises the screen
+    //   space error for tiles away from the centre of the screen. In an
+    //   interactive globe that is a good trade. In a framed photograph it means
+    //   the edges of every capture are permanently coarser than the middle.
+    //
+    //   progressiveResolutionHeightFraction (default 0.3) asks for a
+    //   deliberately low-resolution pass first so something appears quickly.
+    //   We are not showing the intermediate frames to anyone, so it only adds
+    //   requests we then throw away.
+    //
+    // Neither changes the finest level available; they change which tiles get
+    // asked for and when. Turning both off costs nothing but wall clock.
+    tileset.foveatedScreenSpaceError = !stationaryLoading;
+    tileset.progressiveResolutionHeightFraction = stationaryLoading ? 0.0 : 0.3;
     viewer.scene.primitives.add(tileset);
 
     // Position the camera at the first view before warmup so the warm-up
