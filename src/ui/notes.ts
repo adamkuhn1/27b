@@ -43,6 +43,7 @@ export function directionNote(
   confidence: DirectionConfidence | undefined,
   opts: { settled?: boolean } = {},
 ): string | null {
+  if (confidence?.insideNeighborByM != null) return ABUTTING_NOTE;
   if (opts.settled === false) return "Still sharpening when this frame was captured.";
   if (!confidence) return null;
 
@@ -63,6 +64,16 @@ export function directionNote(
       return null;
   }
 }
+
+/**
+ * Copy for a wall that is shared with the building next door.
+ *
+ * Deliberately about the building, not about us: nothing failed and nothing is
+ * missing. There is no window on that side, so there is nothing to show. Said
+ * without hedging, because the footprint data says it plainly.
+ */
+export const ABUTTING_NOTE =
+  "This wall is shared with the building next door — no window on this side.";
 
 /** Copy for a direction whose imagery did not arrive. */
 export const NO_IMAGERY_NOTE = "This direction didn't load.";

@@ -49,6 +49,7 @@ import {
 // pay for. See the `lazyCesium` comment in vite.config.ts.
 import "cesium/Build/Cesium/Widgets/widgets.css";
 import type { CameraView, RenderSession } from "../lib/types";
+import { RENDER_TUNING } from "./renderTuning";
 import { applyCameraView } from "./cesiumCamera";
 import { describeError } from "../lib/redact";
 import {
@@ -60,53 +61,6 @@ import {
 
 /** Text we are required to show alongside the imagery (policy: logo or the words). */
 const GOOGLE_ATTRIBUTION = "Google Maps";
-
-/**
- * The renderer's tuning surface, in one place.
- *
- * Every number here was chosen against real captures in the rendering bake-off
- * recorded in `docs/repair/portfolio-suite-product-sprint/27b/REPORT.md`. They
- * are grouped so that a reader can see the whole set at once, and so that the
- * bake-off harness can override exactly these values and nothing else — the
- * experiment therefore drives the shipped code path rather than a copy of it.
- */
-export const RENDER_TUNING = {
-  /** Capture size in CSS pixels (see `superSample` for the backing store). */
-  width: 800,
-  height: 600,
-  /**
-   * Cesium renders at CSS resolution by default
-   * (`Viewer.useBrowserRecommendedResolution` defaults to `true`, which
-   * *ignores* devicePixelRatio), so the capture was previously 800x600 real
-   * pixels no matter what display it ran on. `resolutionScale` multiplies the
-   * canvas backing store, and `canvas.toDataURL()` reads the backing store —
-   * so this is ordinary supersampling of our own render surface, downsampled by
-   * the browser at display size. It adds raster resolution; it cannot and does
-   * not add scene content.
-   */
-  superSample: 1,
-  /** Max ms to wait for tiles to settle per view before capturing anyway. */
-  settleTimeoutMs: 16000,
-  /** Cesium's LOD threshold. Lower = finer tiles, more requests, more memory. */
-  maximumScreenSpaceError: 10,
-  /**
-   * Horizontal field of view, degrees. Cesium's `PerspectiveFrustum` defaults
-   * to 60 and applies `fov` to the wider viewport dimension.
-   */
-  fovDeg: 60,
-  /**
-   * Near clip plane, metres. Cesium's default is 1.0 m, which clips anything
-   * closer than a metre — a real constraint once the camera sits close to a
-   * facade.
-   */
-  nearPlaneM: 1.0,
-  /**
-   * Whether to apply the loading options that suit a stationary capture rather
-   * than an interactive globe. See the call site for what they are and why
-   * Cesium's defaults are the wrong ones here.
-   */
-  stationaryLoading: false,
-} as const;
 
 export interface RenderOptions {
   /** Google Map Tiles API key (Photorealistic 3D Tiles). Required. */
