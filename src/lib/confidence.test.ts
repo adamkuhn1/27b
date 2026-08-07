@@ -11,12 +11,21 @@ import {
   bearingDeltaDeg,
   classifyBand,
   CONE_HALF_ANGLE_DEG,
+  COURT_MIN_STANDOFF_M,
+  courtOffsets,
+  courtStandoffM,
   isRenderableDirection,
+  mergeCourtFindings,
   SEARCH_RADIUS_M,
 } from "./confidence";
 import { RENDER_TUNING } from "../viewer/renderTuning";
 import { loadCase, type RawFixture } from "./__fixtures__/loader";
-import type { CameraView, NeighborBuilding } from "./types";
+import { FACADE_OFFSET_M } from "./geometry";
+import type {
+  CameraView,
+  ConfidenceReport,
+  NeighborBuilding,
+} from "./types";
 import esbRaw from "./__fixtures__/esb.json";
 import flatironRaw from "./__fixtures__/flatiron.json";
 import e79Raw from "./__fixtures__/e79.json";
@@ -241,6 +250,7 @@ const CAMERA: CameraView = {
   heightM: 20,
   pitchDeg: -3,
   standoffM: 20,
+  wallDistanceM: 14,
 };
 
 function measure(neighbors: NeighborBuilding[], eyeM = 20) {
@@ -450,35 +460,179 @@ describe("party walls in the real fixtures", () => {
     }
   });
 
-  it("finds the abutting wall at 425 E 79th St, and only below the neighbour's roof", () => {
-    // This is the building whose four frames the release-candidate report
-    // described as "a melted grey landscape" and attributed to mesh quality.
-    // One of its cameras is inside the building next door: at floor 10 the eye
-    // sits 7.5 m below that neighbour's roof. The imagery was never the problem
-    // in that direction — the camera placement was.
-    expect(inside(E79, 10)).toEqual(["V2"]);
+  it("separates a party wall from a light court at 425 E 79th St", () => {
+    // This building is why the predicate was rewritten. It has BOTH cases, and
+    // the old test (kept below as the party wall) asserted that both were
+    // party walls, because the old predicate only asked whether the camera —
+    // six metres out — had ended up inside a neighbour.
+    //
+    //   V4 WNW: the wall itself is inside the neighbour. No window. Suppressed.
+    //   V2 ESE: a measured 4.4 m gap to the building opposite. A real window
+    //           with a real, very close view. The camera moves into the court
+    //           rather than the direction being deleted.
+    const { views, report } = assess(E79, 3);
+    const v4 = report.bySlot["V4"]!;
+    const v2 = report.bySlot["V2"]!;
 
-    const { views, report } = assess(E79, 10);
-    const v2 = report.bySlot[views.find((v) => v.slot === "V2")!.slot]!;
-    expect(v2.insideNeighborByM).toBeGreaterThan(5);
-    expect(v2.insideNeighborByM).toBeLessThan(10);
+    expect(v4.insideNeighborByM).toBeGreaterThan(5);
+    expect(v4.courtWidthM).toBeNull();
+    expect(isRenderableDirection("V4", report)).toBe(false);
 
-    // Depth shrinks as the camera climbs, and the direction becomes renderable
-    // again once the eye clears that neighbour's roof.
-    expect(inside(E79, 3)).toContain("V2");
+    expect(v2.insideNeighborByM).toBeNull();
+    expect(v2.courtWidthM).toBeCloseTo(4.4, 1);
+    expect(isRenderableDirection("V2", report)).toBe(true);
+    expect(views).toHaveLength(4);
+  });
+
+  it("reports a court only while the building across it is above the eye", () => {
+    // Both conditions are about the camera, not about the lot: a wall is a
+    // party wall while the neighbour rises above your eye, and a court is a
+    // court while the building across it does. Climb above either and the
+    // camera at its full six-metre standoff is simply outdoors.
+    //
+    // THIS IS THE DEFECT, stated as a test. At floor 10 the old predicate
+    // suppressed V2 as a party wall. It is a light court, and at floor 10 it is
+    // the ONLY qualified direction left — the real party wall on V4 is already
+    // below the eye. So the old code deleted the one direction that needed
+    // qualifying and presented the other three as though nothing were unusual.
+    for (const floor of [3, 10]) {
+      expect(assess(E79, floor).report.bySlot["V2"]!.courtWidthM).toBeCloseTo(
+        4.4,
+        1,
+      );
+    }
+    // Above the roofline opposite, both qualifications lapse.
+    expect(assess(E79, 18).report.bySlot["V2"]!.courtWidthM).toBeNull();
+    expect(inside(E79, 3)).toEqual(["V4"]);
+    expect(inside(E79, 10)).toEqual([]);
     expect(inside(E79, 18)).toEqual([]);
+  });
+
+  it("does not mistake a neighbour's own depth for a courtyard", () => {
+    // The failure mode that made the first version of this predicate wrong.
+    // When two footprints touch exactly on a shared lot line the wall lies ON
+    // the neighbour's boundary, where an even-odd test can report either side.
+    // Reporting "outside" makes the ray's first crossing the neighbour's FAR
+    // wall, so its depth is measured as open ground. At 425 E 79th that turned
+    // a party wall into a 7.72 m "court" — wide enough that the camera would
+    // have been placed 3.86 m INSIDE the building next door.
+    //
+    // The guard is that a real court is open in the middle.
+    const { report } = assess(E79, 3);
+    const v4 = report.bySlot["V4"]!;
+    expect(v4.courtWidthM).toBeNull();
+    expect(v4.insideNeighborByM).not.toBeNull();
+  });
+
+  it("never returns both a party wall and a court for one direction", () => {
+    // They are contradictory descriptions of the same facade, and the UI would
+    // have to pick one arbitrarily.
+    for (const raw of [ESB, FLATIRON, DAKOTA, E79]) {
+      for (const floor of [3, 6, 10, 18, 40]) {
+        const { report } = assess(raw, floor);
+        for (const d of Object.values(report.bySlot)) {
+          if (!d) continue;
+          expect(d.insideNeighborByM === null || d.courtWidthM === null).toBe(
+            true,
+          );
+        }
+      }
+    }
+  });
+});
+
+describe("placing a camera in a light court", () => {
+  it("puts it mid-court, so it clears both meshes equally", () => {
+    expect(courtStandoffM(4.41)).toBeCloseTo(2.205, 3);
+    expect(courtStandoffM(8)).toBe(4);
+  });
+
+  it("never gives up more clearance than the default offset buys", () => {
+    // A wide court is not a reason to stand further out than an open facade
+    // would; beyond FACADE_OFFSET_M the extra metres only cost subject detail.
+    expect(courtStandoffM(40)).toBe(FACADE_OFFSET_M);
+    expect(courtStandoffM(1000)).toBe(FACADE_OFFSET_M);
+  });
+
+  it("refuses a court too narrow to hold a camera at all", () => {
+    // Below the minimum there is no position both outside our own wall and
+    // outside the one opposite, so there is nothing honest to capture.
+    expect(courtStandoffM(2.9)).toBeNull();
+    expect(courtStandoffM(0.2)).toBeNull();
+    expect(courtStandoffM(COURT_MIN_STANDOFF_M * 2)).toBe(COURT_MIN_STANDOFF_M);
+  });
+
+  it("marks a too-narrow court unrenderable rather than capturing a wall", () => {
+    const report = {
+      bySlot: {
+        V1: {
+          slot: "V1",
+          band: "enclosed",
+          maxObstructionAngleDeg: 60,
+          firstBlockingM: 1,
+          insideNeighborByM: null,
+          courtWidthM: 1.2,
+        },
+      },
+      neighborDataIncomplete: false,
+      neighborsConsidered: 1,
+      searchRadiusM: SEARCH_RADIUS_M,
+    } as const as ConfidenceReport;
+
+    expect(isRenderableDirection("V1", report)).toBe(false);
+    expect(courtOffsets(report)).toEqual({});
+  });
+
+  it("offers a reduced offset only for the directions that need one", () => {
+    const { report } = assess(E79, 10);
+    const offsets = courtOffsets(report);
+
+    expect(Object.keys(offsets)).toEqual(["V2"]);
+    expect(offsets.V2!).toBeCloseTo(2.2, 1);
+    // The free-standing buildings need no repositioning at all, so the second
+    // placement pass never runs for them.
+    expect(courtOffsets(assess(ESB, 80).report)).toEqual({});
+    expect(courtOffsets(assess(DAKOTA, 10).report)).toEqual({});
+  });
+
+  it("carries the court width across a re-measurement from inside the court", () => {
+    // The moved camera no longer sees the condition that moved it, so a naive
+    // re-assessment would present a 2.2 m standoff as an ordinary view.
+    const first = assess(E79, 10).report;
+    const asIfRemeasured: ConfidenceReport = {
+      ...first,
+      bySlot: {
+        ...first.bySlot,
+        V2: { ...first.bySlot.V2!, courtWidthM: null, band: "enclosed" },
+      },
+    };
+
+    const merged = mergeCourtFindings(first, asIfRemeasured);
+    expect(merged.bySlot.V2!.courtWidthM).toBeCloseTo(4.41, 1);
+    // Everything else comes from the re-measurement, not the first pass.
+    expect(merged.bySlot.V2!.band).toBe("enclosed");
+    expect(merged.bySlot.V4!.insideNeighborByM).toBe(
+      first.bySlot.V4!.insideNeighborByM,
+    );
   });
 });
 
 describe("counting directions that were actually requested", () => {
   it("excludes party walls, so a complete result is not reported as partial", () => {
     // Regression guard for a defect the live verification caught: 425 E 79th
-    // at floor 10 has one shared wall, so three directions are requested and
-    // three arrive. Counting against four facades reported "3 of 4 directions
-    // loaded", which reads as a failure when nothing failed.
-    const { views, report } = assess(E79, 10);
+    // at floor 10 has one wall inside the building next door, so three
+    // directions are requested and three arrive. Counting against four facades
+    // reported "3 of 4 directions loaded", which reads as a failure when
+    // nothing failed.
+    //
+    // Floor 3 rather than the floor 10 this used to use. At floor 10 the only
+    // qualified direction is a light court, which is now correctly requested,
+    // so all four are asked for; floor 3 is where this building genuinely has
+    // a wall with no window in it.
+    const { views, report } = assess(E79, 3);
     const requested = views.filter((v) => isRenderableDirection(v.slot, report));
     expect(views).toHaveLength(4);
     expect(requested).toHaveLength(3);
+    expect(requested.map((v) => v.slot)).toEqual(["V1", "V2", "V3"]);
   });
 });

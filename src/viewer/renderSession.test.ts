@@ -24,6 +24,7 @@ function view(slot: ViewSlot, headingDeg: number): CameraView {
     heightM: 100,
     pitchDeg: -5,
     standoffM: 36,
+    wallDistanceM: 30,
   };
 }
 
