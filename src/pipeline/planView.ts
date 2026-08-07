@@ -9,14 +9,17 @@
 import { geocodeAddress, GeocodeError } from "../lib/geocode";
 import { fetchFootprintByBin, FootprintError } from "../lib/footprint";
 import { estimateFloorElevation, buildCameraViews } from "../lib/geometry";
-import { fetchNeighbors } from "../lib/neighbors";
-import { assessConfidence, SEARCH_RADIUS_M } from "../lib/confidence";
+import { fetchNeighbors, type NeighborSet } from "../lib/neighbors";
+import {
+  assessConfidence,
+  courtOffsets,
+  mergeCourtFindings,
+  SEARCH_RADIUS_M,
+} from "../lib/confidence";
 import { readPlan, writePlan } from "../lib/cache";
 import { metrics } from "../lib/metrics";
 import type {
   BuildingFootprint,
-  CameraView,
-  ConfidenceReport,
   ViewPlan,
   ViewPlanResult,
   UnavailableReason,
@@ -96,23 +99,67 @@ export async function planView(
     // 4. Geometry math (pure, real): elevation (both datums) + four cameras
     //    aimed along the building's own facades where the footprint supports it.
     const elevation = estimateFloorElevation(footprint, floor);
-    const { views, basis, concentration } = buildCameraViews(
+    const eyeAboveGroundM =
+      elevation.eyeElevationNavd88M - footprint.groundElevationNavd88M;
+    const placed = buildCameraViews(
       footprint,
       elevation.eyeElevationEllipsoidalM,
-      elevation.eyeElevationNavd88M - footprint.groundElevationNavd88M,
+      eyeAboveGroundM,
     );
 
     // 5. Per-direction enclosure, from neighbouring footprints. Degrades to
     //    null — "no notes available" — and never to a missing or altered
     //    result. Never to "open", either: an unknown surroundings is not an
     //    open view, and the UI says nothing rather than implying either.
-    const confidence = await resolveConfidence(
-      d,
-      footprint,
-      views,
-      elevation.eyeElevationNavd88M,
-      signal,
-    );
+    const neighborhood = await resolveNeighborhood(d, footprint, signal);
+
+    // 6. Re-place any camera that would have stood inside the building across a
+    //    light court, and re-measure from where it actually ends up.
+    //
+    //    Two passes rather than one because the court can only be measured once
+    //    the cameras exist, and the cameras can only be corrected once the court
+    //    is measured. It is bounded at two: the second pass moves cameras
+    //    strictly closer to their own wall, into ground the first pass already
+    //    proved is open, so it cannot discover a new court. Costs no network —
+    //    the neighbour rows are fetched once and both passes are pure.
+    let { views, basis, concentration } = placed;
+    let confidence = neighborhood
+      ? assessConfidence({
+          views,
+          eyeElevationNavd88M: elevation.eyeElevationNavd88M,
+          subjectBin: footprint.bin,
+          subjectGroundElevationNavd88M: footprint.groundElevationNavd88M,
+          neighbors: neighborhood.neighbors,
+          neighborDataIncomplete: neighborhood.incomplete,
+        })
+      : null;
+
+    if (confidence && neighborhood) {
+      const offsets = courtOffsets(confidence);
+      if (Object.keys(offsets).length > 0) {
+        const repositioned = buildCameraViews(
+          footprint,
+          elevation.eyeElevationEllipsoidalM,
+          eyeAboveGroundM,
+          undefined,
+          offsets,
+        );
+        views = repositioned.views;
+        basis = repositioned.basis;
+        concentration = repositioned.concentration;
+        confidence = mergeCourtFindings(
+          confidence,
+          assessConfidence({
+            views,
+            eyeElevationNavd88M: elevation.eyeElevationNavd88M,
+            subjectBin: footprint.bin,
+            subjectGroundElevationNavd88M: footprint.groundElevationNavd88M,
+            neighbors: neighborhood.neighbors,
+            neighborDataIncomplete: neighborhood.incomplete,
+          }),
+        );
+      }
+    }
 
     const plan: ViewPlan = {
       address,
@@ -155,41 +202,34 @@ export async function planView(
 }
 
 /**
- * Fetch neighbours and measure enclosure, or return `null`.
+ * Fetch the neighbouring footprints, or return `null`.
  *
  * Everything here is best-effort by design: the four camera vantages are the
  * result, and the enclosure notes are an annotation on them. A failed,
  * timed-out or empty neighbour lookup therefore costs the visitor the notes and
  * nothing else. An abort propagates, because an aborted plan should not
  * continue at all.
+ *
+ * Returns the rows rather than a finished report because the caller measures
+ * twice against the same rows — see the two-pass placement above.
  */
-async function resolveConfidence(
+async function resolveNeighborhood(
   d: PlanDeps,
   footprint: BuildingFootprint,
-  views: CameraView[],
-  eyeElevationNavd88M: number,
   signal?: AbortSignal,
-): Promise<ConfidenceReport | null> {
+): Promise<NeighborSet | null> {
   const timeout = new AbortController();
   const timer = setTimeout(() => timeout.abort(), NEIGHBOR_TIMEOUT_MS);
   const onOuterAbort = () => timeout.abort();
   signal?.addEventListener("abort", onOuterAbort, { once: true });
 
   try {
-    const { neighbors, incomplete } = await d.fetchNeighbors(
+    return await d.fetchNeighbors(
       footprint.centroid.lat,
       footprint.centroid.lng,
       SEARCH_RADIUS_M,
       timeout.signal,
     );
-    return assessConfidence({
-      views,
-      eyeElevationNavd88M,
-      subjectBin: footprint.bin,
-      subjectGroundElevationNavd88M: footprint.groundElevationNavd88M,
-      neighbors,
-      neighborDataIncomplete: incomplete,
-    });
   } catch (err) {
     if (signal?.aborted) throw err; // the whole request was superseded
     return null;

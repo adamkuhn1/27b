@@ -126,6 +126,13 @@ export interface CameraView {
   pitchDeg: number;
   /** Meters from the footprint centroid to the camera along `headingDeg`. */
   standoffM: number;
+  /**
+   * Meters from the footprint centroid to the building's own outer wall along
+   * `headingDeg`. `standoffM - wallDistanceM` is therefore the offset actually
+   * applied outside the facade, which is what locates the window itself — the
+   * point the enclosure layer has to measure a light court from.
+   */
+  wallDistanceM: number;
 }
 
 /**
@@ -161,12 +168,26 @@ export interface DirectionConfidence {
    * This is the party-wall condition, and in NYC it is common rather than
    * exotic: row and infill buildings share lot lines, so one to three of a
    * building's four "facades" can be solid wall buried in the building next
-   * door. There is no window there, so there is no view — and a camera placed
-   * six metres beyond such a facade is not outdoors, it is inside the
-   * neighbour's mesh. The renderer skips these directions rather than
-   * capturing the inside of a building and presenting it as a view.
+   * door. There is no window there, so there is no view.
+   *
+   * Set ONLY when the wall itself is inside the neighbour. The test used to be
+   * whether the *camera* — six metres out — was inside, which also caught every
+   * facade across a light court narrower than six metres, where there is a real
+   * window with a real (close) view. Those are now `courtWidthM` instead.
    */
   insideNeighborByM: number | null;
+  /**
+   * Width of the gap between this facade and the building opposite, in metres,
+   * when that gap is narrower than the default camera offset. `null` in the
+   * ordinary case, where the camera has its full standoff.
+   *
+   * A light court or narrow side lot. There IS a window here and it does look
+   * at something, so the direction is captured — but from inside the court,
+   * with the standoff reduced to fit (see `courtStandoffM`). The frame is a
+   * close-range view of the wall opposite, and the UI presents it as one rather
+   * than as an ordinary view that happens to look bad.
+   */
+  courtWidthM: number | null;
 }
 
 /** The per-plan result of the confidence pass. */
