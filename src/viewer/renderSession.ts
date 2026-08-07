@@ -33,6 +33,7 @@ import type {
   SessionCloseReason,
   ViewSlot,
 } from "../lib/types";
+import { describeError } from "../lib/redact";
 
 /**
  * The Cesium-shaped hole this module drives. `tileRenderer.ts` supplies the
@@ -200,9 +201,15 @@ export function createRenderSession(
 
   function classify(err: unknown): RenderFailure {
     if (err instanceof CaptureFailedError) return err.failure;
+    // `describeError`, not the raw message. RenderFailure.detail is documented
+    // in types.ts as having any `key=` parameter redacted, and this is the path
+    // that did not honour it: anything thrown out of `source.capture()` that is
+    // not already a CaptureFailedError -- a Cesium RuntimeError out of
+    // `render()` or `applyCameraView` -- arrived verbatim and was console.error'd
+    // by the consumer. A provider error carrying the request URL carries the key.
     return {
       kind: "capture-failed",
-      detail: err instanceof Error ? err.message : String(err),
+      detail: describeError(err),
       fatalForSession: false,
     };
   }

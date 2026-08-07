@@ -17,6 +17,12 @@
 //
 //     h (ellipsoidal) = H (orthometric, NAVD88) + N (geoid height)
 //
+// That addition is done once, at the single place that needs it —
+// `estimateFloorElevation` in `lib/geometry.ts`, which also reports N in its
+// own right. A `navd88ToEllipsoidalM(H, lat, lng)` wrapper used to live here
+// and had no callers: the one real caller needs N separately, so going through
+// the wrapper would have meant sampling the lattice twice for one camera.
+//
 // Over New York City N is about **-31 m to -32.5 m**. Passing an NAVD88 height
 // straight into Cesium therefore placed every camera roughly **32 m too high** —
 // about ten floors of error, in a product whose entire premise is "which floor
@@ -89,16 +95,4 @@ export function geoidHeightM(lat: number, lng: number): number {
     g10 * ti * (1 - tj) +
     g11 * ti * tj
   );
-}
-
-/**
- * Convert an NAVD88 orthometric height (meters) at a location into the WGS84
- * ellipsoidal height (meters) that Cesium/3D Tiles consume.
- */
-export function navd88ToEllipsoidalM(
-  orthometricM: number,
-  lat: number,
-  lng: number,
-): number {
-  return orthometricM + geoidHeightM(lat, lng);
 }

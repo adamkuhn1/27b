@@ -8,5 +8,11 @@
 #
 # Everything that is safe to keep (camera parameters, request counts, timings,
 # attribution strings) lives in summary.json, which IS committed.
+#
+# Both directories below are created on demand by their harness
+# (run-proof.mjs writes proof/evidence/, bakeoff/run.mjs creates
+# bakeoff/results/frames/ at startup), so neither exists in a clean checkout.
+# That is not a stale rule: the ignore has to be in place BEFORE the run that
+# produces the files, or the first run commits Google Maps Content.
 evidence/*.png
 bakeoff/results/frames/

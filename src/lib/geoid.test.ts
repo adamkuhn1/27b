@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { geoidHeightM, navd88ToEllipsoidalM } from "./geoid";
+import { geoidHeightM } from "./geoid";
 
 /**
  * Ground truth sampled from NOAA NGS's Geoid Height Service (GEOID18) on
@@ -41,16 +41,3 @@ describe("geoidHeightM (GEOID18 over NYC)", () => {
   });
 });
 
-describe("navd88ToEllipsoidalM", () => {
-  it("lowers an NAVD88 height by the geoid undulation", () => {
-    const h = navd88ToEllipsoidalM(100, 40.7484, -73.9857);
-    expect(h).toBeCloseTo(100 + geoidHeightM(40.7484, -73.9857), 9);
-    expect(h).toBeLessThan(100);
-  });
-
-  it("shifts by ~31.8 m at the Empire State Building — about ten floors", () => {
-    const shift = 100 - navd88ToEllipsoidalM(100, 40.7484, -73.9857);
-    expect(shift).toBeGreaterThan(31);
-    expect(shift).toBeLessThan(33);
-  });
-});

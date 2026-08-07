@@ -1,14 +1,21 @@
 import type { CameraView } from "../lib/types";
 import { useTileCaptures } from "./useTileCaptures";
+import { ABUTTING_NOTE } from "../ui/notes";
 
 interface CesiumViewProps {
   view: CameraView;
   /** True when no imagery key is configured — render nothing (no fake scene). */
   disabled?: boolean;
   /**
-   * True when this facade is shared with the building next door. Nothing was
-   * requested for it and nothing will arrive; the pane is empty on purpose and
-   * the label says why.
+   * True when this facade faces the building next door at this height. Nothing
+   * was requested for it and nothing will arrive; the pane is empty on purpose
+   * and the label says why.
+   *
+   * Deliberately NOT phrased as "a shared wall". The predicate behind this flag
+   * tests whether the camera, placed FACADE_OFFSET_M beyond the wall, lands
+   * inside a neighbour that rises above the eye — which is not the same thing,
+   * and was asserted as plain fact about a building where it is false. See the
+   * note at ui/notes.ts:ABUTTING_NOTE.
    */
   noWindow?: boolean;
 }
@@ -39,7 +46,7 @@ export function CesiumView({ view, disabled, noWindow }: CesiumViewProps) {
       <div
         className="view__canvas view__canvas--empty"
         role="img"
-        aria-label={`No window facing ${view.compass} — this wall is shared with the building next door`}
+        aria-label={`No window facing ${view.compass}. ${ABUTTING_NOTE}`}
       />
     );
   }
