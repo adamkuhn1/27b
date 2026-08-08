@@ -56,6 +56,16 @@ export interface GeocodeResult {
   bin?: string;
   /** Borough name, when available (used for a friendly display + NYC gate). */
   borough?: string;
+  /**
+   * Set when the live address service was unreachable and this building's
+   * committed record was used instead (see lib/knownAddresses.ts). The UI must
+   * disclose it: the coordinates are real and were captured from the real
+   * service, but they were not looked up just now, and the reader is entitled
+   * to know which of those two things happened.
+   */
+  fromRecord?: true;
+  /** ISO date the record was captured. Present only with `fromRecord`. */
+  recordedAt?: string;
 }
 
 /**
@@ -285,7 +295,14 @@ export interface CaptureResult {
  * on a second pass.
  */
 export interface RenderFailure {
-  kind: "capture-failed" | "readback-blocked";
+  /**
+   * `empty-frame` means the render completed and drew no provider geometry at
+   * all — the capture is Cesium's sky gradient over a black earth and nothing
+   * else. It is separated from `capture-failed` because it is the one failure
+   * that succeeds: readback worked, no error was thrown, and without this the
+   * app puts a photograph of nothing on screen under the reader's address.
+   */
+  kind: "capture-failed" | "readback-blocked" | "empty-frame";
   /**
    * Operator diagnostic with any `key=` query parameter redacted. Goes to the
    * console; it is never rendered on screen.

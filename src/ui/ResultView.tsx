@@ -159,6 +159,18 @@ function ResultBody({
             (NYC Open Data). No imagery is analysed.
           </p>
         )}
+        {/* Said plainly, because the alternative is a result that looks
+            identical to a live one and is not. Everything downstream of this
+            point — footprint, geometry, imagery — is being fetched right now;
+            only the address lookup came from the record. */}
+        {plan.geocode.fromRecord && (
+          <p className="result__meta result__meta--dim">
+            The NYC address service was unreachable, so this building's
+            coordinates came from a record captured on {plan.geocode.recordedAt}{" "}
+            rather than from a lookup just now. The footprint, the geometry and
+            the imagery are all live.
+          </p>
+        )}
       </details>
 
       {captures.phase !== "idle" && (

@@ -106,6 +106,52 @@ class RenderAbortedError extends Error {
  */
 const SETTLE_GRACE_MS = 900;
 
+/**
+ * How often to drive a frame while streaming tiles. ~33 fps: enough to keep the
+ * tileset's traversal advancing and its request queue full, without spending
+ * more GPU than the streaming can use. Shared by the warm-up and by
+ * `waitForTiles`, because they are doing the same job.
+ */
+const PUMP_INTERVAL_MS = 30;
+
+/** How long to stream tiles before the first capture. See the call site. */
+const WARMUP_MS = 3000;
+
+/**
+ * Multiplier on the settle budget for the FIRST capture of a session. See the
+ * `firstCapture` comment in `openCesiumFrameSource` for the measurement.
+ */
+const FIRST_CAPTURE_SETTLE_FACTOR = 2.5;
+
+/**
+ * Render frames for `durationMs` so a tileset can stream.
+ *
+ * A 3D tileset only discovers and requests the tiles it needs during
+ * `Scene.render()`. Under `requestRenderMode` no frames happen unless somebody
+ * asks for them, so "wait a while for tiles to load" without rendering loads
+ * nothing beyond whatever one frame already asked for. Anywhere this app waits
+ * for tiles, it has to pump.
+ */
+async function pumpFrames(
+  viewer: Viewer,
+  durationMs: number,
+  checkAborted: () => void,
+): Promise<void> {
+  const until = Date.now() + durationMs;
+  while (Date.now() < until) {
+    checkAborted();
+    try {
+      viewer.scene.requestRender();
+      viewer.render();
+    } catch {
+      // A render throwing here is the session's problem, not the warm-up's;
+      // the capture that follows will surface it with context.
+      return;
+    }
+    await new Promise<void>((r) => setTimeout(r, PUMP_INTERVAL_MS));
+  }
+}
+
 /** How `waitForTiles` ended. */
 export interface SettleOutcome {
   /**
@@ -208,7 +254,8 @@ function waitForTiles(
 
     // Drive tile streaming with synchronous viewer.render() so the tile
     // network round-trips advance even when rAF is throttled for offscreen
-    // canvases.  30 ms ≈ 33 fps — enough throughput without excess quota cost.
+    // canvases. See PUMP_INTERVAL_MS — the warm-up pumps at the same rate for
+    // the same reason.
     const renderInterval = setInterval(() => {
       if (done) return;
       try {
@@ -217,7 +264,7 @@ function waitForTiles(
       } catch {
         // Ignore errors from a partially-torn-down viewer.
       }
-    }, 30);
+    }, PUMP_INTERVAL_MS);
 
     const cleanup = () => {
       clearTimeout(hardTimer);
@@ -544,16 +591,53 @@ async function openCesiumFrameSource(
 
     viewer.scene.primitives.add(tileset);
 
-    // Position the camera at the first view before warmup so the warm-up
-    // period streams tiles for the actual vantage, not a default globe position.
+    // Warm the tileset before the first capture.
+    //
+    // This used to be `requestRender()` followed by a 3 s sleep, and it did
+    // almost nothing. The scene runs in `requestRenderMode`, and a 3D tileset
+    // only advances its traversal — decides which tiles it wants, and asks for
+    // them — inside `Scene.render()`. One request renders one frame, which
+    // fetches the root's immediate children and then stops; the remaining 3 s
+    // is a sleep beside an idle renderer. Every tile the picture actually needs
+    // was therefore left to be discovered inside the first capture's 16 s
+    // settle window, which is why the FIRST direction of a session so often
+    // came back as sky over a coarse global mesh while later directions —
+    // running against a tileset the earlier waits had populated — looked right.
+    //
+    // Measured on an Apple M2 (ANGLE Metal, not a software rasteriser), five
+    // presets, twenty directions: the sky-only frames were NNE and ESE, the two
+    // captured first, and the same building rendered correctly when it ran
+    // fourth in the list with a warm cache. The reports and frames are under
+    // `proof/presets-verification/`; `report-warmup-only.json` is this change
+    // on its own, before the first-capture budget below was added.
+    //
+    // So pump real frames instead. Same wall clock, same billing — renderer
+    // tile requests inside an open session are unmetered, and the root tileset
+    // request that IS billed already happened above.
     if (views.length > 0) applyCameraView(viewer.camera, views[0]);
-
-    // Allow tiles to begin streaming.
-    viewer.scene.requestRender();
-    await new Promise<void>((r) => setTimeout(r, 3000));
+    await pumpFrames(viewer, WARMUP_MS, checkAborted);
     checkAborted();
 
     const activeViewer = viewer;
+
+    // The first capture of a session is not like the others.
+    //
+    // Every later view runs against a tileset the earlier waits have already
+    // populated — the neighbourhood's tiles are in memory and the traversal
+    // only has to fill in what is newly visible. The first one starts from a
+    // tileset that knows nothing but its root, and at a high floor over
+    // Manhattan the visible extent is enormous. Measured across five presets on
+    // an M2: the sky-only frames were always among the first captured, and the
+    // same view rendered correctly when it ran later with the hierarchy warm.
+    //
+    // Pumping frames during the warm-up (above) fixed some of them and cut
+    // ~17% off the total wall clock, but not all — 432 Park at floor 80 still
+    // starved with 3 s of warm-up plus a 16 s settle. So the first view gets a
+    // larger budget. Nothing is billed for waiting: renderer tile requests
+    // inside an open session are unmetered, and the one metered request has
+    // already happened.
+    let firstCapture = true;
+
     return {
       async capture(view) {
         checkAborted();
@@ -561,10 +645,14 @@ async function openCesiumFrameSource(
 
         applyCameraView(activeViewer.camera, view);
         activeViewer.scene.requestRender();
+        const budgetMs = firstCapture
+          ? Math.round(settleTimeoutMs * FIRST_CAPTURE_SETTLE_FACTOR)
+          : settleTimeoutMs;
+        firstCapture = false;
         const { settled } = await waitForTiles(
           activeViewer,
           tileset,
-          settleTimeoutMs,
+          budgetMs,
           signal,
         );
         checkAborted();
@@ -577,7 +665,69 @@ async function openCesiumFrameSource(
         await new Promise<void>((r) => setTimeout(r, 800));
         activeViewer.scene.requestRender();
         await new Promise<void>((r) => setTimeout(r, 200));
-        activeViewer.render();
+
+        // Count the provider tiles that actually DRAW in the frame we are about
+        // to read back.
+        //
+        // A settle can time out having loaded nothing. When that happens
+        // everything downstream still succeeds: the canvas reads back fine, the
+        // PNG is valid, the slot goes to `ready`, and the app presents Cesium's
+        // sky gradient over a black earth as this building's view — captioned,
+        // in the case that prompted this, "Still sharpening when this frame was
+        // captured". Measured on 175 Fifth Ave at floor 18 looking NNE
+        // (proof/presets-verification/report-before.json): a photograph of
+        // nothing, under the reader's address, with no indication anything had
+        // gone wrong. That is the fabricated-scene failure arriving by accident
+        // rather than by design, and it is not allowed either way.
+        //
+        // `tileVisible` fires once per tile that survives culling, per frame.
+        // Counting the firings is NOT enough: a tile can be selected with no
+        // payload — an empty interior node, or one whose content has not
+        // arrived — and the first version of this check counted those and
+        // therefore passed the very frame it was written for. So count
+        // TRIANGLES, which is the thing that can actually appear in a picture.
+        //
+        // Counting geometry rather than measuring pixels is deliberate. The
+        // frame this guards is empty because nothing loaded; a pixel test that
+        // caught it would also catch the light court at 425 E 79th, which is a
+        // real, correct, almost featureless frame of a wall four metres away
+        // (measured: edge energy 0.9 against 0.32 for the empty one — far too
+        // close to separate safely). Geometry count tells those two apart
+        // exactly: one has thousands of triangles, the other has none.
+        let tilesDrawn = 0;
+        let trianglesDrawn = 0;
+        const stopCounting = tileset.tileVisible.addEventListener((tile) => {
+          tilesDrawn += 1;
+          trianglesDrawn += tile.content?.trianglesLength ?? 0;
+        });
+        try {
+          // The scene runs in `requestRenderMode`, so `render()` only actually
+          // draws when a render has been requested — and an earlier request may
+          // already have been consumed by the rAF loop. Requesting inside the
+          // counting window makes this frame certain to draw, which matters
+          // twice over: it is the frame `tileVisible` is counted across AND the
+          // frame `composeAttributedPng` reads back below. Counting one frame
+          // and photographing another is how this check would come to report on
+          // a picture nobody saw.
+          activeViewer.scene.requestRender();
+          activeViewer.render();
+        } finally {
+          stopCounting();
+        }
+
+        if (trianglesDrawn === 0) {
+          // Not fatal for the session: the next direction looks somewhere else
+          // and may well have tiles. Retryable, and the session's own retry
+          // budget decides whether it is worth another 16 s.
+          throw new CaptureFailedError({
+            kind: "empty-frame",
+            detail:
+              `No provider geometry drew for slot ${view.slot} after ` +
+              `${settled ? "a settled" : "an unsettled"} wait: ` +
+              `${tilesDrawn} tile(s) selected, 0 triangles. The frame is sky only.`,
+            fatalForSession: false,
+          });
+        }
 
         // Read the attributions Google returned for the tiles in THIS frame.
         // Cesium rebuilds the credit container each frame from the tiles it

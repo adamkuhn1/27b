@@ -1,0 +1,46 @@
+{
+  "_": "What NYC Planning GeoSearch actually returned for the landing-page presets. Used ONLY as a fallback when the live service is unreachable — see src/lib/knownAddresses.ts. Written exclusively by proof/capture-known-addresses.mjs from live responses; never hand-edited, never derived.",
+  "source": "https://geosearch.planninglabs.nyc/v2/search",
+  "records": {
+    "425 E 79th St, Manhattan, New York, NY 10075": {
+      "label": "425 EAST 79 STREET, New York, NY, USA",
+      "lat": 40.772038,
+      "lng": -73.951304,
+      "bin": "1050349",
+      "borough": "Manhattan",
+      "capturedAt": "2026-08-08"
+    },
+    "175 5th Ave, Manhattan, New York, NY 10010": {
+      "label": "175 5 AVENUE, New York, NY, USA",
+      "lat": 40.740979,
+      "lng": -73.989688,
+      "bin": "1016278",
+      "borough": "Manhattan",
+      "capturedAt": "2026-08-08"
+    },
+    "350 5th Ave, Manhattan, New York, NY 10118": {
+      "label": "350 5 AVENUE, New York, NY, USA",
+      "lat": 40.748441,
+      "lng": -73.985656,
+      "bin": "1015862",
+      "borough": "Manhattan",
+      "capturedAt": "2026-08-08"
+    },
+    "1 W 72nd St, Manhattan, New York, NY 10023": {
+      "label": "1 WEST 72 STREET, New York, NY, USA",
+      "lat": 40.776785,
+      "lng": -73.975905,
+      "bin": "1028637",
+      "borough": "Manhattan",
+      "capturedAt": "2026-08-08"
+    },
+    "432 Park Ave, Manhattan, New York, NY 10022": {
+      "label": "432 PARK AVENUE, New York, NY, USA",
+      "lat": 40.761684,
+      "lng": -73.971779,
+      "bin": "1088817",
+      "borough": "Manhattan",
+      "capturedAt": "2026-08-08"
+    }
+  }
+}

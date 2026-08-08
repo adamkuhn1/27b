@@ -34,12 +34,32 @@ interface Preset {
 // Mostly buildings people actually live in, because that is what this is for.
 // The two landmarks are here because they are the cases a New Yorker will try
 // first, not because the app is a tour of them.
+//
+// ORDER IS DELIBERATE, and it was wrong until 2026-08-08. 425 E 79th was first
+// because it is the most interesting case in the app: a floor-10 walk-up with a
+// party wall on one side and a 4 m light court on another, which is the whole
+// point of the enclosure work. It is also, for exactly that reason, the worst
+// picture of the five — three of its four directions are a close-range facade
+// two metres away, which is what the provider's mesh renders worst
+// (proof/presets-verification/frames/425-e79-nne-close-range.png). Whoever clicked the first
+// button saw a smear and concluded the renderer was broken.
+//
+// So the order now runs from the clearest view to the most enclosed one. The
+// hard case is still here and still labelled; it is just no longer the opening
+// argument. Every one of these was rendered and looked at before this list was
+// reordered — see proof/verify-presets.mjs.
 const PRESETS: Preset[] = [
   {
-    name: "425 E 79th St",
-    address: "425 E 79th St, Manhattan, New York, NY 10075",
-    floor: 10,
-    detail: "floor 10 · Upper East Side",
+    name: "432 Park Ave",
+    address: "432 Park Ave, Manhattan, New York, NY 10022",
+    floor: 80,
+    detail: "floor 80 · over Central Park",
+  },
+  {
+    name: "Empire State Bldg",
+    address: "350 5th Ave, Manhattan, New York, NY 10118",
+    floor: 80,
+    detail: "floor 80 · Midtown",
   },
   {
     name: "The Dakota",
@@ -48,22 +68,16 @@ const PRESETS: Preset[] = [
     detail: "floor 7 · Upper West Side",
   },
   {
-    name: "432 Park Ave",
-    address: "432 Park Ave, Manhattan, New York, NY 10022",
-    floor: 80,
-    detail: "floor 80 · Midtown",
-  },
-  {
     name: "175 Fifth Ave",
     address: "175 5th Ave, Manhattan, New York, NY 10010",
     floor: 18,
     detail: "floor 18 · the Flatiron",
   },
   {
-    name: "Empire State Bldg",
-    address: "350 5th Ave, Manhattan, New York, NY 10118",
-    floor: 80,
-    detail: "floor 80 · Midtown",
+    name: "425 E 79th St",
+    address: "425 E 79th St, Manhattan, New York, NY 10075",
+    floor: 10,
+    detail: "floor 10 · hemmed in on three sides",
   },
 ];
 
