@@ -21,3 +21,9 @@ bakeoff/results/frames/
 # KEY.json, GROUPS.json) are text and ARE committed — the verdict is the
 # evidence, the pixels were only how it was reached.
 bakeoff/results/blind-*/*.png
+# Same rule for the evaluation matrix and the starved-session check: the frame
+# PNGs are provider imagery, the report.json beside them is camera parameters,
+# timings, request counts and pixel statistics, and only the latter is safe to
+# commit.
+eval-matrix/**/*.png
+empty-frame-guard/*.png
