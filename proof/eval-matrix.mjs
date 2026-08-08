@@ -41,6 +41,7 @@ const BASE_URL = arg("url", "http://localhost:5177/");
 const PASS = arg("pass", "A");
 const OUT = arg("out", join(HERE, "eval-matrix", `pass-${PASS}`));
 const ONLY = arg("cases", "").split(",").filter(Boolean);
+const ONLY_FLOORS = arg("floors", "").split(",").filter(Boolean).map(Number);
 const MAX_SESSIONS = Number(arg("max-sessions", "14"));
 const DPR = Number(arg("dpr", "2"));
 const SETTLE_TIMEOUT_MS = Number(arg("timeout", "180000"));
@@ -167,7 +168,9 @@ try {
   console.error(`[matrix ${PASS}] dev diagnostic hook: ${gate.devHook ? "present" : "absent (DOM fallback)"}`);
 
   const cases = MATRIX.filter((c) => ONLY.length === 0 || ONLY.includes(c.id)).flatMap((c) =>
-    c.floors.map((floor) => ({ ...c, floor })),
+    c.floors
+      .filter((f) => ONLY_FLOORS.length === 0 || ONLY_FLOORS.includes(f))
+      .map((floor) => ({ ...c, floor })),
   );
 
   console.error(

@@ -8,7 +8,7 @@ import {
 import { ResultView } from "./ui/ResultView";
 import { planView } from "./pipeline/planView";
 import { hasImagerySource } from "./lib/config";
-import { purgeRetiredCaptureCache } from "./lib/cache";
+import { purgeRetiredCaptureCache, purgeSupersededPlans } from "./lib/cache";
 import type { ViewPlanResult } from "./lib/types";
 
 // One-time cleanup: builds before 2026-08-04 persisted rendered Google tile
@@ -18,6 +18,11 @@ import type { ViewPlanResult } from "./lib/types";
 // any such data left in a returning visitor's browser is deleted at startup
 // rather than merely ignored.
 purgeRetiredCaptureCache();
+
+// Plans written by an earlier version of the geometry are keyed under that
+// version and can never be read by this build. Delete them rather than leave a
+// generation of dead entries in the visitor's storage.
+purgeSupersededPlans();
 
 type UiState =
   | { kind: "idle" }

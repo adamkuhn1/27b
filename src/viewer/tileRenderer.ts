@@ -672,13 +672,19 @@ async function openCesiumFrameSource(
         // A settle can time out having loaded nothing. When that happens
         // everything downstream still succeeds: the canvas reads back fine, the
         // PNG is valid, the slot goes to `ready`, and the app presents Cesium's
-        // sky gradient over a black earth as this building's view — captioned,
-        // in the case that prompted this, "Still sharpening when this frame was
-        // captured". Measured on 175 Fifth Ave at floor 18 looking NNE
-        // (proof/presets-verification/report-before.json): a photograph of
+        // sky gradient over a black earth as this building's view — captioned
+        // "Still sharpening when this frame was captured". Three of the twenty
+        // frames in proof/presets-verification/report-before.json are that
+        // frame (432 Park floor 80 NNE and ESE, Empire State floor 80 NNE: edge
+        // energy 0.35-0.50 against 4.7-18.7 for a real one): a photograph of
         // nothing, under the reader's address, with no indication anything had
         // gone wrong. That is the fabricated-scene failure arriving by accident
         // rather than by design, and it is not allowed either way.
+        //
+        // The guard is exercised directly by proof/verify-empty-frame-guard.mjs,
+        // which starves a real session by blocking the renderer's tile requests
+        // at the network layer: all four directions fail, twice each, and the
+        // page shows "This direction didn't load." with no image.
         //
         // `tileVisible` fires once per tile that survives culling, per frame.
         // Counting the firings is NOT enough: a tile can be selected with no

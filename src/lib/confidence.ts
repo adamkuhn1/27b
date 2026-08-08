@@ -282,10 +282,17 @@ export const COURT_MIN_STANDOFF_M = 1.5;
  * reconstruction handles worse is a fact about the imagery, and this codebase
  * does not read the imagery.
  *
- * NOT VERIFIED AGAINST A REAL RENDER. The arithmetic is right and the camera is
- * outdoors, but what a 2 m standoff looks like in Google's mesh is a question
- * only a capture can answer. The UI therefore presents these directions as
- * close-range and never promotes one to the main view.
+ * WHAT A COURT CAMERA ACTUALLY RETURNS. Captured: 425 E 79th's 4 m court puts
+ * the camera 2 m off the wall opposite, and at both floor 10 and floor 4 the
+ * frame comes back as a near-featureless dark gradient — horizontal edge energy
+ * 0.90 and 0.68 against 3.2-18.7 for every other direction measured on the same
+ * buildings (`proof/eval-matrix/pass-{A,B}/`, two independent cold sessions,
+ * same numbers both times). The camera is in the right place and the mesh at
+ * that range has nothing left to resolve.
+ *
+ * That is why these directions are labelled close-range, carry the court width
+ * in words, and are never promoted to the main view: the picture alone is
+ * indistinguishable from a failed render, and only the geometry knows it is not.
  */
 export function courtStandoffM(courtWidthM: number): number | null {
   const half = courtWidthM / 2;

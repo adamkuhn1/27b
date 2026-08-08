@@ -1,0 +1,329 @@
+{
+  "_": "Renderer tile requests blocked at the network layer so the session opens and then starves. PASS = the zero-triangle guard refused every frame and the app said so.",
+  "ranAt": "2026-08-08T23:33:30.769Z",
+  "url": "http://localhost:5178/",
+  "address": "1 W 72nd St, Manhattan, New York, NY 10023",
+  "floor": 7,
+  "pass": true,
+  "presentedFrames": 0,
+  "finalState": {
+    "axes": [
+      "failed",
+      "failed",
+      "failed",
+      "failed"
+    ],
+    "leadPhase": "failed",
+    "leadHasImage": false,
+    "leadNote": "This direction didn't load.",
+    "bad": null
+  },
+  "perDirection": [
+    {
+      "compass": "NNE",
+      "leadPhase": "failed",
+      "hasImage": false,
+      "note": "This direction didn't load."
+    },
+    {
+      "compass": "ESE",
+      "leadPhase": "failed",
+      "hasImage": false,
+      "note": "This direction didn't load."
+    },
+    {
+      "compass": "SSW",
+      "leadPhase": "failed",
+      "hasImage": false,
+      "note": "This direction didn't load."
+    },
+    {
+      "compass": "WNW",
+      "leadPhase": "failed",
+      "hasImage": false,
+      "note": "This direction didn't load."
+    }
+  ],
+  "emptyFrameLogs": [
+    {
+      "level": "error",
+      "text": "[27b] direction V1 failed (attempt 1): No provider geometry drew for slot V1 after an unsettled wait: 0 tile(s) selected, 0 triangles. The frame is sky only."
+    },
+    {
+      "level": "error",
+      "text": "[27b] direction V2 failed (attempt 1): No provider geometry drew for slot V2 after a settled wait: 0 tile(s) selected, 0 triangles. The frame is sky only."
+    },
+    {
+      "level": "error",
+      "text": "[27b] direction V3 failed (attempt 1): No provider geometry drew for slot V3 after a settled wait: 0 tile(s) selected, 0 triangles. The frame is sky only."
+    },
+    {
+      "level": "error",
+      "text": "[27b] direction V4 failed (attempt 1): No provider geometry drew for slot V4 after an unsettled wait: 0 tile(s) selected, 0 triangles. The frame is sky only."
+    },
+    {
+      "level": "error",
+      "text": "[27b] direction V1 failed (attempt 2): No provider geometry drew for slot V1 after an unsettled wait: 0 tile(s) selected, 0 triangles. The frame is sky only."
+    },
+    {
+      "level": "error",
+      "text": "[27b] direction V2 failed (attempt 2): No provider geometry drew for slot V2 after an unsettled wait: 0 tile(s) selected, 0 triangles. The frame is sky only."
+    },
+    {
+      "level": "error",
+      "text": "[27b] direction V3 failed (attempt 2): No provider geometry drew for slot V3 after an unsettled wait: 0 tile(s) selected, 0 triangles. The frame is sky only."
+    },
+    {
+      "level": "error",
+      "text": "[27b] direction V4 failed (attempt 2): No provider geometry drew for slot V4 after an unsettled wait: 0 tile(s) selected, 0 triangles. The frame is sky only."
+    }
+  ],
+  "consoleLines": [
+    {
+      "level": "debug",
+      "text": "[vite] connecting..."
+    },
+    {
+      "level": "debug",
+      "text": "[vite] connected."
+    },
+    {
+      "level": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold"
+    },
+    {
+      "level": "debug",
+      "text": "[vite] connecting..."
+    },
+    {
+      "level": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold"
+    },
+    {
+      "level": "debug",
+      "text": "[vite] connected."
+    },
+    {
+      "level": "warning",
+      "text": "Only the Google geocoder can be used with Google Photorealistic 3D Tiles.  Set the `geocode` property of Viewer constructor options.  You can set additionalOptions.onlyUsingWithGoogleGeocoder to hide this warning once you have configured the geocoder."
+    },
+    {
+      "level": "error",
+      "text": "[27b] tile failed: Request has failed."
+    },
+    {
+      "level": "error",
+      "text": "[27b] tile failed: Request has failed."
+    },
+    {
+      "level": "error",
+      "text": "[27b] tile failed: Request has failed."
+    },
+    {
+      "level": "error",
+      "text": "[27b] tile failed: Request has failed."
+    },
+    {
+      "level": "error",
+      "text": "[27b] tile failed: Request has failed."
+    },
+    {
+      "level": "error",
+      "text": "[27b] tile failed: Request has failed."
+    },
+    {
+      "level": "error",
+      "text": "[27b] tile failed: Request has failed."
+    },
+    {
+      "level": "error",
+      "text": "[27b] tile failed: Request has failed."
+    },
+    {
+      "level": "error",
+      "text": "[27b] tile failed: Request has failed."
+    },
+    {
+      "level": "error",
+      "text": "[27b] tile failed: Request has failed."
+    },
+    {
+      "level": "error",
+      "text": "[27b] tile failed: Request has failed."
+    },
+    {
+      "level": "error",
+      "text": "[27b] tile failed: Request has failed."
+    },
+    {
+      "level": "error",
+      "text": "[27b] tile failed: Request has failed."
+    },
+    {
+      "level": "error",
+      "text": "[27b] tile failed: Request has failed."
+    },
+    {
+      "level": "error",
+      "text": "[27b] tile failed: Request has failed."
+    },
+    {
+      "level": "error",
+      "text": "[27b] tile failed: Request has failed."
+    },
+    {
+      "level": "error",
+      "text": "[27b] tile failed: Request has failed."
+    },
+    {
+      "level": "error",
+      "text": "[27b] tile failed: Request has failed."
+    },
+    {
+      "level": "error",
+      "text": "[27b] tile failed: Request has failed."
+    },
+    {
+      "level": "error",
+      "text": "[27b] tile failed: Request has failed."
+    },
+    {
+      "level": "error",
+      "text": "[27b] tile failed: Request has failed."
+    },
+    {
+      "level": "error",
+      "text": "[27b] tile failed: Request has failed."
+    },
+    {
+      "level": "error",
+      "text": "[27b] tile failed: Request has failed."
+    },
+    {
+      "level": "error",
+      "text": "[27b] tile failed: Request has failed."
+    },
+    {
+      "level": "error",
+      "text": "[27b] tile failed: Request has failed."
+    },
+    {
+      "level": "error",
+      "text": "[27b] tile failed: Request has failed."
+    },
+    {
+      "level": "error",
+      "text": "[27b] tile failed: Request has failed."
+    },
+    {
+      "level": "error",
+      "text": "[27b] tile failed: Request has failed."
+    },
+    {
+      "level": "error",
+      "text": "[27b] tile failed: Request has failed."
+    },
+    {
+      "level": "error",
+      "text": "[27b] tile failed: Request has failed."
+    },
+    {
+      "level": "error",
+      "text": "[27b] tile failed: Request has failed."
+    },
+    {
+      "level": "error",
+      "text": "[27b] tile failed: Request has failed."
+    },
+    {
+      "level": "error",
+      "text": "[27b] tile failed: Request has failed."
+    },
+    {
+      "level": "error",
+      "text": "[27b] direction V1 failed (attempt 1): No provider geometry drew for slot V1 after an unsettled wait: 0 tile(s) selected, 0 triangles. The frame is sky only."
+    },
+    {
+      "level": "error",
+      "text": "[27b] tile failed: Request has failed."
+    },
+    {
+      "level": "error",
+      "text": "[27b] tile failed: Request has failed."
+    },
+    {
+      "level": "error",
+      "text": "[27b] tile failed: Request has failed."
+    },
+    {
+      "level": "error",
+      "text": "[27b] tile failed: Request has failed."
+    },
+    {
+      "level": "error",
+      "text": "[27b] direction V2 failed (attempt 1): No provider geometry drew for slot V2 after a settled wait: 0 tile(s) selected, 0 triangles. The frame is sky only."
+    },
+    {
+      "level": "error",
+      "text": "[27b] tile failed: Request has failed."
+    },
+    {
+      "level": "error",
+      "text": "[27b] tile failed: Request has failed."
+    },
+    {
+      "level": "error",
+      "text": "[27b] tile failed: Request has failed."
+    },
+    {
+      "level": "error",
+      "text": "[27b] tile failed: Request has failed."
+    },
+    {
+      "level": "error",
+      "text": "[27b] tile failed: Request has failed."
+    },
+    {
+      "level": "error",
+      "text": "[27b] tile failed: Request has failed."
+    },
+    {
+      "level": "error",
+      "text": "[27b] tile failed: Request has failed."
+    },
+    {
+      "level": "error",
+      "text": "[27b] tile failed: Request has failed."
+    },
+    {
+      "level": "error",
+      "text": "[27b] direction V3 failed (attempt 1): No provider geometry drew for slot V3 after a settled wait: 0 tile(s) selected, 0 triangles. The frame is sky only."
+    },
+    {
+      "level": "error",
+      "text": "[27b] direction V4 failed (attempt 1): No provider geometry drew for slot V4 after an unsettled wait: 0 tile(s) selected, 0 triangles. The frame is sky only."
+    },
+    {
+      "level": "error",
+      "text": "[27b] direction V1 failed (attempt 2): No provider geometry drew for slot V1 after an unsettled wait: 0 tile(s) selected, 0 triangles. The frame is sky only."
+    },
+    {
+      "level": "error",
+      "text": "[27b] direction V2 failed (attempt 2): No provider geometry drew for slot V2 after an unsettled wait: 0 tile(s) selected, 0 triangles. The frame is sky only."
+    },
+    {
+      "level": "error",
+      "text": "[27b] direction V3 failed (attempt 2): No provider geometry drew for slot V3 after an unsettled wait: 0 tile(s) selected, 0 triangles. The frame is sky only."
+    },
+    {
+      "level": "error",
+      "text": "[27b] direction V4 failed (attempt 2): No provider geometry drew for slot V4 after an unsettled wait: 0 tile(s) selected, 0 triangles. The frame is sky only."
+    }
+  ],
+  "shot": "/Users/adamk/Developer/portfolio-suite/.release-artifacts/wt/27b/apps/27b/proof/empty-frame-guard/starved-session.png",
+  "billing": {
+    "rootTilesetRequests": 1,
+    "blockedRendererTileRequests": 45,
+    "worstCaseUsd": 0.006
+  }
+}
