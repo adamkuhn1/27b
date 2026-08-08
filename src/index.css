@@ -685,6 +685,15 @@ body {
 .state__body + .state__body {
   margin-top: 0.75rem;
 }
+/* The second paragraph explains whose fault it is and what still works. It is
+   context, not the headline, so it is set quieter and smaller than the message
+   above it. */
+.state__body--aside {
+  font-size: 0.86rem;
+  opacity: 0.82;
+  border-top: 1px solid var(--line);
+  padding-top: 0.75rem;
+}
 
 /* ---- Loading ---- */
 .loading {

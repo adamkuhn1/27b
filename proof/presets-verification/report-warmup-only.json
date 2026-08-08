@@ -1,0 +1,683 @@
+{
+  "_": "Physical verification of the landing-page presets against the real provider. See verify-presets.mjs.",
+  "ranAt": "2026-08-08T21:15:00.950Z",
+  "url": "http://localhost:5199/",
+  "devicePixelRatio": 2,
+  "webglRenderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M2, Unspecified Version)",
+  "billing": {
+    "rootTilesetRequests": 5,
+    "note": "Root-tileset requests are the billable unit. 1,000/month free, $6.00/1,000 after.",
+    "worstCaseUsd": 0.03
+  },
+  "rendererTileRequests": 13920,
+  "results": [
+    {
+      "preset": "432 Park Ave",
+      "detail": "floor 80 · over Central Park",
+      "settled": true,
+      "settleMs": 78876,
+      "failedState": null,
+      "heading": "432 PARK AVENUE, New York, NY, USA",
+      "frameLine": "Floor 80 · approximate view, not a specific apartment",
+      "notes": [],
+      "attribution": "Imagery: Google Maps · Data SIO, NOAA, U.S. Navy, NGA, GEBCO, Google, IBCAO, Landsat / Copernicus, Vexcel Imaging US, Inc.",
+      "renderAgainOffered": false,
+      "directions": [
+        {
+          "compass": "NNE",
+          "thumbState": null,
+          "thumbQuality": "normal",
+          "promoted": true,
+          "leadPhase": "ready",
+          "leadQuality": "normal",
+          "caption": "Looking NNE\n28° true",
+          "note": "Still sharpening when this frame was captured.",
+          "image": {
+            "w": 800,
+            "h": 623,
+            "src": "data:image/p"
+          },
+          "rect": {
+            "x": 232,
+            "y": 672.7578125,
+            "w": 752,
+            "h": 644.8046875
+          },
+          "pixels": {
+            "meanLuma": 90.4,
+            "sdLuma": 71,
+            "edgeEnergy": 0.35
+          },
+          "shot": "apps/27b/proof/presets-warmfix/432-park-ave-0-nne.png"
+        },
+        {
+          "compass": "ESE",
+          "thumbState": null,
+          "thumbQuality": "normal",
+          "promoted": true,
+          "leadPhase": "ready",
+          "leadQuality": "normal",
+          "caption": "Looking ESE\n118° true",
+          "note": "Still sharpening when this frame was captured.",
+          "image": {
+            "w": 800,
+            "h": 623,
+            "src": "data:image/p"
+          },
+          "rect": {
+            "x": 232,
+            "y": 672.7578125,
+            "w": 752,
+            "h": 644.8046875
+          },
+          "pixels": {
+            "meanLuma": 106.9,
+            "sdLuma": 57.5,
+            "edgeEnergy": 2.36
+          },
+          "shot": "apps/27b/proof/presets-warmfix/432-park-ave-1-ese.png"
+        },
+        {
+          "compass": "SSW",
+          "thumbState": null,
+          "thumbQuality": "normal",
+          "promoted": true,
+          "leadPhase": "ready",
+          "leadQuality": "normal",
+          "caption": "Looking SSW\n208° true",
+          "note": "Still sharpening when this frame was captured.",
+          "image": {
+            "w": 800,
+            "h": 623,
+            "src": "data:image/p"
+          },
+          "rect": {
+            "x": 232,
+            "y": 672.7578125,
+            "w": 752,
+            "h": 644.8046875
+          },
+          "pixels": {
+            "meanLuma": 118.4,
+            "sdLuma": 50.6,
+            "edgeEnergy": 8.03
+          },
+          "shot": "apps/27b/proof/presets-warmfix/432-park-ave-2-ssw.png"
+        },
+        {
+          "compass": "WNW",
+          "thumbState": null,
+          "thumbQuality": "normal",
+          "promoted": true,
+          "leadPhase": "ready",
+          "leadQuality": "normal",
+          "caption": "Looking WNW\n298° true",
+          "note": "Still sharpening when this frame was captured.",
+          "image": {
+            "w": 800,
+            "h": 623,
+            "src": "data:image/p"
+          },
+          "rect": {
+            "x": 232,
+            "y": 672.7578125,
+            "w": 752,
+            "h": 644.8046875
+          },
+          "pixels": {
+            "meanLuma": 116.7,
+            "sdLuma": 52.5,
+            "edgeEnergy": 11.36
+          },
+          "shot": "apps/27b/proof/presets-warmfix/432-park-ave-3-wnw.png"
+        }
+      ],
+      "provider": {
+        "rootTilesetRequests": 1,
+        "rendererTileRequests": 1514
+      },
+      "consoleProblems": [
+        {
+          "level": "warning",
+          "text": "Only the Google geocoder can be used with Google Photorealistic 3D Tiles.  Set the `geocode` property of Viewer constructor options.  You can set additionalOptions.onlyUsingWithGoogleGeocoder to hide this warning once you have configured the geocoder."
+        }
+      ],
+      "pageShot": "apps/27b/proof/presets-warmfix/432-park-ave-page.png"
+    },
+    {
+      "preset": "Empire State Bldg",
+      "detail": "floor 80 · Midtown",
+      "settled": true,
+      "settleMs": 62509,
+      "failedState": null,
+      "heading": "350 5 AVENUE, New York, NY, USA",
+      "frameLine": "Floor 80 · approximate view, not a specific apartment",
+      "notes": [],
+      "attribution": "Imagery: Google Maps · Data SIO, NOAA, U.S. Navy, NGA, GEBCO, Google, IBCAO, Landsat / Copernicus, Vexcel Imaging US, Inc.",
+      "renderAgainOffered": false,
+      "directions": [
+        {
+          "compass": "NNE",
+          "thumbState": null,
+          "thumbQuality": "normal",
+          "promoted": true,
+          "leadPhase": "ready",
+          "leadQuality": "normal",
+          "caption": "Looking NNE\n29° true",
+          "note": null,
+          "image": {
+            "w": 800,
+            "h": 623,
+            "src": "data:image/p"
+          },
+          "rect": {
+            "x": 232,
+            "y": 672.7578125,
+            "w": 752,
+            "h": 616.2890625
+          },
+          "pixels": {
+            "meanLuma": 119.6,
+            "sdLuma": 45.9,
+            "edgeEnergy": 8.85
+          },
+          "shot": "apps/27b/proof/presets-warmfix/empire-state-bldg-0-nne.png"
+        },
+        {
+          "compass": "ESE",
+          "thumbState": null,
+          "thumbQuality": "normal",
+          "promoted": true,
+          "leadPhase": "ready",
+          "leadQuality": "normal",
+          "caption": "Looking ESE\n119° true",
+          "note": null,
+          "image": {
+            "w": 800,
+            "h": 623,
+            "src": "data:image/p"
+          },
+          "rect": {
+            "x": 232,
+            "y": 672.7578125,
+            "w": 752,
+            "h": 616.2890625
+          },
+          "pixels": {
+            "meanLuma": 118.9,
+            "sdLuma": 49.2,
+            "edgeEnergy": 7.48
+          },
+          "shot": "apps/27b/proof/presets-warmfix/empire-state-bldg-1-ese.png"
+        },
+        {
+          "compass": "SSW",
+          "thumbState": null,
+          "thumbQuality": "normal",
+          "promoted": true,
+          "leadPhase": "ready",
+          "leadQuality": "normal",
+          "caption": "Looking SSW\n209° true",
+          "note": "Still sharpening when this frame was captured.",
+          "image": {
+            "w": 800,
+            "h": 623,
+            "src": "data:image/p"
+          },
+          "rect": {
+            "x": 232,
+            "y": 672.7578125,
+            "w": 752,
+            "h": 644.8046875
+          },
+          "pixels": {
+            "meanLuma": 119.5,
+            "sdLuma": 49,
+            "edgeEnergy": 8.06
+          },
+          "shot": "apps/27b/proof/presets-warmfix/empire-state-bldg-2-ssw.png"
+        },
+        {
+          "compass": "WNW",
+          "thumbState": null,
+          "thumbQuality": "normal",
+          "promoted": true,
+          "leadPhase": "ready",
+          "leadQuality": "normal",
+          "caption": "Looking WNW\n299° true",
+          "note": null,
+          "image": {
+            "w": 800,
+            "h": 623,
+            "src": "data:image/p"
+          },
+          "rect": {
+            "x": 232,
+            "y": 672.7578125,
+            "w": 752,
+            "h": 616.2890625
+          },
+          "pixels": {
+            "meanLuma": 117.9,
+            "sdLuma": 48.3,
+            "edgeEnergy": 8.15
+          },
+          "shot": "apps/27b/proof/presets-warmfix/empire-state-bldg-3-wnw.png"
+        }
+      ],
+      "provider": {
+        "rootTilesetRequests": 1,
+        "rendererTileRequests": 2445
+      },
+      "consoleProblems": [
+        {
+          "level": "warning",
+          "text": "Only the Google geocoder can be used with Google Photorealistic 3D Tiles.  Set the `geocode` property of Viewer constructor options.  You can set additionalOptions.onlyUsingWithGoogleGeocoder to hide this warning once you have configured the geocoder."
+        }
+      ],
+      "pageShot": "apps/27b/proof/presets-warmfix/empire-state-bldg-page.png"
+    },
+    {
+      "preset": "The Dakota",
+      "detail": "floor 7 · Upper West Side",
+      "settled": true,
+      "settleMs": 45109,
+      "failedState": null,
+      "heading": "1 WEST 72 STREET, New York, NY, USA",
+      "frameLine": "Floor 7 · approximate view, not a specific apartment",
+      "notes": [],
+      "attribution": "Imagery: Google Maps · Data SIO, NOAA, U.S. Navy, NGA, GEBCO, Google, IBCAO, Landsat / Copernicus, Vexcel Imaging US, Inc.",
+      "renderAgainOffered": false,
+      "directions": [
+        {
+          "compass": "NNE",
+          "thumbState": null,
+          "thumbQuality": "qualified",
+          "promoted": true,
+          "leadPhase": "ready",
+          "leadQuality": "qualified",
+          "caption": "Looking NNE\n29° true\nEnclosed",
+          "note": "Another building stands about 12 m from this side.",
+          "image": {
+            "w": 800,
+            "h": 623,
+            "src": "data:image/p"
+          },
+          "rect": {
+            "x": 232,
+            "y": 672.7578125,
+            "w": 752,
+            "h": 644.8046875
+          },
+          "pixels": {
+            "meanLuma": 76.7,
+            "sdLuma": 36,
+            "edgeEnergy": 4.71
+          },
+          "shot": "apps/27b/proof/presets-warmfix/the-dakota-0-nne.png"
+        },
+        {
+          "compass": "ESE",
+          "thumbState": null,
+          "thumbQuality": "normal",
+          "promoted": true,
+          "leadPhase": "ready",
+          "leadQuality": "normal",
+          "caption": "Looking ESE\n119° true",
+          "note": null,
+          "image": {
+            "w": 800,
+            "h": 623,
+            "src": "data:image/p"
+          },
+          "rect": {
+            "x": 232,
+            "y": 672.7578125,
+            "w": 752,
+            "h": 616.2890625
+          },
+          "pixels": {
+            "meanLuma": 98.5,
+            "sdLuma": 51.5,
+            "edgeEnergy": 5.83
+          },
+          "shot": "apps/27b/proof/presets-warmfix/the-dakota-1-ese.png"
+        },
+        {
+          "compass": "SSW",
+          "thumbState": null,
+          "thumbQuality": "qualified",
+          "promoted": true,
+          "leadPhase": "ready",
+          "leadQuality": "qualified",
+          "caption": "Looking SSW\n209° true\nEnclosed",
+          "note": "Another building stands about 24 m from this side.",
+          "image": {
+            "w": 800,
+            "h": 623,
+            "src": "data:image/p"
+          },
+          "rect": {
+            "x": 232,
+            "y": 672.7578125,
+            "w": 752,
+            "h": 644.8046875
+          },
+          "pixels": {
+            "meanLuma": 63.8,
+            "sdLuma": 15.6,
+            "edgeEnergy": 8.61
+          },
+          "shot": "apps/27b/proof/presets-warmfix/the-dakota-2-ssw.png"
+        },
+        {
+          "compass": "WNW",
+          "thumbState": null,
+          "thumbQuality": "qualified",
+          "promoted": true,
+          "leadPhase": "ready",
+          "leadQuality": "qualified",
+          "caption": "Looking WNW\n299° true\nEnclosed",
+          "note": "Another building stands about 8 m from this side.",
+          "image": {
+            "w": 800,
+            "h": 623,
+            "src": "data:image/p"
+          },
+          "rect": {
+            "x": 232,
+            "y": 672.7578125,
+            "w": 752,
+            "h": 644.8046875
+          },
+          "pixels": {
+            "meanLuma": 158.7,
+            "sdLuma": 64.3,
+            "edgeEnergy": 13.78
+          },
+          "shot": "apps/27b/proof/presets-warmfix/the-dakota-3-wnw.png"
+        }
+      ],
+      "provider": {
+        "rootTilesetRequests": 1,
+        "rendererTileRequests": 3068
+      },
+      "consoleProblems": [
+        {
+          "level": "warning",
+          "text": "Only the Google geocoder can be used with Google Photorealistic 3D Tiles.  Set the `geocode` property of Viewer constructor options.  You can set additionalOptions.onlyUsingWithGoogleGeocoder to hide this warning once you have configured the geocoder."
+        }
+      ],
+      "pageShot": "apps/27b/proof/presets-warmfix/the-dakota-page.png"
+    },
+    {
+      "preset": "175 Fifth Ave",
+      "detail": "floor 18 · the Flatiron",
+      "settled": true,
+      "settleMs": 57462,
+      "failedState": null,
+      "heading": "175 5 AVENUE, New York, NY, USA",
+      "frameLine": "Floor 18 · approximate view, not a specific apartment",
+      "notes": [
+        "This building isn't a simple rectangle, so these four directions are a best fit to its walls.",
+        "Some nearby buildings have no height on file, so the notes below may miss an obstruction."
+      ],
+      "attribution": "Imagery: Google Maps · Data SIO, NOAA, U.S. Navy, NGA, GEBCO, Google, IBCAO, Landsat / Copernicus, Vexcel Imaging US, Inc.",
+      "renderAgainOffered": false,
+      "directions": [
+        {
+          "compass": "NNE",
+          "thumbState": null,
+          "thumbQuality": "normal",
+          "promoted": true,
+          "leadPhase": "ready",
+          "leadQuality": "normal",
+          "caption": "Looking NNE\n19° true",
+          "note": "Partly enclosed — nearby rooftops fill much of this direction.",
+          "image": {
+            "w": 800,
+            "h": 623,
+            "src": "data:image/p"
+          },
+          "rect": {
+            "x": 232,
+            "y": 781.953125,
+            "w": 752,
+            "h": 644.8046875
+          },
+          "pixels": {
+            "meanLuma": 103.9,
+            "sdLuma": 41.1,
+            "edgeEnergy": 11.14
+          },
+          "shot": "apps/27b/proof/presets-warmfix/175-fifth-ave-0-nne.png"
+        },
+        {
+          "compass": "ESE",
+          "thumbState": null,
+          "thumbQuality": "qualified",
+          "promoted": true,
+          "leadPhase": "ready",
+          "leadQuality": "qualified",
+          "caption": "Looking ESE\n109° true\nEnclosed",
+          "note": "This side looks into nearby buildings rather than out over the city.",
+          "image": {
+            "w": 800,
+            "h": 623,
+            "src": "data:image/p"
+          },
+          "rect": {
+            "x": 232,
+            "y": 781.953125,
+            "w": 752,
+            "h": 644.8046875
+          },
+          "pixels": {
+            "meanLuma": 73.9,
+            "sdLuma": 32.6,
+            "edgeEnergy": 11.58
+          },
+          "shot": "apps/27b/proof/presets-warmfix/175-fifth-ave-1-ese.png"
+        },
+        {
+          "compass": "SSW",
+          "thumbState": null,
+          "thumbQuality": "normal",
+          "promoted": true,
+          "leadPhase": "ready",
+          "leadQuality": "normal",
+          "caption": "Looking SSW\n199° true",
+          "note": "Partly enclosed — nearby rooftops fill much of this direction.",
+          "image": {
+            "w": 800,
+            "h": 623,
+            "src": "data:image/p"
+          },
+          "rect": {
+            "x": 232,
+            "y": 781.953125,
+            "w": 752,
+            "h": 644.8046875
+          },
+          "pixels": {
+            "meanLuma": 107.5,
+            "sdLuma": 44,
+            "edgeEnergy": 8.65
+          },
+          "shot": "apps/27b/proof/presets-warmfix/175-fifth-ave-2-ssw.png"
+        },
+        {
+          "compass": "WNW",
+          "thumbState": null,
+          "thumbQuality": "normal",
+          "promoted": true,
+          "leadPhase": "ready",
+          "leadQuality": "normal",
+          "caption": "Looking WNW\n289° true",
+          "note": null,
+          "image": {
+            "w": 800,
+            "h": 623,
+            "src": "data:image/p"
+          },
+          "rect": {
+            "x": 232,
+            "y": 781.953125,
+            "w": 752,
+            "h": 616.2890625
+          },
+          "pixels": {
+            "meanLuma": 116,
+            "sdLuma": 43.5,
+            "edgeEnergy": 9.41
+          },
+          "shot": "apps/27b/proof/presets-warmfix/175-fifth-ave-3-wnw.png"
+        }
+      ],
+      "provider": {
+        "rootTilesetRequests": 1,
+        "rendererTileRequests": 3617
+      },
+      "consoleProblems": [
+        {
+          "level": "warning",
+          "text": "Only the Google geocoder can be used with Google Photorealistic 3D Tiles.  Set the `geocode` property of Viewer constructor options.  You can set additionalOptions.onlyUsingWithGoogleGeocoder to hide this warning once you have configured the geocoder."
+        }
+      ],
+      "pageShot": "apps/27b/proof/presets-warmfix/175-fifth-ave-page.png"
+    },
+    {
+      "preset": "425 E 79th St",
+      "detail": "floor 10 · hemmed in on three sides",
+      "settled": true,
+      "settleMs": 50642,
+      "failedState": null,
+      "heading": "425 EAST 79 STREET, New York, NY, USA",
+      "frameLine": "Floor 10 · approximate view, not a specific apartment",
+      "notes": [],
+      "attribution": "Imagery: Google Maps · Data SIO, NOAA, U.S. Navy, NGA, GEBCO, Google, IBCAO, Landsat / Copernicus, Vexcel Imaging US, Inc.",
+      "renderAgainOffered": false,
+      "directions": [
+        {
+          "compass": "NNE",
+          "thumbState": null,
+          "thumbQuality": "qualified",
+          "promoted": true,
+          "leadPhase": "ready",
+          "leadQuality": "qualified",
+          "caption": "Looking NNE\n29° true\nEnclosed",
+          "note": "Another building stands about 12 m from this side.",
+          "image": {
+            "w": 800,
+            "h": 623,
+            "src": "data:image/p"
+          },
+          "rect": {
+            "x": 232,
+            "y": 672.7578125,
+            "w": 752,
+            "h": 644.8046875
+          },
+          "pixels": {
+            "meanLuma": 82.2,
+            "sdLuma": 31.4,
+            "edgeEnergy": 5.18
+          },
+          "shot": "apps/27b/proof/presets-warmfix/425-e-79th-st-0-nne.png"
+        },
+        {
+          "compass": "ESE",
+          "thumbState": "close range",
+          "thumbQuality": "close",
+          "promoted": true,
+          "leadPhase": "ready",
+          "leadQuality": "close",
+          "caption": "Looking ESE\n119° true\nClose range",
+          "note": "A light court about 4 m wide — the building opposite is very close.",
+          "image": {
+            "w": 800,
+            "h": 623,
+            "src": "data:image/p"
+          },
+          "rect": {
+            "x": 232,
+            "y": 672.7578125,
+            "w": 752,
+            "h": 644.8046875
+          },
+          "pixels": {
+            "meanLuma": 42,
+            "sdLuma": 7.6,
+            "edgeEnergy": 0.9
+          },
+          "shot": "apps/27b/proof/presets-warmfix/425-e-79th-st-1-ese.png"
+        },
+        {
+          "compass": "SSW",
+          "thumbState": null,
+          "thumbQuality": "qualified",
+          "promoted": true,
+          "leadPhase": "ready",
+          "leadQuality": "qualified",
+          "caption": "Looking SSW\n209° true\nEnclosed",
+          "note": "Another building stands about 24 m from this side.",
+          "image": {
+            "w": 800,
+            "h": 623,
+            "src": "data:image/p"
+          },
+          "rect": {
+            "x": 232,
+            "y": 672.7578125,
+            "w": 752,
+            "h": 644.8046875
+          },
+          "pixels": {
+            "meanLuma": 63.9,
+            "sdLuma": 38,
+            "edgeEnergy": 9.47
+          },
+          "shot": "apps/27b/proof/presets-warmfix/425-e-79th-st-2-ssw.png"
+        },
+        {
+          "compass": "WNW",
+          "thumbState": null,
+          "thumbQuality": "qualified",
+          "promoted": true,
+          "leadPhase": "ready",
+          "leadQuality": "qualified",
+          "caption": "Looking WNW\n299° true\nEnclosed",
+          "note": "This side looks into nearby buildings rather than out over the city.",
+          "image": {
+            "w": 800,
+            "h": 623,
+            "src": "data:image/p"
+          },
+          "rect": {
+            "x": 232,
+            "y": 672.7578125,
+            "w": 752,
+            "h": 644.8046875
+          },
+          "pixels": {
+            "meanLuma": 165.1,
+            "sdLuma": 55.9,
+            "edgeEnergy": 18.67
+          },
+          "shot": "apps/27b/proof/presets-warmfix/425-e-79th-st-3-wnw.png"
+        }
+      ],
+      "provider": {
+        "rootTilesetRequests": 1,
+        "rendererTileRequests": 3276
+      },
+      "consoleProblems": [
+        {
+          "level": "warning",
+          "text": "Only the Google geocoder can be used with Google Photorealistic 3D Tiles.  Set the `geocode` property of Viewer constructor options.  You can set additionalOptions.onlyUsingWithGoogleGeocoder to hide this warning once you have configured the geocoder."
+        }
+      ],
+      "pageShot": "apps/27b/proof/presets-warmfix/425-e-79th-st-page.png"
+    }
+  ]
+}

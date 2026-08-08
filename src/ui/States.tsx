@@ -10,11 +10,16 @@ export function LoadingState() {
   );
 }
 
+// "Something went wrong" was the title for every network failure, and on
+// 2026-08-08 that is what all five presets showed for hours while NYC
+// Planning's GeoSearch returned 503 across every endpoint. It reads as "this
+// app is broken", which is both worse than the truth and less useful than it:
+// nothing here went wrong, an upstream service was down. Name it.
 const REASON_TITLE: Record<UnavailableReason, string> = {
   "not-nyc": "Address isn't in New York City",
   "geocode-failed": "Address not found",
   "no-footprint": "Building footprint not available",
-  "network-error": "Something went wrong",
+  "network-error": "The NYC address service isn't responding",
 };
 
 /**
@@ -33,6 +38,18 @@ export function UnavailableState({
     <section className="state" role="status" aria-live="polite">
       <h2 className="state__title">{REASON_TITLE[reason]}</h2>
       <p className="state__body">{message}</p>
+      {/* Only for the outage case, and only because it is actionable: the
+          preset buildings carry a committed record of their coordinates and
+          keep working while the lookup service is down (lib/knownAddresses.ts).
+          Saying so turns a dead end into the one thing the reader can do. */}
+      {reason === "network-error" && (
+        <p className="state__body state__body--aside">
+          This is geosearch.planninglabs.nyc, the free NYC Planning service every
+          address lookup starts at — not this app, and not your connection. The
+          buildings offered on the previous screen still work: their coordinates
+          are held on file here.
+        </p>
+      )}
     </section>
   );
 }

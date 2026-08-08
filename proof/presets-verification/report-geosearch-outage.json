@@ -1,0 +1,169 @@
+{
+  "_": "Physical verification of the landing-page presets against the real provider. See verify-presets.mjs.",
+  "ranAt": "2026-08-08T20:21:35.092Z",
+  "url": "http://localhost:5199/",
+  "devicePixelRatio": 2,
+  "billing": {
+    "rootTilesetRequests": 0,
+    "note": "Root-tileset requests are the billable unit. 1,000/month free, $6.00/1,000 after.",
+    "worstCaseUsd": 0
+  },
+  "rendererTileRequests": 0,
+  "results": [
+    {
+      "preset": "425 E 79th St",
+      "detail": "floor 10 · Upper East Side",
+      "settled": true,
+      "settleMs": 2324,
+      "failedState": {
+        "title": "Something went wrong",
+        "body": "Could not reach the NYC address service."
+      },
+      "heading": null,
+      "frameLine": null,
+      "notes": [],
+      "attribution": null,
+      "renderAgainOffered": false,
+      "directions": [],
+      "provider": {
+        "rootTilesetRequests": 0,
+        "rendererTileRequests": 0
+      },
+      "consoleProblems": [
+        {
+          "level": "error",
+          "text": "Access to fetch at 'https://geosearch.planninglabs.nyc/v2/search?text=425%20E%2079th%20St%2C%20Manhattan%2C%20New%20York%2C%20NY%2010075&size=1' from origin 'http://localhost:5199' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource."
+        },
+        {
+          "level": "error",
+          "text": "Failed to load resource: net::ERR_FAILED"
+        }
+      ],
+      "pageShot": "/Users/adamk/Developer/portfolio-suite/apps/27b/proof/presets/425-e-79th-st-page.png"
+    },
+    {
+      "preset": "The Dakota",
+      "detail": "floor 7 · Upper West Side",
+      "settled": true,
+      "settleMs": 2313,
+      "failedState": {
+        "title": "Something went wrong",
+        "body": "Could not reach the NYC address service."
+      },
+      "heading": null,
+      "frameLine": null,
+      "notes": [],
+      "attribution": null,
+      "renderAgainOffered": false,
+      "directions": [],
+      "provider": {
+        "rootTilesetRequests": 0,
+        "rendererTileRequests": 0
+      },
+      "consoleProblems": [
+        {
+          "level": "error",
+          "text": "Access to fetch at 'https://geosearch.planninglabs.nyc/v2/search?text=1%20W%2072nd%20St%2C%20Manhattan%2C%20New%20York%2C%20NY%2010023&size=1' from origin 'http://localhost:5199' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource."
+        },
+        {
+          "level": "error",
+          "text": "Failed to load resource: net::ERR_FAILED"
+        }
+      ],
+      "pageShot": "/Users/adamk/Developer/portfolio-suite/apps/27b/proof/presets/the-dakota-page.png"
+    },
+    {
+      "preset": "432 Park Ave",
+      "detail": "floor 80 · Midtown",
+      "settled": true,
+      "settleMs": 2252,
+      "failedState": {
+        "title": "Something went wrong",
+        "body": "Could not reach the NYC address service."
+      },
+      "heading": null,
+      "frameLine": null,
+      "notes": [],
+      "attribution": null,
+      "renderAgainOffered": false,
+      "directions": [],
+      "provider": {
+        "rootTilesetRequests": 0,
+        "rendererTileRequests": 0
+      },
+      "consoleProblems": [
+        {
+          "level": "error",
+          "text": "Access to fetch at 'https://geosearch.planninglabs.nyc/v2/search?text=432%20Park%20Ave%2C%20Manhattan%2C%20New%20York%2C%20NY%2010022&size=1' from origin 'http://localhost:5199' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource."
+        },
+        {
+          "level": "error",
+          "text": "Failed to load resource: net::ERR_FAILED"
+        }
+      ],
+      "pageShot": "/Users/adamk/Developer/portfolio-suite/apps/27b/proof/presets/432-park-ave-page.png"
+    },
+    {
+      "preset": "175 Fifth Ave",
+      "detail": "floor 18 · the Flatiron",
+      "settled": true,
+      "settleMs": 2252,
+      "failedState": {
+        "title": "Something went wrong",
+        "body": "Could not reach the NYC address service."
+      },
+      "heading": null,
+      "frameLine": null,
+      "notes": [],
+      "attribution": null,
+      "renderAgainOffered": false,
+      "directions": [],
+      "provider": {
+        "rootTilesetRequests": 0,
+        "rendererTileRequests": 0
+      },
+      "consoleProblems": [
+        {
+          "level": "error",
+          "text": "Access to fetch at 'https://geosearch.planninglabs.nyc/v2/search?text=175%205th%20Ave%2C%20Manhattan%2C%20New%20York%2C%20NY%2010010&size=1' from origin 'http://localhost:5199' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource."
+        },
+        {
+          "level": "error",
+          "text": "Failed to load resource: net::ERR_FAILED"
+        }
+      ],
+      "pageShot": "/Users/adamk/Developer/portfolio-suite/apps/27b/proof/presets/175-fifth-ave-page.png"
+    },
+    {
+      "preset": "Empire State Bldg",
+      "detail": "floor 80 · Midtown",
+      "settled": true,
+      "settleMs": 2259,
+      "failedState": {
+        "title": "Something went wrong",
+        "body": "Could not reach the NYC address service."
+      },
+      "heading": null,
+      "frameLine": null,
+      "notes": [],
+      "attribution": null,
+      "renderAgainOffered": false,
+      "directions": [],
+      "provider": {
+        "rootTilesetRequests": 0,
+        "rendererTileRequests": 0
+      },
+      "consoleProblems": [
+        {
+          "level": "error",
+          "text": "Access to fetch at 'https://geosearch.planninglabs.nyc/v2/search?text=350%205th%20Ave%2C%20Manhattan%2C%20New%20York%2C%20NY%2010118&size=1' from origin 'http://localhost:5199' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource."
+        },
+        {
+          "level": "error",
+          "text": "Failed to load resource: net::ERR_FAILED"
+        }
+      ],
+      "pageShot": "/Users/adamk/Developer/portfolio-suite/apps/27b/proof/presets/empire-state-bldg-page.png"
+    }
+  ]
+}

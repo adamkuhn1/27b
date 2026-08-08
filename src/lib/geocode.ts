@@ -11,6 +11,7 @@
 import type { GeocodeResult } from "./types";
 import { isWithinNyc } from "./validation";
 import { verifyAddressMatch, type ParsedQuery } from "./addressMatch";
+import { recordedGeocode } from "./knownAddresses";
 
 const GEOSEARCH_URL =
   "https://geosearch.planninglabs.nyc/v2/search";
@@ -52,6 +53,78 @@ export class GeocodeError extends Error {
  * failure so the pipeline can route every branch to the honest unavailable state.
  */
 export async function geocodeAddress(
+  address: string,
+  signal?: AbortSignal,
+): Promise<GeocodeResult> {
+  try {
+    return await geocodeLive(address, signal);
+  } catch (err) {
+    // A record substitutes for an outage, never for an answer. `not-nyc` and
+    // `geocode-failed` mean the service replied and the reply was no; those are
+    // correct results and they stand. Only `network-error` — unreachable, 5xx,
+    // malformed — is the case a record is allowed to cover.
+    if (!(err instanceof GeocodeError) || err.kind !== "network-error") throw err;
+    const recorded = recordedGeocode(address);
+    if (!recorded) throw err;
+    return recorded;
+  }
+}
+
+/**
+ * How many times to ask before concluding the service is down.
+ *
+ * Three attempts over ~1 s. GeoSearch sits behind a load balancer that returns
+ * 503 with no body when it has no healthy backend, and a single unlucky request
+ * hitting a rolling restart used to be indistinguishable from an outage. This
+ * is not a retry loop for a service that is genuinely down — with the whole
+ * host at 503 all three attempts fail in about a second and the caller gets its
+ * answer promptly, which is the behaviour a person waiting on a spinner wants.
+ */
+const ATTEMPTS = 3;
+const BACKOFF_MS = [200, 700];
+
+/** Ask the live service, retrying only what is worth retrying. */
+async function geocodeLive(
+  address: string,
+  signal?: AbortSignal,
+): Promise<GeocodeResult> {
+  let last: GeocodeError | undefined;
+  for (let attempt = 0; attempt < ATTEMPTS; attempt += 1) {
+    try {
+      return await geocodeOnce(address, signal);
+    } catch (err) {
+      // Only transport-level trouble is retryable. Asking a healthy service the
+      // same unanswerable question three times is just three times the wait.
+      if (!(err instanceof GeocodeError) || err.kind !== "network-error") throw err;
+      last = err;
+      const wait = BACKOFF_MS[attempt];
+      if (wait === undefined) break;
+      await sleep(wait, signal);
+    }
+  }
+  throw last ?? new GeocodeError("Could not reach the NYC address service.", "network-error");
+}
+
+/** Sleep that still honours an abort, so cancelling a lookup cancels promptly. */
+function sleep(ms: number, signal?: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(new DOMException("Aborted", "AbortError"));
+      return;
+    }
+    const timer = setTimeout(() => {
+      signal?.removeEventListener("abort", onAbort);
+      resolve();
+    }, ms);
+    function onAbort() {
+      clearTimeout(timer);
+      reject(new DOMException("Aborted", "AbortError"));
+    }
+    signal?.addEventListener("abort", onAbort, { once: true });
+  });
+}
+
+async function geocodeOnce(
   address: string,
   signal?: AbortSignal,
 ): Promise<GeocodeResult> {
