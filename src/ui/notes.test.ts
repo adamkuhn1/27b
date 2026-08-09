@@ -187,6 +187,63 @@ describe("whole-result notes", () => {
     expect(notes.map((n) => n.id)).not.toContain("partial");
   });
 
+  it("counts up while frames are still arriving", () => {
+    const notes = planNotes(plan({ confidence: report() }), {
+      loadedCount: 2,
+      totalCount: 4,
+      stillCapturing: true,
+    });
+    expect(notes.map((n) => n.text)).toContain("2 of 4 directions loaded.");
+  });
+
+  it("says what the empty frames are once the render is over", () => {
+    // The bare count left two empty frames unexplained, which is the state a
+    // reader most needs a sentence for.
+    const [note] = planNotes(plan({ confidence: report() }), {
+      loadedCount: 2,
+      totalCount: 4,
+      stillCapturing: false,
+    }).filter((n) => n.id === "partial");
+    expect(note.text).toContain("2 of 4 directions loaded");
+    expect(note.text).toMatch(/the other 2 frames are empty, not stand-ins/);
+    expect(note.text).not.toMatch(/fail/i);
+  });
+
+  it("keeps the singular readable when only one direction is missing", () => {
+    const [note] = planNotes(plan({ confidence: report() }), {
+      loadedCount: 3,
+      totalCount: 4,
+      stillCapturing: false,
+    }).filter((n) => n.id === "partial");
+    expect(note.text).toMatch(/the other frame is empty, not a stand-in/);
+  });
+
+  it("does not go silent when a render opened and produced nothing", () => {
+    // Distinct from `imageryUnavailable`, which is a session that never opened,
+    // and from the still-capturing case, where zero loaded means "not yet".
+    const notes = planNotes(plan({ confidence: report() }), {
+      loadedCount: 0,
+      totalCount: 4,
+      stillCapturing: false,
+    });
+    expect(notes.map((n) => n.id)).toContain("none-loaded");
+    expect(notes.find((n) => n.id === "none-loaded")!.text).toMatch(
+      /nothing has been put in its place/i,
+    );
+  });
+
+  it("stays silent about counts when there is no render at all", () => {
+    // No imagery key: the page says so in its own state, and a note claiming
+    // nothing loaded would be describing a render that was never requested.
+    const notes = planNotes(plan({ confidence: report() }), {
+      loadedCount: 0,
+      totalCount: 4,
+      stillCapturing: undefined,
+    });
+    expect(notes.map((n) => n.id)).not.toContain("none-loaded");
+    expect(notes.map((n) => n.id)).not.toContain("partial");
+  });
+
   it("says once, at the head, that no imagery loaded at all", () => {
     const notes = planNotes(plan({ confidence: report() }), {
       loadedCount: 0,
@@ -244,6 +301,15 @@ describe("nothing this module can say is a claim the data doesn't support", () =
     const unsettled = directionNote(conf({}), { settled: false });
     if (unsettled) out.push(unsettled);
 
+    // Both halves of the light-court copy: the court a camera fits in, and the
+    // one it does not. Widths chosen to reach both branches of the rounding.
+    for (const courtWidthM of [4.4, 2, 0.4]) {
+      for (const capturable of [true, false]) {
+        const n = directionNote(conf({ courtWidthM }), { capturable });
+        if (n) out.push(n);
+      }
+    }
+
     for (const p of [
       plan({ confidence: null }, 2),
       plan({ confidence: report({ neighborDataIncomplete: true }) }, 400),
@@ -251,6 +317,23 @@ describe("nothing this module can say is a claim the data doesn't support", () =
       plan({ facadeConcentration: 0.6, confidence: report() }),
     ]) {
       out.push(...planNotes(p, { loadedCount: 3, totalCount: 4 }).map((n) => n.text));
+    }
+    // Every form the load-count note can take, including the ones only a
+    // finished render produces. A string that reaches the screen and not this
+    // list is a string nothing checks.
+    for (const [loadedCount, stillCapturing] of [
+      [2, false],
+      [3, false],
+      [1, true],
+      [0, false],
+    ] as const) {
+      out.push(
+        ...planNotes(plan({ confidence: report() }), {
+          loadedCount,
+          totalCount: 4,
+          stillCapturing,
+        }).map((n) => n.text),
+      );
     }
     out.push(
       ...planNotes(plan({ confidence: report() }), {
@@ -290,6 +373,33 @@ function report(overrides: Partial<ConfidenceReport> = {}): ConfidenceReport {
     ...overrides,
   };
 }
+
+describe("a light court", () => {
+  it("says the width and that the building opposite is close", () => {
+    expect(directionNote(conf({ courtWidthM: 4.4 }))).toBe(
+      "A light court about 4 m wide \u2014 the building opposite is very close.",
+    );
+  });
+
+  it("says instead that there is no frame when a camera does not fit", () => {
+    // The direction is never requested, so the pane beside this sentence is
+    // empty for good. Saying "the building opposite is very close" there would
+    // describe a picture that does not exist.
+    const note = directionNote(conf({ courtWidthM: 2 }), { capturable: false });
+    expect(note).toBe(
+      "A light court about 2 m wide \u2014 too narrow to place a camera in, so this side has no frame.",
+    );
+  });
+
+  it("never rounds a real gap down to zero metres", () => {
+    // NYC footprints are not surveyed better than a metre, so widths round to
+    // one — but "about 0 m wide" reads as a bug rather than as a measurement.
+    expect(directionNote(conf({ courtWidthM: 0.4 }), { capturable: false })).toContain(
+      "under a metre wide",
+    );
+    expect(directionNote(conf({ courtWidthM: 0.4 }))).toContain("under a metre wide");
+  });
+});
 
 describe("a wall shared with the building next door", () => {
   it("says there is no window there, and says it instead of an enclosure note", () => {

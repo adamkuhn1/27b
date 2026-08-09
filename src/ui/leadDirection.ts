@@ -87,8 +87,22 @@ function openness(
  * that came out badly. That distinction is the difference between a limitation
  * and a defect, and only the app knows which this is.
  */
-export type ViewQuality = "normal" | "qualified" | "close" | "no-window";
+export type ViewQuality =
+  | "normal"
+  | "qualified"
+  | "close"
+  | "no-window"
+  | "no-room";
 
+/**
+ * `close` and `no-room` are both light courts and the difference between them
+ * is whether a camera fits. `isRenderableDirection` is the predicate that
+ * decides what the renderer asks for, so it is the predicate the label has to
+ * agree with: a court under about three metres gets no camera, therefore no
+ * frame, ever. Reporting it as `close` — as this did — left the pane empty and
+ * still announcing that it was waiting to capture, with a note describing a
+ * picture that was never coming.
+ */
 export function viewQuality(
   slot: ViewSlot,
   confidence: ConfidenceReport | null | undefined,
@@ -96,7 +110,14 @@ export function viewQuality(
   const d = confidence?.bySlot[slot];
   if (!d) return "normal";
   if (d.insideNeighborByM != null) return "no-window";
-  if (d.courtWidthM != null) return "close";
+  if (d.courtWidthM != null) {
+    return isRenderableDirection(slot, confidence) ? "close" : "no-room";
+  }
   if (d.band === "enclosed") return "qualified";
   return "normal";
+}
+
+/** True when nothing was requested for this direction and nothing will arrive. */
+export function isUncaptured(quality: ViewQuality): boolean {
+  return quality === "no-window" || quality === "no-room";
 }

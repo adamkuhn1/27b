@@ -41,10 +41,14 @@ export const LOOSE_FACADE_CONCENTRATION = 0.8;
  */
 export function directionNote(
   confidence: DirectionConfidence | undefined,
-  opts: { settled?: boolean } = {},
+  opts: { settled?: boolean; capturable?: boolean } = {},
 ): string | null {
   if (confidence?.insideNeighborByM != null) return ABUTTING_NOTE;
-  if (confidence?.courtWidthM != null) return courtNote(confidence.courtWidthM);
+  if (confidence?.courtWidthM != null) {
+    return opts.capturable === false
+      ? narrowCourtNote(confidence.courtWidthM)
+      : courtNote(confidence.courtWidthM);
+  }
   if (opts.settled === false) return "Still sharpening when this frame was captured.";
   if (!confidence) return null;
 
@@ -84,6 +88,14 @@ export const ABUTTING_NOTE =
   "At this height this side faces the building next door.";
 
 /**
+ * The same fact as `narrowCourtNote`, without the measurement, for the places
+ * that describe the empty frame itself rather than annotate it — the frame's
+ * accessible name, which already names the direction.
+ */
+export const NARROW_COURT_REASON =
+  "The light court on this side is too narrow to place a camera in.";
+
+/**
  * Copy for a facade across a light court or narrow side lot.
  *
  * Both clauses are measurements from NYC Open Data footprints, not observations
@@ -91,9 +103,31 @@ export const ABUTTING_NOTE =
  * polygons are not surveyed to better than that.
  */
 export function courtNote(courtWidthM: number): string {
-  return `A light court about ${Math.round(
+  return `A light court ${courtWidth(courtWidthM)} — the building opposite is very close.`;
+}
+
+/**
+ * Copy for a light court too narrow to stand a camera in.
+ *
+ * The same measurement as `courtNote`, and a different fact about it: below
+ * about three metres there is no position that clears both walls, so this
+ * direction is never requested and the frame beside this sentence is empty
+ * because of the building, not because something failed.
+ */
+export function narrowCourtNote(courtWidthM: number): string {
+  return `A light court ${courtWidth(
     courtWidthM,
-  )} m wide — the building opposite is very close.`;
+  )} — too narrow to place a camera in, so this side has no frame.`;
+}
+
+/**
+ * Widths are rounded to the metre because the underlying polygons are not
+ * surveyed to better than that. Rounding a 40 cm gap to "about 0 m wide" is the
+ * one case where that is worse than saying it in words.
+ */
+function courtWidth(courtWidthM: number): string {
+  const rounded = Math.round(courtWidthM);
+  return rounded < 1 ? "under a metre wide" : `about ${rounded} m wide`;
 }
 
 /** Copy for a direction whose imagery did not arrive. */
@@ -117,7 +151,7 @@ export const RENDER_ALL_AGAIN = "Render all four again";
  * measurement itself — this is only the heading over it.
  */
 export function qualityLead(
-  quality: "normal" | "qualified" | "close" | "no-window",
+  quality: "normal" | "qualified" | "close" | "no-window" | "no-room",
 ): string | null {
   switch (quality) {
     case "close":
@@ -126,6 +160,8 @@ export function qualityLead(
       return "Enclosed";
     case "no-window":
       return "No window on this side";
+    case "no-room":
+      return "Too narrow to capture";
     case "normal":
       return null;
   }
@@ -148,6 +184,13 @@ export function planNotes(
     totalCount?: number;
     /** True when the render session never opened at all. */
     imageryUnavailable?: boolean;
+    /**
+     * Whether frames are still arriving. Three-way, and the third value
+     * matters: `undefined` means there is no render to report on — no imagery
+     * key — and a count note would then be describing something that was never
+     * requested.
+     */
+    stillCapturing?: boolean;
   } = {},
 ): PlanNote[] {
   const notes: PlanNote[] = [];
@@ -195,20 +238,45 @@ export function planNotes(
     });
   }
 
-  const { loadedCount, totalCount } = opts;
-  if (
-    loadedCount !== undefined &&
-    totalCount !== undefined &&
-    loadedCount > 0 &&
-    loadedCount < totalCount
-  ) {
-    notes.push({
-      id: "partial",
-      text: `${loadedCount} of ${totalCount} directions loaded.`,
-    });
+  const { loadedCount, totalCount, stillCapturing } = opts;
+  if (loadedCount !== undefined && totalCount !== undefined && totalCount > 0) {
+    if (loadedCount > 0 && loadedCount < totalCount) {
+      notes.push({
+        id: "partial",
+        text:
+          stillCapturing === false
+            ? partialNote(loadedCount, totalCount)
+            : `${loadedCount} of ${totalCount} directions loaded.`,
+      });
+    } else if (
+      loadedCount === 0 &&
+      stillCapturing === false &&
+      !opts.imageryUnavailable
+    ) {
+      // The session opened and then produced nothing. Indistinguishable from
+      // the outside from a session that never opened, and it gets the same
+      // sentence — the guarantee it states is the one the reader needs.
+      notes.push({ id: "none-loaded", text: NO_IMAGERY_AT_ALL_NOTE });
+    }
   }
 
   return notes;
+}
+
+/**
+ * Copy for a render that finished with some directions still missing.
+ *
+ * The bare count this replaces ("2 of 4 directions loaded.") left two empty
+ * frames on screen with nothing said about them, which reads as a broken
+ * renderer. It is the count PLUS the guarantee: those frames are empty because
+ * nothing arrived, not because something was put in their place. Which
+ * directions they are is marked on the frames themselves and on the plan.
+ */
+function partialNote(loaded: number, total: number): string {
+  const missing = total - loaded;
+  return missing === 1
+    ? `${loaded} of ${total} directions loaded; the other frame is empty, not a stand-in.`
+    : `${loaded} of ${total} directions loaded; the other ${missing} frames are empty, not stand-ins.`;
 }
 
 /** Look up one direction's measurement, if the report exists. */
