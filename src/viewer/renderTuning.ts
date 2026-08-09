@@ -79,9 +79,16 @@ export const RENDER_TUNING = {
   /**
    * Max ms to wait for tiles to settle per view before capturing anyway.
    *
-   * Left at 16 s. Measured across sixteen directions on four buildings, all but
-   * one settled in 3.7-9.5 s; raising the ceiling to 28 s changed neither the
-   * tile count nor the picture. Waiting longer is not the lever it looks like.
+   * Left at 16 s, but UNVERIFIED -- do not cite the bake-off for it.
+   *
+   * That comparison recorded identical tile counts at 16 s and 28 s, which
+   * looked like evidence that waiting longer buys nothing. It is not: the 28 s
+   * arm ran after two others at the same address in the same browser profile
+   * and recorded byte-identical request counts to both, so all three were
+   * served from a warm cache and none of them measured a fetch. The sixteen
+   * settle times quoted alongside it are real; the ceiling conclusion is not.
+   *
+   * Establishing a real value needs one cold profile per arm.
    */
   settleTimeoutMs: 16000,
   /**
