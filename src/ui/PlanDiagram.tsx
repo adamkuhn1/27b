@@ -20,7 +20,18 @@ import type { SlotPhase } from "../lib/types";
 // 29°?* Because that is the way this footprint's walls face.
 
 const SIZE = 260;
-const PADDING = 26;
+/**
+ * Margin the drawing leaves for its own labels, in the same user units as
+ * everything else here.
+ *
+ * The compass labels sit at 1.12x the furthest camera plus a 9-unit offset, and
+ * they are centred, so half a label's width has to fit as well. At the label
+ * size the stylesheet sets (14.3 units, which renders at 11 px in the 200 px
+ * column) that is `(SIZE / 2 - PADDING) * 1.12 + 9 + 13 <= SIZE / 2`. 38 is the
+ * smallest round number that satisfies it, so the plan stays as large as it can
+ * while every label lands inside the box.
+ */
+const PADDING = 38;
 
 interface PlanDiagramProps {
   plan: ViewPlan;

@@ -49,14 +49,53 @@ const SETTLE_TIMEOUT_MS = Number(arg("timeout", "180000"));
 /**
  * The pre-registered matrix. Fixed before any tuning; see
  * .release-artifacts/27b/matrix/PRE-REGISTERED-MATRIX.json for the rationale
- * and the coverage argument. Two floors per address, four directions per floor.
+ * and the coverage argument of the original five, and `pre-registration.json`
+ * beside this file for the cases added for closure.
+ *
+ * Coverage the list is chosen to give, one requirement per column:
+ *
+ *   grid orientation   28-29 deg (commissioners' grid), 19 deg (Flatiron's
+ *                      Broadway edge), 67 deg (the West Village's own grid),
+ *                      86 deg (Stuyvesant Street, which predates both).
+ *   floor height       low (3-4), middle (7-18), high (40-80).
+ *   dense row          425 E 79th St, 63 Bedford St, 21 Stuyvesant St.
+ *   taller freestanding 432 Park Ave.
+ *   party wall         425 E 79th St, 63 Bedford St — a facade on a shared lot
+ *                      line, which is never captured and is labelled instead.
+ *   irregular footprint 175 5th Ave (rectangularity 0.60), 1 W 72nd St.
+ *   invalid address    an address that is well-formed and does not exist.
+ *   no imagery         a real address whose provider requests are blocked at
+ *                      the network layer, so the honest failure path runs.
+ *
+ * Every bearing, BIN and rectangularity quoted above was read out of a keyless
+ * run of this same app; none of it is asserted from memory.
  */
 const MATRIX = [
-  { id: "432park", address: "432 Park Ave, Manhattan, New York, NY 10022", floors: [80, 30], category: "tall landmark / open north" },
-  { id: "esb", address: "350 5th Ave, Manhattan, New York, NY 10118", floors: [80, 20], category: "tall landmark / dense Midtown" },
-  { id: "dakota", address: "1 W 72nd St, Manhattan, New York, NY 10023", floors: [7, 3], category: "irregular footprint (courtyard)" },
-  { id: "flatiron", address: "175 5th Ave, Manhattan, New York, NY 10010", floors: [18, 6], category: "irregular footprint (triangle)" },
-  { id: "425e79", address: "425 E 79th St, Manhattan, New York, NY 10075", floors: [10, 4], category: "dense row building" },
+  { id: "432park", address: "432 Park Ave, Manhattan, New York, NY 10022", floors: [80, 40, 3], category: "taller freestanding tower / grid 28 deg / high, middle and low floor" },
+  { id: "esb", address: "350 5th Ave, Manhattan, New York, NY 10118", floors: [80], category: "tall landmark, dense Midtown / grid 29 deg / high floor" },
+  { id: "dakota", address: "1 W 72nd St, Manhattan, New York, NY 10023", floors: [7], category: "irregular footprint (courtyard) / grid 29 deg / middle floor" },
+  { id: "flatiron", address: "175 5th Ave, Manhattan, New York, NY 10010", floors: [18], category: "irregular footprint (triangle, rectangularity 0.60) / grid 19 deg / middle floor" },
+  { id: "425e79", address: "425 E 79th St, Manhattan, New York, NY 10075", floors: [10, 4], category: "dense row building, party wall and light court / grid 29 deg / middle and low floor" },
+  { id: "bedford", address: "63 Bedford St, Manhattan, New York, NY 10014", floors: [3], category: "West Village row house, party wall / grid 67 deg / low floor" },
+  { id: "stuyvesant", address: "21 Stuyvesant St, Manhattan, New York, NY 10003", floors: [3], category: "off-grid street, near-cardinal bearings / grid 86 deg / low floor" },
+  {
+    id: "invalid",
+    address: "9999 5th Ave, Manhattan, New York, NY 10028",
+    floors: [10],
+    category: "well-formed address that does not exist — must refuse, never substitute",
+    expect: "unavailable",
+  },
+  {
+    id: "noimagery",
+    address: "1 W 72nd St, Manhattan, New York, NY 10023",
+    floors: [7],
+    category: "imagery unavailable — provider blocked at the network layer",
+    expect: "no-imagery",
+    // Blocked in the browser, so the request never reaches Google and the case
+    // costs nothing. It exercises exactly the path a 403, an outage or a
+    // corporate proxy would take.
+    block: ["*tile.googleapis.com*"],
+  },
 ];
 
 mkdirSync(OUT, { recursive: true });
@@ -183,6 +222,10 @@ try {
     const beforeTiles = rendererTiles;
     const errorsAt = consoleErrors.length;
 
+    // Per-case network blocking, cleared for every case that does not ask for
+    // it so one blocked case cannot silently starve the next.
+    await page.send("Network.setBlockedURLs", { urls: kase.block ?? [] });
+
     // Cold page, cold cache. Clearing before the reload means the app boots
     // with nothing of its own in storage — a returning visitor's warm plan can
     // never be what makes a case pass here.
@@ -231,12 +274,24 @@ try {
           if (!lead) return { none: true };
           const axes = [...document.querySelectorAll(".plan__axis")].map((g) =>
             (g.className.baseVal || "").replace(/.*plan__axis--/, ""));
-          return { axes };
+          return {
+            axes,
+            // A session that could not be opened at all: the app says so once,
+            // at the head of the result, and no direction will ever move off
+            // its starting phase. Without this the loop would sit out the full
+            // timeout waiting for frames that are not coming.
+            sessionFailed: [...document.querySelectorAll(".notes li")].some((n) =>
+              /imagery didn't load/i.test(n.textContent || "")),
+          };
         })())`),
       );
       if (st.unavailable) {
         settled = true;
         failedState = st.unavailable;
+        break;
+      }
+      if (st.sessionFailed) {
+        settled = true;
         break;
       }
       const working = (st.axes ?? []).filter((a) => a === "queued" || a === "capturing").length;
@@ -269,12 +324,30 @@ try {
             })),
           };
         }
-        const metas = [...document.querySelectorAll(".result__meta")].map((m) => m.textContent);
+        const metas = [...document.querySelectorAll(".result__meta")].map((m) =>
+          (m.textContent || "").replace(/\\s+/g, " ").trim());
+        const joined = metas.join(" ");
+        const num = (re) => {
+          const m = joined.match(re);
+          return m ? Number(m[1]) : null;
+        };
+        // The plan drawing's own accessible name is the bearings as the app
+        // computed them, which is a stronger record than the compass
+        // abbreviations on the thumbnails: it carries the degrees.
+        const aria = document.querySelector(".plan__svg")?.getAttribute("aria-label") ?? "";
         return {
           source: "dom",
           metas,
-          bearings: [...document.querySelectorAll(".thumb")].map((t) =>
-            t.querySelector(".thumb__compass")?.textContent ?? null),
+          bin: (joined.match(/BIN (\\d+)/) ?? [])[1] ?? null,
+          eyeAboveGroundM: num(/Eye ([\\d.]+) m above ground/),
+          roofHeightM: num(/roof ([\\d.]+) m/),
+          rectangularity: num(/rectangularity ([\\d.]+)/),
+          eyeNavd88M: num(/Camera height ([\\d.]+) m NAVD88/),
+          basis: /own facades/.test(joined) ? "facade" : /true compass views/.test(joined) ? "compass" : null,
+          bearingsDeg: [...aria.matchAll(/([A-Z]{1,3}) (\\d+) degrees/g)].map((m) => ({
+            compass: m[1], headingDeg: Number(m[2]),
+          })),
+          planAriaLabel: aria,
         };
       })())`),
     );
@@ -282,6 +355,13 @@ try {
     const directions = [];
     const count = Number(await page.eval(`document.querySelectorAll(".thumb").length`));
     for (let i = 0; i < count; i += 1) {
+      // A direction nothing was requested for cannot be promoted — its
+      // thumbnail is disabled, because there is no frame to show large. Reading
+      // the lead anyway (which the first version of this loop did) copied the
+      // PREVIOUS direction's phase, note, pixel statistics and screenshot onto
+      // this row, so a party wall was recorded as a landed frame and the same
+      // PNG was written twice under two compass names. Such a row now carries
+      // only what its own thumbnail says.
       const disabled = await page.eval(
         `document.querySelectorAll(".thumb")[${i}].disabled === true`,
       );
@@ -292,18 +372,30 @@ try {
       const d = JSON.parse(
         await page.eval(`JSON.stringify((() => {
           const thumb = document.querySelectorAll(".thumb")[${i}];
+          const promoted = thumb?.disabled !== true;
+          const base = {
+            compass: thumb?.querySelector(".thumb__compass")?.textContent ?? null,
+            thumbState: thumb?.querySelector(".thumb__state")?.textContent ?? null,
+            thumbQuality: thumb?.getAttribute("data-quality") ?? null,
+            thumbPhase: thumb?.getAttribute("data-phase") ?? null,
+            promoted,
+            frameDescription:
+              thumb?.querySelector(".thumb__frame [role='img']")?.getAttribute("aria-label") ?? null,
+            thumbHasImage: Boolean(thumb?.querySelector("img")),
+          };
+          if (!promoted) return base;
           const lead = document.querySelector(".lead");
           const img = lead?.querySelector("img");
           const r = lead?.getBoundingClientRect();
           return {
-            compass: thumb?.querySelector(".thumb__compass")?.textContent ?? null,
-            thumbState: thumb?.querySelector(".thumb__state")?.textContent ?? null,
-            thumbQuality: thumb?.getAttribute("data-quality") ?? null,
-            promoted: thumb?.disabled !== true,
+            ...base,
             leadPhase: lead?.getAttribute("data-phase") ?? null,
             leadQuality: lead?.getAttribute("data-quality") ?? null,
             bearing: lead?.querySelector(".lead__bearing")?.textContent ?? null,
+            leadLabel: lead?.querySelector(".lead__quality")?.textContent ?? null,
             note: lead?.querySelector(".lead__note")?.textContent ?? null,
+            emptyFrameDescription:
+              lead?.querySelector(".view__canvas--empty[role='img']")?.getAttribute("aria-label") ?? null,
             image: img ? { w: img.naturalWidth, h: img.naturalHeight } : null,
             rect: r ? { x: r.x + window.scrollX, y: r.y + window.scrollY, w: r.width, h: r.height } : null,
           };
@@ -357,17 +449,42 @@ try {
     }
 
     const summary = JSON.parse(
-      await page.eval(`JSON.stringify((() => ({
-        heading: document.querySelector(".result__addr")?.textContent ?? null,
-        frameLine: document.querySelector(".result__frame")?.textContent ?? null,
-        notes: [...document.querySelectorAll(".notes li")].map((n) => n.textContent),
-        attribution: document.querySelector(".attribution__line")?.textContent ?? null,
-      }))())`),
+      await page.eval(`JSON.stringify((() => {
+        const attr = document.querySelector(".attribution__line");
+        const r = attr?.getBoundingClientRect();
+        return {
+          heading: document.querySelector(".result__addr")?.textContent ?? null,
+          frameLine: document.querySelector(".result__frame")?.textContent ?? null,
+          notes: [...document.querySelectorAll(".notes li")].map((n) => n.textContent),
+          attribution: attr?.textContent ?? null,
+          attributionBox: r ? {
+            w: +r.width.toFixed(1), h: +r.height.toFixed(1),
+            withinDocument: r.right <= document.documentElement.clientWidth + 0.5 && r.left >= -0.5,
+          } : null,
+        };
+      })())`),
     );
+
+    // The whole result in one image, for the human pass. The per-direction
+    // shots above prove each frame; this proves they were assembled into a page
+    // that says the right things around them.
+    const full = await page.eval(
+      `JSON.stringify((() => { const r = document.querySelector(".app__inner")?.getBoundingClientRect(); return r ? { x: r.x + scrollX, y: r.y + scrollY, w: r.width, h: Math.min(r.height, 4000) } : null; })())`,
+    );
+    const fullRect = JSON.parse(full);
+    if (fullRect) {
+      const { data } = await page.send("Page.captureScreenshot", {
+        format: "png",
+        captureBeyondViewport: true,
+        clip: { x: fullRect.x, y: fullRect.y, width: fullRect.w, height: fullRect.h, scale: 1 },
+      });
+      writeFileSync(join(OUT, `${slug}-page.png`), Buffer.from(data, "base64"));
+    }
 
     const record = {
       case: kase.id,
       category: kase.category,
+      expect: kase.expect ?? "frames",
       address: kase.address,
       floor: kase.floor,
       settled,

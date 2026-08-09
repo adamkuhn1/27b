@@ -1,0 +1,2525 @@
+{
+  "label": "after",
+  "url": "http://localhost:5291/",
+  "ranAt": "2026-08-09T18:34:18.135Z",
+  "viewports": [
+    {
+      "viewport": {
+        "name": "320x640",
+        "width": 320,
+        "height": 640
+      },
+      "idle": {
+        "contrast": [
+          {
+            "selector": ".masthead__mark",
+            "color": "color(srgb 0.396471 0.50451 0.590196)",
+            "effectiveColor": "rgb(101, 129, 150)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 10.72,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.8,
+            "passes": true
+          },
+          {
+            "selector": ".masthead__tag",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 10.72,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".masthead__sub",
+            "color": "rgb(163, 167, 176)",
+            "effectiveColor": "rgb(163, 167, 176)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 14.56,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 8.16,
+            "passes": true
+          },
+          {
+            "selector": ".presets__label",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 10.72,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".preset__name",
+            "color": "rgb(163, 167, 176)",
+            "effectiveColor": "rgb(163, 167, 176)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 11.68,
+            "fontWeight": 500,
+            "large": false,
+            "required": 4.5,
+            "ratio": 8.16,
+            "passes": true
+          },
+          {
+            "selector": ".preset__detail",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 9.92,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".framing",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 13.12,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".field__label",
+            "color": "rgb(163, 167, 176)",
+            "effectiveColor": "rgb(163, 167, 176)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 14.72,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 8.16,
+            "passes": true
+          },
+          {
+            "selector": ".foot__sources",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 11.84,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          }
+        ],
+        "framingSentences": [
+          "Approximately what you'd see, not the view from a particular apartment: per-floor heights aren't published, so your floor's height is estimated, and the four directions come from the building's shape.",
+          "The imagery is always real, or absent — never a stand-in."
+        ],
+        "overflowsX": false
+      },
+      "result": {
+        "resolved": true,
+        "contrast": [
+          {
+            "selector": ".masthead__mark",
+            "color": "color(srgb 0.396471 0.50451 0.590196)",
+            "effectiveColor": "rgb(101, 129, 150)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 10.72,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.8,
+            "passes": true
+          },
+          {
+            "selector": ".masthead__tag",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 10.72,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".masthead__sub",
+            "color": "rgb(163, 167, 176)",
+            "effectiveColor": "rgb(163, 167, 176)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 14.56,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 8.16,
+            "passes": true
+          },
+          {
+            "selector": ".presets__label",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 10.72,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".preset__name",
+            "color": "rgb(163, 167, 176)",
+            "effectiveColor": "rgb(163, 167, 176)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 11.68,
+            "fontWeight": 500,
+            "large": false,
+            "required": 4.5,
+            "ratio": 8.16,
+            "passes": true
+          },
+          {
+            "selector": ".preset__detail",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 9.92,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".framing",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 13.12,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".field__label",
+            "color": "rgb(163, 167, 176)",
+            "effectiveColor": "rgb(163, 167, 176)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 14.72,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 8.16,
+            "passes": true
+          },
+          {
+            "selector": ".foot__sources",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 11.84,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".plan__caption",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 11.52,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".result__frame",
+            "color": "rgb(163, 167, 176)",
+            "effectiveColor": "rgb(163, 167, 176)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 14.08,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 8.16,
+            "passes": true
+          },
+          {
+            "selector": ".lead__bearing",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 12.8,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".thumb__compass",
+            "color": "rgb(163, 167, 176)",
+            "effectiveColor": "rgb(163, 167, 176)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 11.2,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 8.16,
+            "passes": true
+          },
+          {
+            "selector": ".disclosure summary",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 10.88,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".result__meta--dim",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 12.48,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          }
+        ],
+        "planLabels": [
+          {
+            "selector": ".plan__label",
+            "text": "NNE",
+            "declaredPx": 14.3,
+            "userUnitScale": 1,
+            "renderedCssPx": 14.3,
+            "renderedDevicePx": 28.6
+          },
+          {
+            "selector": ".plan__label",
+            "text": "ESE",
+            "declaredPx": 14.3,
+            "userUnitScale": 1,
+            "renderedCssPx": 14.3,
+            "renderedDevicePx": 28.6
+          },
+          {
+            "selector": ".plan__label",
+            "text": "SSW",
+            "declaredPx": 14.3,
+            "userUnitScale": 1,
+            "renderedCssPx": 14.3,
+            "renderedDevicePx": 28.6
+          },
+          {
+            "selector": ".plan__label",
+            "text": "WNW",
+            "declaredPx": 14.3,
+            "userUnitScale": 1,
+            "renderedCssPx": 14.3,
+            "renderedDevicePx": 28.6
+          }
+        ],
+        "planCaption": [
+          {
+            "selector": ".plan__caption",
+            "text": "Footprint and camera standoffs, to scale · north up",
+            "rect": {
+              "x": 16,
+              "y": 1796.1,
+              "w": 260,
+              "h": 17.3
+            },
+            "offRight": 0,
+            "clippedBy": null
+          }
+        ],
+        "attribution": [],
+        "frames": [],
+        "notes": [],
+        "overflowsX": false
+      }
+    },
+    {
+      "viewport": {
+        "name": "375x812",
+        "width": 375,
+        "height": 812
+      },
+      "idle": {
+        "contrast": [
+          {
+            "selector": ".masthead__mark",
+            "color": "color(srgb 0.396471 0.50451 0.590196)",
+            "effectiveColor": "rgb(101, 129, 150)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 10.72,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.8,
+            "passes": true
+          },
+          {
+            "selector": ".masthead__tag",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 10.72,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".masthead__sub",
+            "color": "rgb(163, 167, 176)",
+            "effectiveColor": "rgb(163, 167, 176)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 14.56,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 8.16,
+            "passes": true
+          },
+          {
+            "selector": ".presets__label",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 10.72,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".preset__name",
+            "color": "rgb(163, 167, 176)",
+            "effectiveColor": "rgb(163, 167, 176)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 11.68,
+            "fontWeight": 500,
+            "large": false,
+            "required": 4.5,
+            "ratio": 8.16,
+            "passes": true
+          },
+          {
+            "selector": ".preset__detail",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 9.92,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".framing",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 13.12,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".field__label",
+            "color": "rgb(163, 167, 176)",
+            "effectiveColor": "rgb(163, 167, 176)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 14.72,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 8.16,
+            "passes": true
+          },
+          {
+            "selector": ".foot__sources",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 11.84,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          }
+        ],
+        "framingSentences": [
+          "Approximately what you'd see, not the view from a particular apartment: per-floor heights aren't published, so your floor's height is estimated, and the four directions come from the building's shape.",
+          "The imagery is always real, or absent — never a stand-in."
+        ],
+        "overflowsX": false
+      },
+      "result": {
+        "resolved": true,
+        "contrast": [
+          {
+            "selector": ".masthead__mark",
+            "color": "color(srgb 0.396471 0.50451 0.590196)",
+            "effectiveColor": "rgb(101, 129, 150)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 10.72,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.8,
+            "passes": true
+          },
+          {
+            "selector": ".masthead__tag",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 10.72,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".masthead__sub",
+            "color": "rgb(163, 167, 176)",
+            "effectiveColor": "rgb(163, 167, 176)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 14.56,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 8.16,
+            "passes": true
+          },
+          {
+            "selector": ".presets__label",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 10.72,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".preset__name",
+            "color": "rgb(163, 167, 176)",
+            "effectiveColor": "rgb(163, 167, 176)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 11.68,
+            "fontWeight": 500,
+            "large": false,
+            "required": 4.5,
+            "ratio": 8.16,
+            "passes": true
+          },
+          {
+            "selector": ".preset__detail",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 9.92,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".framing",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 13.12,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".field__label",
+            "color": "rgb(163, 167, 176)",
+            "effectiveColor": "rgb(163, 167, 176)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 14.72,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 8.16,
+            "passes": true
+          },
+          {
+            "selector": ".foot__sources",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 11.84,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".plan__caption",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 11.52,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".result__frame",
+            "color": "rgb(163, 167, 176)",
+            "effectiveColor": "rgb(163, 167, 176)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 14.08,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 8.16,
+            "passes": true
+          },
+          {
+            "selector": ".lead__bearing",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 12.8,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".thumb__compass",
+            "color": "rgb(163, 167, 176)",
+            "effectiveColor": "rgb(163, 167, 176)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 11.2,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 8.16,
+            "passes": true
+          },
+          {
+            "selector": ".disclosure summary",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 10.88,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".result__meta--dim",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 12.48,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          }
+        ],
+        "planLabels": [
+          {
+            "selector": ".plan__label",
+            "text": "NNE",
+            "declaredPx": 14.3,
+            "userUnitScale": 1,
+            "renderedCssPx": 14.3,
+            "renderedDevicePx": 28.6
+          },
+          {
+            "selector": ".plan__label",
+            "text": "ESE",
+            "declaredPx": 14.3,
+            "userUnitScale": 1,
+            "renderedCssPx": 14.3,
+            "renderedDevicePx": 28.6
+          },
+          {
+            "selector": ".plan__label",
+            "text": "SSW",
+            "declaredPx": 14.3,
+            "userUnitScale": 1,
+            "renderedCssPx": 14.3,
+            "renderedDevicePx": 28.6
+          },
+          {
+            "selector": ".plan__label",
+            "text": "WNW",
+            "declaredPx": 14.3,
+            "userUnitScale": 1,
+            "renderedCssPx": 14.3,
+            "renderedDevicePx": 28.6
+          }
+        ],
+        "planCaption": [
+          {
+            "selector": ".plan__caption",
+            "text": "Footprint and camera standoffs, to scale · north up",
+            "rect": {
+              "x": 16,
+              "y": 1692.1,
+              "w": 260,
+              "h": 17.3
+            },
+            "offRight": 0,
+            "clippedBy": null
+          }
+        ],
+        "attribution": [],
+        "frames": [],
+        "notes": [],
+        "overflowsX": false
+      }
+    },
+    {
+      "viewport": {
+        "name": "768x1024",
+        "width": 768,
+        "height": 1024
+      },
+      "idle": {
+        "contrast": [
+          {
+            "selector": ".masthead__mark",
+            "color": "color(srgb 0.396471 0.50451 0.590196)",
+            "effectiveColor": "rgb(101, 129, 150)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 10.72,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.8,
+            "passes": true
+          },
+          {
+            "selector": ".masthead__tag",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 10.72,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".masthead__sub",
+            "color": "rgb(163, 167, 176)",
+            "effectiveColor": "rgb(163, 167, 176)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 14.56,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 8.16,
+            "passes": true
+          },
+          {
+            "selector": ".presets__label",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 10.72,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".preset__name",
+            "color": "rgb(163, 167, 176)",
+            "effectiveColor": "rgb(163, 167, 176)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 11.68,
+            "fontWeight": 500,
+            "large": false,
+            "required": 4.5,
+            "ratio": 8.16,
+            "passes": true
+          },
+          {
+            "selector": ".preset__detail",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 9.92,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".framing",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 13.12,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".field__label",
+            "color": "rgb(163, 167, 176)",
+            "effectiveColor": "rgb(163, 167, 176)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 14.72,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 8.16,
+            "passes": true
+          },
+          {
+            "selector": ".foot__sources",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 11.84,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          }
+        ],
+        "framingSentences": [
+          "Approximately what you'd see, not the view from a particular apartment: per-floor heights aren't published, so your floor's height is estimated, and the four directions come from the building's shape.",
+          "The imagery is always real, or absent — never a stand-in."
+        ],
+        "overflowsX": false
+      },
+      "result": {
+        "resolved": true,
+        "contrast": [
+          {
+            "selector": ".masthead__mark",
+            "color": "color(srgb 0.396471 0.50451 0.590196)",
+            "effectiveColor": "rgb(101, 129, 150)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 10.72,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.8,
+            "passes": true
+          },
+          {
+            "selector": ".masthead__tag",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 10.72,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".masthead__sub",
+            "color": "rgb(163, 167, 176)",
+            "effectiveColor": "rgb(163, 167, 176)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 14.56,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 8.16,
+            "passes": true
+          },
+          {
+            "selector": ".presets__label",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 10.72,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".preset__name",
+            "color": "rgb(163, 167, 176)",
+            "effectiveColor": "rgb(163, 167, 176)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 11.68,
+            "fontWeight": 500,
+            "large": false,
+            "required": 4.5,
+            "ratio": 8.16,
+            "passes": true
+          },
+          {
+            "selector": ".preset__detail",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 9.92,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".framing",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 13.12,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".field__label",
+            "color": "rgb(163, 167, 176)",
+            "effectiveColor": "rgb(163, 167, 176)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 14.72,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 8.16,
+            "passes": true
+          },
+          {
+            "selector": ".foot__sources",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 11.84,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".plan__caption",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 11.52,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".result__frame",
+            "color": "rgb(163, 167, 176)",
+            "effectiveColor": "rgb(163, 167, 176)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 14.08,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 8.16,
+            "passes": true
+          },
+          {
+            "selector": ".lead__bearing",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 12.8,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".thumb__compass",
+            "color": "rgb(163, 167, 176)",
+            "effectiveColor": "rgb(163, 167, 176)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 11.2,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 8.16,
+            "passes": true
+          },
+          {
+            "selector": ".disclosure summary",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 10.88,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".result__meta--dim",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 12.48,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          }
+        ],
+        "planLabels": [
+          {
+            "selector": ".plan__label",
+            "text": "NNE",
+            "declaredPx": 14.3,
+            "userUnitScale": 1,
+            "renderedCssPx": 14.3,
+            "renderedDevicePx": 28.6
+          },
+          {
+            "selector": ".plan__label",
+            "text": "ESE",
+            "declaredPx": 14.3,
+            "userUnitScale": 1,
+            "renderedCssPx": 14.3,
+            "renderedDevicePx": 28.6
+          },
+          {
+            "selector": ".plan__label",
+            "text": "SSW",
+            "declaredPx": 14.3,
+            "userUnitScale": 1,
+            "renderedCssPx": 14.3,
+            "renderedDevicePx": 28.6
+          },
+          {
+            "selector": ".plan__label",
+            "text": "WNW",
+            "declaredPx": 14.3,
+            "userUnitScale": 1,
+            "renderedCssPx": 14.3,
+            "renderedDevicePx": 28.6
+          }
+        ],
+        "planCaption": [
+          {
+            "selector": ".plan__caption",
+            "text": "Footprint and camera standoffs, to scale · north up",
+            "rect": {
+              "x": 30.7,
+              "y": 1552.3,
+              "w": 260,
+              "h": 17.3
+            },
+            "offRight": 0,
+            "clippedBy": null
+          }
+        ],
+        "attribution": [],
+        "frames": [],
+        "notes": [],
+        "overflowsX": false
+      }
+    },
+    {
+      "viewport": {
+        "name": "1024x768",
+        "width": 1024,
+        "height": 768
+      },
+      "idle": {
+        "contrast": [
+          {
+            "selector": ".masthead__mark",
+            "color": "color(srgb 0.396471 0.50451 0.590196)",
+            "effectiveColor": "rgb(101, 129, 150)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 10.72,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.8,
+            "passes": true
+          },
+          {
+            "selector": ".masthead__tag",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 10.72,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".masthead__sub",
+            "color": "rgb(163, 167, 176)",
+            "effectiveColor": "rgb(163, 167, 176)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 14.56,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 8.16,
+            "passes": true
+          },
+          {
+            "selector": ".presets__label",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 10.72,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".preset__name",
+            "color": "rgb(163, 167, 176)",
+            "effectiveColor": "rgb(163, 167, 176)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 11.68,
+            "fontWeight": 500,
+            "large": false,
+            "required": 4.5,
+            "ratio": 8.16,
+            "passes": true
+          },
+          {
+            "selector": ".preset__detail",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 9.92,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".framing",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 13.12,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".field__label",
+            "color": "rgb(163, 167, 176)",
+            "effectiveColor": "rgb(163, 167, 176)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 14.72,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 8.16,
+            "passes": true
+          },
+          {
+            "selector": ".foot__sources",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 11.84,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          }
+        ],
+        "framingSentences": [
+          "Approximately what you'd see, not the view from a particular apartment: per-floor heights aren't published, so your floor's height is estimated, and the four directions come from the building's shape.",
+          "The imagery is always real, or absent — never a stand-in."
+        ],
+        "overflowsX": false
+      },
+      "result": {
+        "resolved": true,
+        "contrast": [
+          {
+            "selector": ".masthead__mark",
+            "color": "color(srgb 0.396471 0.50451 0.590196)",
+            "effectiveColor": "rgb(101, 129, 150)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 10.72,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.8,
+            "passes": true
+          },
+          {
+            "selector": ".masthead__tag",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 10.72,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".masthead__sub",
+            "color": "rgb(163, 167, 176)",
+            "effectiveColor": "rgb(163, 167, 176)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 14.56,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 8.16,
+            "passes": true
+          },
+          {
+            "selector": ".presets__label",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 10.72,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".preset__name",
+            "color": "rgb(163, 167, 176)",
+            "effectiveColor": "rgb(163, 167, 176)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 11.68,
+            "fontWeight": 500,
+            "large": false,
+            "required": 4.5,
+            "ratio": 8.16,
+            "passes": true
+          },
+          {
+            "selector": ".preset__detail",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 9.92,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".framing",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 13.12,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".field__label",
+            "color": "rgb(163, 167, 176)",
+            "effectiveColor": "rgb(163, 167, 176)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 14.72,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 8.16,
+            "passes": true
+          },
+          {
+            "selector": ".foot__sources",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 11.84,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".plan__caption",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 11.52,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".result__frame",
+            "color": "rgb(163, 167, 176)",
+            "effectiveColor": "rgb(163, 167, 176)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 14.08,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 8.16,
+            "passes": true
+          },
+          {
+            "selector": ".lead__bearing",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 12.8,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".thumb__compass",
+            "color": "rgb(163, 167, 176)",
+            "effectiveColor": "rgb(163, 167, 176)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 11.2,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 8.16,
+            "passes": true
+          },
+          {
+            "selector": ".disclosure summary",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 10.88,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".result__meta--dim",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 12.48,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          }
+        ],
+        "planLabels": [
+          {
+            "selector": ".plan__label",
+            "text": "NNE",
+            "declaredPx": 14.3,
+            "userUnitScale": 0.7692,
+            "renderedCssPx": 11,
+            "renderedDevicePx": 22
+          },
+          {
+            "selector": ".plan__label",
+            "text": "ESE",
+            "declaredPx": 14.3,
+            "userUnitScale": 0.7692,
+            "renderedCssPx": 11,
+            "renderedDevicePx": 22
+          },
+          {
+            "selector": ".plan__label",
+            "text": "SSW",
+            "declaredPx": 14.3,
+            "userUnitScale": 0.7692,
+            "renderedCssPx": 11,
+            "renderedDevicePx": 22
+          },
+          {
+            "selector": ".plan__label",
+            "text": "WNW",
+            "declaredPx": 14.3,
+            "userUnitScale": 0.7692,
+            "renderedCssPx": 11,
+            "renderedDevicePx": 22
+          }
+        ],
+        "planCaption": [
+          {
+            "selector": ".plan__caption",
+            "text": "Footprint and camera standoffs, to scale · north up",
+            "rect": {
+              "x": 792,
+              "y": 922,
+              "w": 200,
+              "h": 34.6
+            },
+            "offRight": 0,
+            "clippedBy": null
+          }
+        ],
+        "attribution": [],
+        "frames": [],
+        "notes": [],
+        "overflowsX": false
+      }
+    },
+    {
+      "viewport": {
+        "name": "1440x900",
+        "width": 1440,
+        "height": 900
+      },
+      "idle": {
+        "contrast": [
+          {
+            "selector": ".masthead__mark",
+            "color": "color(srgb 0.396471 0.50451 0.590196)",
+            "effectiveColor": "rgb(101, 129, 150)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 10.72,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.8,
+            "passes": true
+          },
+          {
+            "selector": ".masthead__tag",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 10.72,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".masthead__sub",
+            "color": "rgb(163, 167, 176)",
+            "effectiveColor": "rgb(163, 167, 176)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 14.56,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 8.16,
+            "passes": true
+          },
+          {
+            "selector": ".presets__label",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 10.72,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".preset__name",
+            "color": "rgb(163, 167, 176)",
+            "effectiveColor": "rgb(163, 167, 176)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 11.68,
+            "fontWeight": 500,
+            "large": false,
+            "required": 4.5,
+            "ratio": 8.16,
+            "passes": true
+          },
+          {
+            "selector": ".preset__detail",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 9.92,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".framing",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 13.12,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".field__label",
+            "color": "rgb(163, 167, 176)",
+            "effectiveColor": "rgb(163, 167, 176)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 14.72,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 8.16,
+            "passes": true
+          },
+          {
+            "selector": ".foot__sources",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 11.84,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          }
+        ],
+        "framingSentences": [
+          "Approximately what you'd see, not the view from a particular apartment: per-floor heights aren't published, so your floor's height is estimated, and the four directions come from the building's shape.",
+          "The imagery is always real, or absent — never a stand-in."
+        ],
+        "overflowsX": false
+      },
+      "result": {
+        "resolved": true,
+        "contrast": [
+          {
+            "selector": ".masthead__mark",
+            "color": "color(srgb 0.396471 0.50451 0.590196)",
+            "effectiveColor": "rgb(101, 129, 150)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 10.72,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.8,
+            "passes": true
+          },
+          {
+            "selector": ".masthead__tag",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 10.72,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".masthead__sub",
+            "color": "rgb(163, 167, 176)",
+            "effectiveColor": "rgb(163, 167, 176)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 14.56,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 8.16,
+            "passes": true
+          },
+          {
+            "selector": ".presets__label",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 10.72,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".preset__name",
+            "color": "rgb(163, 167, 176)",
+            "effectiveColor": "rgb(163, 167, 176)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 11.68,
+            "fontWeight": 500,
+            "large": false,
+            "required": 4.5,
+            "ratio": 8.16,
+            "passes": true
+          },
+          {
+            "selector": ".preset__detail",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 9.92,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".framing",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 13.12,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".field__label",
+            "color": "rgb(163, 167, 176)",
+            "effectiveColor": "rgb(163, 167, 176)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 14.72,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 8.16,
+            "passes": true
+          },
+          {
+            "selector": ".foot__sources",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 11.84,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".plan__caption",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 11.52,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".result__frame",
+            "color": "rgb(163, 167, 176)",
+            "effectiveColor": "rgb(163, 167, 176)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 14.08,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 8.16,
+            "passes": true
+          },
+          {
+            "selector": ".lead__bearing",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 12.8,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".thumb__compass",
+            "color": "rgb(163, 167, 176)",
+            "effectiveColor": "rgb(163, 167, 176)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 11.2,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 8.16,
+            "passes": true
+          },
+          {
+            "selector": ".disclosure summary",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 10.88,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".result__meta--dim",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 12.48,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          }
+        ],
+        "planLabels": [
+          {
+            "selector": ".plan__label",
+            "text": "NNE",
+            "declaredPx": 14.3,
+            "userUnitScale": 0.7692,
+            "renderedCssPx": 11,
+            "renderedDevicePx": 22
+          },
+          {
+            "selector": ".plan__label",
+            "text": "ESE",
+            "declaredPx": 14.3,
+            "userUnitScale": 0.7692,
+            "renderedCssPx": 11,
+            "renderedDevicePx": 22
+          },
+          {
+            "selector": ".plan__label",
+            "text": "SSW",
+            "declaredPx": 14.3,
+            "userUnitScale": 0.7692,
+            "renderedCssPx": 11,
+            "renderedDevicePx": 22
+          },
+          {
+            "selector": ".plan__label",
+            "text": "WNW",
+            "declaredPx": 14.3,
+            "userUnitScale": 0.7692,
+            "renderedCssPx": 11,
+            "renderedDevicePx": 22
+          }
+        ],
+        "planCaption": [
+          {
+            "selector": ".plan__caption",
+            "text": "Footprint and camera standoffs, to scale · north up",
+            "rect": {
+              "x": 1008,
+              "y": 880.8,
+              "w": 200,
+              "h": 34.6
+            },
+            "offRight": 0,
+            "clippedBy": null
+          }
+        ],
+        "attribution": [],
+        "frames": [],
+        "notes": [],
+        "overflowsX": false
+      }
+    },
+    {
+      "viewport": {
+        "name": "1920x1080",
+        "width": 1920,
+        "height": 1080
+      },
+      "idle": {
+        "contrast": [
+          {
+            "selector": ".masthead__mark",
+            "color": "color(srgb 0.396471 0.50451 0.590196)",
+            "effectiveColor": "rgb(101, 129, 150)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 10.72,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.8,
+            "passes": true
+          },
+          {
+            "selector": ".masthead__tag",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 10.72,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".masthead__sub",
+            "color": "rgb(163, 167, 176)",
+            "effectiveColor": "rgb(163, 167, 176)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 14.56,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 8.16,
+            "passes": true
+          },
+          {
+            "selector": ".presets__label",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 10.72,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".preset__name",
+            "color": "rgb(163, 167, 176)",
+            "effectiveColor": "rgb(163, 167, 176)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 11.68,
+            "fontWeight": 500,
+            "large": false,
+            "required": 4.5,
+            "ratio": 8.16,
+            "passes": true
+          },
+          {
+            "selector": ".preset__detail",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 9.92,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".framing",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 13.12,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".field__label",
+            "color": "rgb(163, 167, 176)",
+            "effectiveColor": "rgb(163, 167, 176)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 14.72,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 8.16,
+            "passes": true
+          },
+          {
+            "selector": ".foot__sources",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 11.84,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          }
+        ],
+        "framingSentences": [
+          "Approximately what you'd see, not the view from a particular apartment: per-floor heights aren't published, so your floor's height is estimated, and the four directions come from the building's shape.",
+          "The imagery is always real, or absent — never a stand-in."
+        ],
+        "overflowsX": false
+      },
+      "result": {
+        "resolved": true,
+        "contrast": [
+          {
+            "selector": ".masthead__mark",
+            "color": "color(srgb 0.396471 0.50451 0.590196)",
+            "effectiveColor": "rgb(101, 129, 150)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 10.72,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.8,
+            "passes": true
+          },
+          {
+            "selector": ".masthead__tag",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 10.72,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".masthead__sub",
+            "color": "rgb(163, 167, 176)",
+            "effectiveColor": "rgb(163, 167, 176)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 14.56,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 8.16,
+            "passes": true
+          },
+          {
+            "selector": ".presets__label",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 10.72,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".preset__name",
+            "color": "rgb(163, 167, 176)",
+            "effectiveColor": "rgb(163, 167, 176)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 11.68,
+            "fontWeight": 500,
+            "large": false,
+            "required": 4.5,
+            "ratio": 8.16,
+            "passes": true
+          },
+          {
+            "selector": ".preset__detail",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 9.92,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".framing",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 13.12,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".field__label",
+            "color": "rgb(163, 167, 176)",
+            "effectiveColor": "rgb(163, 167, 176)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 14.72,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 8.16,
+            "passes": true
+          },
+          {
+            "selector": ".foot__sources",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 11.84,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".plan__caption",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 11.52,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".result__frame",
+            "color": "rgb(163, 167, 176)",
+            "effectiveColor": "rgb(163, 167, 176)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 14.08,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 8.16,
+            "passes": true
+          },
+          {
+            "selector": ".lead__bearing",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 12.8,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".thumb__compass",
+            "color": "rgb(163, 167, 176)",
+            "effectiveColor": "rgb(163, 167, 176)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 11.2,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 8.16,
+            "passes": true
+          },
+          {
+            "selector": ".disclosure summary",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 10.88,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          },
+          {
+            "selector": ".result__meta--dim",
+            "color": "rgb(122, 126, 134)",
+            "effectiveColor": "rgb(122, 126, 134)",
+            "ground": "rgb(11, 11, 12)",
+            "fontPx": 12.48,
+            "fontWeight": 400,
+            "large": false,
+            "required": 4.5,
+            "ratio": 4.83,
+            "passes": true
+          }
+        ],
+        "planLabels": [
+          {
+            "selector": ".plan__label",
+            "text": "NNE",
+            "declaredPx": 14.3,
+            "userUnitScale": 0.7692,
+            "renderedCssPx": 11,
+            "renderedDevicePx": 22
+          },
+          {
+            "selector": ".plan__label",
+            "text": "ESE",
+            "declaredPx": 14.3,
+            "userUnitScale": 0.7692,
+            "renderedCssPx": 11,
+            "renderedDevicePx": 22
+          },
+          {
+            "selector": ".plan__label",
+            "text": "SSW",
+            "declaredPx": 14.3,
+            "userUnitScale": 0.7692,
+            "renderedCssPx": 11,
+            "renderedDevicePx": 22
+          },
+          {
+            "selector": ".plan__label",
+            "text": "WNW",
+            "declaredPx": 14.3,
+            "userUnitScale": 0.7692,
+            "renderedCssPx": 11,
+            "renderedDevicePx": 22
+          }
+        ],
+        "planCaption": [
+          {
+            "selector": ".plan__caption",
+            "text": "Footprint and camera standoffs, to scale · north up",
+            "rect": {
+              "x": 1248,
+              "y": 880.8,
+              "w": 200,
+              "h": 34.6
+            },
+            "offRight": 0,
+            "clippedBy": null
+          }
+        ],
+        "attribution": [],
+        "frames": [],
+        "notes": [],
+        "overflowsX": false
+      }
+    }
+  ],
+  "favicon": {
+    "favicon.ico": {
+      "status": 200,
+      "type": "image/x-icon",
+      "bytes": 285
+    },
+    "favicon.svg": {
+      "status": 200,
+      "type": "image/svg+xml",
+      "bytes": 493
+    }
+  },
+  "faviconDeclared": [
+    {
+      "rel": "icon",
+      "href": "./favicon.svg",
+      "type": "image/svg+xml"
+    },
+    {
+      "rel": "alternate icon",
+      "href": "./favicon.ico",
+      "type": "image/x-icon"
+    }
+  ],
+  "consoleProblems": [
+    {
+      "level": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-400-normal.woff2"
+    },
+    {
+      "level": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-600-normal.woff2"
+    },
+    {
+      "level": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-500-normal.woff2"
+    },
+    {
+      "level": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-400-normal.woff"
+    },
+    {
+      "level": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-600-normal.woff"
+    },
+    {
+      "level": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-500-normal.woff"
+    },
+    {
+      "level": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-400-normal.woff2"
+    },
+    {
+      "level": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-600-normal.woff2"
+    },
+    {
+      "level": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-500-normal.woff2"
+    },
+    {
+      "level": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-400-normal.woff"
+    },
+    {
+      "level": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-600-normal.woff"
+    },
+    {
+      "level": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-500-normal.woff"
+    },
+    {
+      "level": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-400-normal.woff2"
+    },
+    {
+      "level": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-600-normal.woff2"
+    },
+    {
+      "level": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-500-normal.woff2"
+    },
+    {
+      "level": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-400-normal.woff"
+    },
+    {
+      "level": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-600-normal.woff"
+    },
+    {
+      "level": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-500-normal.woff"
+    },
+    {
+      "level": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-400-normal.woff2"
+    },
+    {
+      "level": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-600-normal.woff2"
+    },
+    {
+      "level": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-500-normal.woff2"
+    },
+    {
+      "level": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-400-normal.woff"
+    },
+    {
+      "level": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-600-normal.woff"
+    },
+    {
+      "level": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-500-normal.woff"
+    },
+    {
+      "level": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-400-normal.woff2"
+    },
+    {
+      "level": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-600-normal.woff2"
+    },
+    {
+      "level": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-500-normal.woff2"
+    },
+    {
+      "level": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-400-normal.woff"
+    },
+    {
+      "level": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-600-normal.woff"
+    },
+    {
+      "level": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-500-normal.woff"
+    },
+    {
+      "level": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-400-normal.woff2"
+    },
+    {
+      "level": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-600-normal.woff2"
+    },
+    {
+      "level": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-500-normal.woff2"
+    },
+    {
+      "level": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-400-normal.woff"
+    },
+    {
+      "level": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-600-normal.woff"
+    },
+    {
+      "level": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-500-normal.woff"
+    }
+  ],
+  "networkFailures": [
+    {
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-400-normal.woff2",
+      "status": 403
+    },
+    {
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-600-normal.woff2",
+      "status": 403
+    },
+    {
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-500-normal.woff2",
+      "status": 403
+    },
+    {
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-400-normal.woff",
+      "status": 403
+    },
+    {
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-600-normal.woff",
+      "status": 403
+    },
+    {
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-500-normal.woff",
+      "status": 403
+    },
+    {
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-400-normal.woff2",
+      "status": 403
+    },
+    {
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-600-normal.woff2",
+      "status": 403
+    },
+    {
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-500-normal.woff2",
+      "status": 403
+    },
+    {
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-400-normal.woff",
+      "status": 403
+    },
+    {
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-600-normal.woff",
+      "status": 403
+    },
+    {
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-500-normal.woff",
+      "status": 403
+    },
+    {
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-400-normal.woff2",
+      "status": 403
+    },
+    {
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-600-normal.woff2",
+      "status": 403
+    },
+    {
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-500-normal.woff2",
+      "status": 403
+    },
+    {
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-400-normal.woff",
+      "status": 403
+    },
+    {
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-600-normal.woff",
+      "status": 403
+    },
+    {
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-500-normal.woff",
+      "status": 403
+    },
+    {
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-400-normal.woff2",
+      "status": 403
+    },
+    {
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-600-normal.woff2",
+      "status": 403
+    },
+    {
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-500-normal.woff2",
+      "status": 403
+    },
+    {
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-400-normal.woff",
+      "status": 403
+    },
+    {
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-600-normal.woff",
+      "status": 403
+    },
+    {
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-500-normal.woff",
+      "status": 403
+    },
+    {
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-400-normal.woff2",
+      "status": 403
+    },
+    {
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-600-normal.woff2",
+      "status": 403
+    },
+    {
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-500-normal.woff2",
+      "status": 403
+    },
+    {
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-400-normal.woff",
+      "status": 403
+    },
+    {
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-600-normal.woff",
+      "status": 403
+    },
+    {
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-500-normal.woff",
+      "status": 403
+    },
+    {
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-400-normal.woff2",
+      "status": 403
+    },
+    {
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-600-normal.woff2",
+      "status": 403
+    },
+    {
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-500-normal.woff2",
+      "status": 403
+    },
+    {
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-400-normal.woff",
+      "status": 403
+    },
+    {
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-600-normal.woff",
+      "status": 403
+    },
+    {
+      "url": "http://localhost:5291/@fs/Users/adamk/Developer/portfolio-suite/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-500-normal.woff",
+      "status": 403
+    }
+  ]
+}

@@ -14,9 +14,18 @@
   --line: #24262d;
   --line-strong: #33363f;
   --text: #eef0f3;
-  --text-dim: #a3a7b0;
-  --text-faint: #6b6f78;
-  --accent: #5d7a91; /* declared per-project accent (site.ts); used once, below */
+  --text-dim: #a3a7b0; /* 8.16:1 on --bg */
+  /* The quiet tier. Every string it colours is set below 14 px, so it is held
+     at the WCAG AA ratio for normal text (4.5:1) rather than at whatever looked
+     restrained: 4.83:1 on --bg. */
+  --text-faint: #7a7e86;
+  --accent: #5d7a91; /* declared per-project accent (site.ts) */
+  /* The same accent, lifted 5% toward white — the smallest step that clears
+     4.5:1 on --bg (it measures 4.82:1). The declared accent is 4.36:1, which is
+     fine for a rule or a fill and not enough for the 10.7 px mark that is the
+     only text this colour carries. Derived rather than typed, so the accent
+     stays the single source and the two can never drift apart. */
+  --accent-text: color-mix(in srgb, var(--accent) 95%, #fff);
   --danger: #e08a6a;
   /* Byte-identical to the shell's --serif (apps/portfolio/src/index.css), and
      the face is shipped from src/main.tsx. This used to be a system sans
@@ -104,7 +113,7 @@ body {
    headline, which is exactly the conflation that made the headline read as an
    instruction to type 27B into the floor box. The name belongs on the name. */
 .masthead__mark {
-  color: var(--accent);
+  color: var(--accent-text);
   letter-spacing: 0.18em;
 }
 
@@ -355,11 +364,15 @@ body {
   stroke: var(--line-strong);
   stroke-width: 1;
 }
+/* SVG type is in user units, so it shrinks with the drawing: the plan is a
+   260-unit square rendered into a 200 px column, which put an 8 px label on
+   screen at 6.2 px. The size is set here in units that will render at 11 px in
+   that column and no smaller anywhere else — `SIZE / 200 * 11`, rounded. */
 .plan__label {
   fill: var(--text-faint);
   font-family: var(--mono);
-  font-size: 8px;
-  letter-spacing: 0.08em;
+  font-size: 14.3px;
+  letter-spacing: 0.06em;
 }
 .plan__axis--capturing .plan__stem,
 .plan__axis--capturing .plan__look,
@@ -587,11 +600,13 @@ body {
   width: 100%;
   height: 100%;
   display: block;
-  /* The only place in this app a frame is cropped, and it is a NAVIGATION
-     control rather than the imagery itself: the full uncropped frame — credit
-     bar included — is one click away in the lead view, and the on-screen
-     attribution line below covers what is displayed either way. */
-  object-fit: cover;
+  /* `contain`, not `cover`. The captured PNG carries Google's attribution baked
+     along its bottom edge, and the frame is ~3% taller than the 4:3 box that
+     holds the row steady — so `cover` scaled to fill and took the credit off
+     the bottom of all four thumbnails. Letterboxing by a few pixels is the
+     cheaper side of that trade: the credit is required, the extra pixels of
+     picture are not. */
+  object-fit: contain;
 }
 .thumb__empty {
   display: block;
@@ -615,6 +630,13 @@ body {
 .thumb[data-quality="no-window"] .thumb__frame {
   opacity: 0.35;
   border-style: dashed;
+}
+/* A direction whose frame never arrived. Dashed like the no-window cell,
+   because both are empty on purpose, but at full strength: this one is a gap in
+   the result rather than a fact about the building, and the row says so. */
+.thumb[data-phase="failed"] .thumb__frame {
+  border-style: dashed;
+  border-color: var(--line-strong);
 }
 .thumb__label {
   display: flex;

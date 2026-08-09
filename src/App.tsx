@@ -194,12 +194,20 @@ export default function App() {
           busy={ui.kind === "loading"}
         />
 
+        {/*
+          Two sentences, and every claim the three-sentence version made is
+          still in them: approximate rather than actual, an estimated floor
+          height, directions derived from the building's shape, and imagery
+          that is real or absent. What went is the explaining — the reader has
+          not typed anything yet, and the reasoning behind each of these is
+          available in "How this was placed" once there is a result to qualify.
+        */}
         <p className="framing">
           <strong>Approximately what you'd see</strong>, not the view from a
-          particular apartment. Nobody publishes per-floor heights, so the
-          height of your floor is estimated, and the four directions come from
-          the shape of the building rather than from a floor plan. The imagery
-          is always real, or absent — never a stand-in.
+          particular apartment: per-floor heights aren't published, so your
+          floor's height is estimated, and the four directions come from the
+          building's shape. The imagery is always real, or absent — never a
+          stand-in.
         </p>
 
         {ui.kind === "loading" && <LoadingState />}
