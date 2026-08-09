@@ -1,0 +1,290 @@
+{
+  "_": "Two cold passes of the pre-registered matrix, each case in a fresh Chrome with a fresh profile and every 27b: key cleared. 'planIdentical' compares BIN, basis, eye heights, roof height, rectangularity and all four bearings; 'directionDiffs' lists any per-direction difference including the frame's pixel statistics.",
+  "A": {
+    "ranAt": "2026-08-09T22:26:05.683Z",
+    "sessions": 11
+  },
+  "B": {
+    "ranAt": "2026-08-09T22:34:06.442Z",
+    "sessions": 11
+  },
+  "allPlansIdentical": true,
+  "casesWithAnyDirectionDifference": [
+    "432park-f80",
+    "432park-f40",
+    "flatiron-f18",
+    "425e79-f4"
+  ],
+  "settleMsRange": {
+    "A": [
+      4076,
+      32773
+    ],
+    "B": [
+      4039,
+      60831
+    ]
+  },
+  "rows": [
+    {
+      "case": "432park-f80",
+      "planIdentical": true,
+      "planDiff": null,
+      "framesA": 4,
+      "framesB": 4,
+      "pixelsIdentical": false,
+      "directionDiffs": [
+        {
+          "index": 3,
+          "A": {
+            "compass": "WNW",
+            "thumbState": null,
+            "leadQuality": "normal",
+            "leadLabel": null,
+            "note": null,
+            "hasImage": true,
+            "imageSize": "800x623",
+            "pixels": {
+              "meanLuma": 118.2,
+              "sdLuma": 51.7,
+              "edgeEnergy": 11.22
+            }
+          },
+          "B": {
+            "compass": "WNW",
+            "thumbState": null,
+            "leadQuality": "normal",
+            "leadLabel": null,
+            "note": null,
+            "hasImage": true,
+            "imageSize": "800x623",
+            "pixels": {
+              "meanLuma": 118.2,
+              "sdLuma": 51.7,
+              "edgeEnergy": 11.23
+            }
+          }
+        }
+      ],
+      "settleMsA": 29819,
+      "settleMsB": 50776
+    },
+    {
+      "case": "432park-f40",
+      "planIdentical": true,
+      "planDiff": null,
+      "framesA": 4,
+      "framesB": 4,
+      "pixelsIdentical": false,
+      "directionDiffs": [
+        {
+          "index": 3,
+          "A": {
+            "compass": "WNW",
+            "thumbState": null,
+            "leadQuality": "qualified",
+            "leadLabel": "Enclosed",
+            "note": "This side looks into nearby buildings rather than out over the city.",
+            "hasImage": true,
+            "imageSize": "800x623",
+            "pixels": {
+              "meanLuma": 73.7,
+              "sdLuma": 34.2,
+              "edgeEnergy": 8.9
+            }
+          },
+          "B": {
+            "compass": "WNW",
+            "thumbState": null,
+            "leadQuality": "qualified",
+            "leadLabel": "Enclosed",
+            "note": "This side looks into nearby buildings rather than out over the city.",
+            "hasImage": true,
+            "imageSize": "800x623",
+            "pixels": {
+              "meanLuma": 73.6,
+              "sdLuma": 34.2,
+              "edgeEnergy": 8.9
+            }
+          }
+        }
+      ],
+      "settleMsA": 32773,
+      "settleMsB": 34698
+    },
+    {
+      "case": "432park-f3",
+      "planIdentical": true,
+      "planDiff": null,
+      "framesA": 3,
+      "framesB": 3,
+      "pixelsIdentical": true,
+      "directionDiffs": [],
+      "settleMsA": 24043,
+      "settleMsB": 30358
+    },
+    {
+      "case": "esb-f80",
+      "planIdentical": true,
+      "planDiff": null,
+      "framesA": 4,
+      "framesB": 4,
+      "pixelsIdentical": true,
+      "directionDiffs": [],
+      "settleMsA": 28441,
+      "settleMsB": 32767
+    },
+    {
+      "case": "dakota-f7",
+      "planIdentical": true,
+      "planDiff": null,
+      "framesA": 4,
+      "framesB": 4,
+      "pixelsIdentical": true,
+      "directionDiffs": [],
+      "settleMsA": 24286,
+      "settleMsB": 31340
+    },
+    {
+      "case": "flatiron-f18",
+      "planIdentical": true,
+      "planDiff": null,
+      "framesA": 4,
+      "framesB": 4,
+      "pixelsIdentical": false,
+      "directionDiffs": [
+        {
+          "index": 3,
+          "A": {
+            "compass": "WNW",
+            "thumbState": null,
+            "leadQuality": "normal",
+            "leadLabel": null,
+            "note": null,
+            "hasImage": true,
+            "imageSize": "800x623",
+            "pixels": {
+              "meanLuma": 116.1,
+              "sdLuma": 43.6,
+              "edgeEnergy": 9.47
+            }
+          },
+          "B": {
+            "compass": "WNW",
+            "thumbState": null,
+            "leadQuality": "normal",
+            "leadLabel": null,
+            "note": null,
+            "hasImage": true,
+            "imageSize": "800x623",
+            "pixels": {
+              "meanLuma": 116.1,
+              "sdLuma": 43.6,
+              "edgeEnergy": 9.46
+            }
+          }
+        }
+      ],
+      "settleMsA": 30929,
+      "settleMsB": 32255
+    },
+    {
+      "case": "425e79-f10",
+      "planIdentical": true,
+      "planDiff": null,
+      "framesA": 4,
+      "framesB": 4,
+      "pixelsIdentical": true,
+      "directionDiffs": [],
+      "settleMsA": 31453,
+      "settleMsB": 31088
+    },
+    {
+      "case": "425e79-f4",
+      "planIdentical": true,
+      "planDiff": null,
+      "framesA": 3,
+      "framesB": 3,
+      "pixelsIdentical": true,
+      "directionDiffs": [
+        {
+          "index": 0,
+          "A": {
+            "compass": "NNE",
+            "thumbState": null,
+            "leadQuality": "qualified",
+            "leadLabel": "Enclosed",
+            "note": "Another building stands about 12 m from this side.",
+            "hasImage": true,
+            "imageSize": "800x623",
+            "pixels": {
+              "meanLuma": 49.4,
+              "sdLuma": 14.5,
+              "edgeEnergy": 3.55
+            }
+          },
+          "B": {
+            "compass": "NNE",
+            "thumbState": null,
+            "leadQuality": "qualified",
+            "leadLabel": "Enclosed",
+            "note": "Still sharpening when this frame was captured.",
+            "hasImage": true,
+            "imageSize": "800x623",
+            "pixels": {
+              "meanLuma": 49.4,
+              "sdLuma": 14.5,
+              "edgeEnergy": 3.55
+            }
+          }
+        }
+      ],
+      "settleMsA": 24458,
+      "settleMsB": 60831
+    },
+    {
+      "case": "bedford-f3",
+      "planIdentical": true,
+      "planDiff": null,
+      "framesA": 2,
+      "framesB": 2,
+      "pixelsIdentical": true,
+      "directionDiffs": [],
+      "settleMsA": 17596,
+      "settleMsB": 17332
+    },
+    {
+      "case": "stuyvesant-f3",
+      "planIdentical": true,
+      "planDiff": null,
+      "framesA": 2,
+      "framesB": 2,
+      "pixelsIdentical": true,
+      "directionDiffs": [],
+      "settleMsA": 26148,
+      "settleMsB": 21536
+    },
+    {
+      "case": "invalid-f10",
+      "planIdentical": true,
+      "planDiff": null,
+      "framesA": 0,
+      "framesB": 0,
+      "pixelsIdentical": true,
+      "directionDiffs": [],
+      "settleMsA": 4076,
+      "settleMsB": 4039
+    },
+    {
+      "case": "noimagery-f7",
+      "planIdentical": true,
+      "planDiff": null,
+      "framesA": 0,
+      "framesB": 0,
+      "pixelsIdentical": true,
+      "directionDiffs": [],
+      "settleMsA": 5028,
+      "settleMsB": 5074
+    }
+  ]
+}
