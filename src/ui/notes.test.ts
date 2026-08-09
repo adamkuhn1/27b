@@ -111,6 +111,59 @@ describe("per-direction notes", () => {
   });
 });
 
+describe("a slow capture of an obstructed direction", () => {
+  // A returning visitor on a slow connection gets pixel-identical frames and a
+  // longer settle. The building next door is exactly as close either way, so
+  // the settle state must not be able to spend the sentence the measurement
+  // needs. Recorded at 425 E 79th St floor 4 NNE, where a 60.8 s pass and a
+  // 24.5 s pass produced identical pixels and different notes.
+  const enclosed = conf({
+    band: "enclosed",
+    firstBlockingM: 11.6,
+    maxObstructionAngleDeg: 27,
+  });
+
+  it("still names the distance to the building on that side", () => {
+    const note = directionNote(enclosed, { settled: false });
+    expect(note).toContain("Another building stands about 12 m from this side");
+  });
+
+  it("reports the slow settle as well, in the same sentence", () => {
+    expect(directionNote(enclosed, { settled: false })).toBe(
+      "Another building stands about 12 m from this side; this frame was still sharpening.",
+    );
+  });
+
+  it("does not lose the enclosure statement that carries no distance", () => {
+    expect(
+      directionNote(
+        conf({ band: "enclosed", firstBlockingM: 93, maxObstructionAngleDeg: 48 }),
+        { settled: false },
+      ),
+    ).toBe(
+      "This side looks into nearby buildings rather than out over the city; this frame was still sharpening.",
+    );
+  });
+
+  it("does not lose a partly-enclosed direction either", () => {
+    expect(directionNote(conf({ band: "partly-enclosed" }), { settled: false })).toBe(
+      "Partly enclosed — nearby rooftops fill much of this direction; this frame was still sharpening.",
+    );
+  });
+
+  it("says the same thing about the world whether the capture was slow or not", () => {
+    for (const c of [
+      conf({ band: "enclosed", firstBlockingM: 11.6, maxObstructionAngleDeg: 27 }),
+      conf({ band: "enclosed", firstBlockingM: 93, maxObstructionAngleDeg: 48 }),
+      conf({ band: "partly-enclosed" }),
+    ]) {
+      const settled = directionNote(c, { settled: true })!;
+      const unsettled = directionNote(c, { settled: false })!;
+      expect(unsettled).toContain(settled.replace(/\.$/, ""));
+    }
+  });
+});
+
 describe("whole-result notes", () => {
   it("is silent for an ordinary rectangular building at a normal floor", () => {
     expect(planNotes(plan({ confidence: report() }))).toEqual([]);
@@ -292,10 +345,16 @@ describe("nothing this module can say is a claim the data doesn't support", () =
     const out: string[] = [];
     for (const band of ["open", "partly-enclosed", "enclosed"] as const) {
       for (const first of [null, 11.6, 93]) {
-        const n = directionNote(
-          conf({ band, firstBlockingM: first, maxObstructionAngleDeg: 48 }),
-        );
-        if (n) out.push(n);
+        // Both settle states: an unsettled capture of an obstructed direction
+        // carries the measurement AND the settle clause in one sentence, and
+        // that longer sentence is held to the same length as the short ones.
+        for (const settled of [undefined, true, false]) {
+          const n = directionNote(
+            conf({ band, firstBlockingM: first, maxObstructionAngleDeg: 48 }),
+            { settled },
+          );
+          if (n) out.push(n);
+        }
       }
     }
     const unsettled = directionNote(conf({}), { settled: false });
