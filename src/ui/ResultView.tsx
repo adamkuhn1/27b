@@ -8,7 +8,7 @@ import {
   useTileCaptures,
 } from "../viewer/useTileCaptures";
 import { PlanDiagram } from "./PlanDiagram";
-import { chooseLeadDirection, viewQuality } from "./leadDirection";
+import { chooseLeadDirection, isUncaptured, viewQuality } from "./leadDirection";
 import {
   NO_IMAGERY_NOTE,
   RENDER_ALL_AGAIN,
@@ -89,12 +89,28 @@ function ResultBody({
     isRenderableDirection(v.slot, plan.confidence),
   ).length;
 
+  // Three-way on purpose: true while frames are still arriving, false once the
+  // render is over, and undefined when there is no render to speak of (no
+  // imagery key). The notes read differently in each case, and "no key" must
+  // not be reported as "nothing loaded".
+  const stillCapturing =
+    captures.phase === "running"
+      ? true
+      : captures.phase === "idle"
+        ? undefined
+        : false;
+
   const notes = planNotes(plan, {
     loadedCount: loaded,
     totalCount: requested,
     imageryUnavailable: captures.phase === "failed",
+    stillCapturing,
   });
 
+  // The plan drawing has one mark for "nothing was asked for here, and this
+  // axis will never resolve" and does not distinguish a party wall from a court
+  // too narrow to stand in — on a 260-unit drawing that distinction is a label,
+  // not a line weight, and the label is on the frame and in the strip.
   const phaseBySlot: Partial<Record<ViewSlot, SlotPhase>> = {};
   for (const view of plan.views) {
     phaseBySlot[view.slot] = isRenderableDirection(view.slot, plan.confidence)
@@ -193,9 +209,9 @@ function LeadView({ plan, view }: { plan: ViewPlan; view: CameraView }) {
   const captures = useTileCaptures();
   const slot = captures.bySlot[view.slot];
   const quality = viewQuality(view.slot, plan.confidence);
-  const noWindow = quality === "no-window";
+  const uncaptured = isUncaptured(quality);
   const sessionFailed = captures.phase === "failed";
-  const failed = !noWindow && (slot?.phase === "failed" || sessionFailed);
+  const failed = !uncaptured && (slot?.phase === "failed" || sessionFailed);
   const lead = qualityLead(quality);
 
   const note = failed
@@ -204,6 +220,7 @@ function LeadView({ plan, view }: { plan: ViewPlan; view: CameraView }) {
       : NO_IMAGERY_NOTE
     : directionNote(confidenceFor(plan.confidence, view.slot), {
         settled: slot?.phase === "ready" ? slot.settled : undefined,
+        capturable: !uncaptured,
       });
 
   return (
@@ -211,7 +228,7 @@ function LeadView({ plan, view }: { plan: ViewPlan; view: CameraView }) {
       className="lead"
       data-quality={quality}
       data-phase={
-        noWindow ? "no-window" : failed ? "failed" : slot?.phase ?? "queued"
+        uncaptured ? quality : failed ? "failed" : slot?.phase ?? "queued"
       }
     >
       <figcaption className="lead__caption">
@@ -222,7 +239,11 @@ function LeadView({ plan, view }: { plan: ViewPlan; view: CameraView }) {
         {lead && <span className="lead__quality">{lead}</span>}
       </figcaption>
 
-      <CesiumView view={view} disabled={captures.phase === "idle"} noWindow={noWindow} />
+      <CesiumView
+        view={view}
+        disabled={captures.phase === "idle"}
+        uncaptured={uncaptured ? (quality as "no-window" | "no-room") : undefined}
+      />
 
       {note && <p className="lead__note">{note}</p>}
 
@@ -269,8 +290,16 @@ function DirectionStrip({
     <div className="thumbs" role="group" aria-label="The four directions">
       {plan.views.map((view) => {
         const quality = viewQuality(view.slot, plan.confidence);
-        const noWindow = quality === "no-window";
+        const uncaptured = isUncaptured(quality);
         const isSelected = view.slot === selected;
+        // Said on the thumbnail itself, not only under the large view. Two
+        // empty cells in a row of four are the whole of what a reader sees of
+        // a partial result until they click one, and an empty cell that says
+        // nothing reads as a picture that failed to decode.
+        const didNotLoad =
+          !uncaptured &&
+          (captures.bySlot[view.slot]?.phase === "failed" ||
+            captures.phase === "failed");
 
         return (
           <button
@@ -278,26 +307,36 @@ function DirectionStrip({
             type="button"
             className="thumb"
             data-quality={quality}
+            data-phase={didNotLoad ? "failed" : undefined}
             data-selected={isSelected ? "true" : undefined}
             aria-pressed={isSelected}
-            // A direction with no window has nothing to promote: there is no
-            // frame and there never will be one. It stays in the row, labelled,
-            // because it is still one of the building's four sides.
-            disabled={noWindow}
+            // A direction nothing was requested for has nothing to promote:
+            // there is no frame and there never will be one. It stays in the
+            // row, labelled, because it is still one of the building's four
+            // sides.
+            disabled={uncaptured}
             onClick={() => onSelect(view.slot)}
           >
             <span className="thumb__frame">
               <CesiumView
                 view={view}
                 disabled={captures.phase === "idle"}
-                noWindow={noWindow}
+                uncaptured={uncaptured ? (quality as "no-window" | "no-room") : undefined}
                 size="thumb"
               />
             </span>
             <span className="thumb__label">
               <span className="thumb__compass">{view.compass}</span>
-              {noWindow && <span className="thumb__state">no window</span>}
-              {quality === "close" && <span className="thumb__state">close range</span>}
+              {quality === "no-window" && (
+                <span className="thumb__state">no window</span>
+              )}
+              {quality === "no-room" && (
+                <span className="thumb__state">too narrow</span>
+              )}
+              {didNotLoad && <span className="thumb__state">didn&rsquo;t load</span>}
+              {!didNotLoad && quality === "close" && (
+                <span className="thumb__state">close range</span>
+              )}
             </span>
           </button>
         );

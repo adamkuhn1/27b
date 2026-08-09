@@ -215,7 +215,75 @@ because it looks like a control.
 
 ---
 
-## 7. Pre-deploy checklist
+## 7. The console steps, exactly
+
+Written out because §3 names the controls but not where they live, and the
+difference between "set a budget" and "set a quota" is the difference between a
+notification and a cap. Paths re-verified against provider documentation on
+**2026-08-09**; sources at the foot of this section.
+
+**a. Restrict the production key by HTTP referrer.**
+Cloud console → **Google Maps Platform → Credentials** → click the key →
+*Edit API key* → **Key restrictions → Set an application restriction →
+Websites** → *Add* one referrer per deploy origin → **Save**. Give the whole
+referrer string including the scheme: `https://27b.<domain>` (and
+`https://*.<domain>` only if a subdomain wildcard is genuinely wanted). The
+documentation is explicit that the whole string is required — scheme, host and
+optional port — because browsers strip paths from cross-origin requests.
+
+**b. Restrict the same key to one API.**
+Same *Edit API key* page → **API restrictions → Restrict key** → in *Select
+APIs* tick **Map Tiles API** only → **Save**. 27B calls nothing else; a key that
+also carries Geocoding or Places turns any referrer bypass into a much larger
+bill.
+
+**c. Set a daily quota cap on the Map Tiles API — this is the only real cap.**
+Cloud console → **Google Maps Platform → Quotas** → select the project → in the
+**APIs** drop-down choose **Map Tiles API** → tick the *requests per day* quota →
+three-dot menu → **Edit quota** → enter the value (§3 recommends **25/day**;
+**0** stops all billable traffic immediately) → **Submit request**.
+
+> "Once requests in your project reach that limit, your service stops
+> responding to requests."
+> — Manage Google Maps Platform costs
+
+That is the behaviour that makes it a cap, and it is also the risk: a quota set
+too low is a user-facing outage. 25/day against a 1,000/month free allowance
+leaves headroom on both sides.
+
+**d. Set a spend alert — and do not mistake it for (c).**
+Cloud console → **Billing → Budgets & alerts** → **Create budget** → *Alerts
+only* → name it → scope it to the project and, if wanted, to the Map Tiles API
+service → set the amount (§3 recommends **$1/month**) → set threshold rules
+(50% / 90% / 100%, actual or forecast) → tick the email notification options →
+**Finish**.
+
+> "Setting an *alerts-only* budget *doesn't* automatically cap Google Cloud or
+> Google Maps Platform usage or spending."
+> — Create, edit, or delete budgets and budget alerts
+
+**e. The safe default preview: build with no key at all.**
+Leave `VITE_GOOGLE_MAPS_KEY` unset in the preview environment — do not define
+the variable, and do not define it as an empty string in a place that shadows a
+real one. `config.ts` treats absent and blank identically, `hasImagerySource()`
+returns false, and `useTileCaptures` returns before it imports the renderer, so
+the metered code path is unreachable rather than merely unused. The build
+succeeds, the geometry pipeline runs in full, and the four frames render empty
+under the "Imagery source not configured" state — never a placeholder scene.
+A keyless build is therefore the correct default for any preview URL, any
+share link and any CI job, and a key should be added only to the one production
+environment whose origin is on the referrer allow-list from (a).
+
+**Sources, all read 2026-08-09:**
+[API security best practices](https://developers.google.com/maps/api-security-best-practices) ·
+[Manage Google Maps Platform costs](https://developers.google.com/maps/billing-and-pricing/manage-costs) ·
+[Create, edit, or delete budgets and budget alerts](https://docs.cloud.google.com/billing/docs/how-to/budgets) ·
+[Map Tiles usage & billing](https://developers.google.com/maps/documentation/tile/usage-and-billing) ·
+[Maps Platform pricing](https://developers.google.com/maps/billing-and-pricing/pricing)
+
+---
+
+## 8. Pre-deploy checklist
 
 - [ ] Production key restricted by HTTP referrer to deploy origins only
 - [ ] Production key restricted to the Map Tiles API only

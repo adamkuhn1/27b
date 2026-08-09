@@ -1,6 +1,6 @@
 import type { CameraView } from "../lib/types";
 import { useTileCaptures } from "./useTileCaptures";
-import { ABUTTING_NOTE } from "../ui/notes";
+import { ABUTTING_NOTE, NARROW_COURT_REASON } from "../ui/notes";
 
 /**
  * Where the frame is being shown.
@@ -24,14 +24,17 @@ interface CesiumViewProps {
   /** True when no imagery key is configured — render nothing (no fake scene). */
   disabled?: boolean;
   /**
-   * True when this facade is inside the building next door at this height.
-   * Nothing was requested for it and nothing will arrive; the frame is empty on
-   * purpose and the label says why.
+   * Why this direction was never requested, when it wasn't.
    *
-   * Distinct from a light court, which is a real window across a narrow gap and
-   * IS captured, from inside the court. See lib/confidence.ts.
+   * `no-window`: the facade is inside the building next door at this height.
+   * `no-room`: it faces a light court too narrow to stand a camera in.
+   *
+   * Either way nothing was asked for and nothing will arrive, so the frame is
+   * empty on purpose and the label says which. A wider light court IS captured,
+   * from inside the court, and does not come through here. See
+   * lib/confidence.ts.
    */
-  noWindow?: boolean;
+  uncaptured?: "no-window" | "no-room";
   size?: ViewSize;
 }
 
@@ -57,7 +60,7 @@ const CLASSES: Record<ViewSize, { image: string; empty: string }> = {
 export function CesiumView({
   view,
   disabled,
-  noWindow,
+  uncaptured,
   size = "lead",
 }: CesiumViewProps) {
   const captures = useTileCaptures(disabled);
@@ -74,8 +77,13 @@ export function CesiumView({
 
   if (disabled) return empty(null);
 
-  if (noWindow) {
+  if (uncaptured === "no-window") {
     return empty(`No window facing ${view.compass}. ${ABUTTING_NOTE}`);
+  }
+  if (uncaptured === "no-room") {
+    return empty(
+      `No frame facing ${view.compass}. ${NARROW_COURT_REASON}`,
+    );
   }
 
   const slot = captures.bySlot[view.slot];

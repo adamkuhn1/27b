@@ -188,6 +188,7 @@ export function TileCapturesProvider({
         reportSessionFailure(err);
         // Honest failure: empty frames, never a fabricated scene.
         setPhase("failed");
+        setBySlot(concludeUnfinished);
         return;
       }
 
@@ -206,6 +207,7 @@ export function TileCapturesProvider({
       if (current()) {
         setSessionOpen(false);
         setPhase("settled");
+        setBySlot(concludeUnfinished);
       }
     })();
 
@@ -291,6 +293,37 @@ export function TileCapturesProvider({
   return (
     <CapturesContext.Provider value={value}>{children}</CapturesContext.Provider>
   );
+}
+
+/**
+ * Close out every direction that never reached a terminal event.
+ *
+ * A session can end with directions still `queued` — it was aborted, or one
+ * failure was fatal for the whole session, or it never opened at all. Left
+ * alone those slots keep their starting phase for as long as the result is on
+ * screen, which means an empty frame that announces "waiting to capture the
+ * view facing WNW" about a capture that can no longer happen, a hairline axis
+ * on the plan that never resolves, and a whole-result note that counts them as
+ * still arriving. The session is over; the honest phase is that they did not
+ * load.
+ *
+ * Returns the same object when there is nothing to change, so React does not
+ * re-render on every settled session.
+ */
+function concludeUnfinished(
+  prev: TileCaptures["bySlot"],
+): TileCaptures["bySlot"] {
+  let changed = false;
+  const next: TileCaptures["bySlot"] = { ...prev };
+  for (const [slot, state] of Object.entries(prev) as Array<
+    [ViewSlot, SlotState | undefined]
+  >) {
+    if (state && (state.phase === "queued" || state.phase === "capturing")) {
+      next[slot] = { ...state, phase: "failed" };
+      changed = true;
+    }
+  }
+  return changed ? next : prev;
 }
 
 /**

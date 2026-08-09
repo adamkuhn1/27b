@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { chooseLeadDirection, viewQuality } from "./leadDirection";
+import { chooseLeadDirection, isUncaptured, viewQuality } from "./leadDirection";
+import { isRenderableDirection } from "../lib/confidence";
 import type {
   CameraView,
   ConfidenceReport,
@@ -208,5 +209,36 @@ describe("how a direction is presented", () => {
   it("says nothing about a direction it has no data for", () => {
     expect(viewQuality("V1", null)).toBe("normal");
     expect(viewQuality("V4", report({ band: "enclosed" }))).toBe("normal");
+  });
+
+  // A court under about three metres has no camera position that clears both
+  // walls, so the renderer never asks for it. Calling that "close range" — as
+  // this did — left an empty pane announcing that it was waiting to capture,
+  // under a note describing a picture that was never coming. Two buildings in
+  // the acceptance matrix hit it: 432 Park at floor 3 and 63 Bedford St.
+  it("separates a court a camera fits in from one it does not", () => {
+    expect(viewQuality("V1", report({ courtWidthM: 4.4 }))).toBe("close");
+    expect(viewQuality("V1", report({ courtWidthM: 2 }))).toBe("no-room");
+    expect(viewQuality("V1", report({ courtWidthM: 0.4 }))).toBe("no-room");
+  });
+
+  it("agrees with the predicate that decides what is requested", () => {
+    // The label and the renderer must not be able to disagree: anything the
+    // renderer skips has to be presented as a direction with no frame.
+    for (const d of [
+      { courtWidthM: 0.4 },
+      { courtWidthM: 2 },
+      { courtWidthM: 3 },
+      { courtWidthM: 4.4 },
+      { courtWidthM: 12 },
+      { insideNeighborByM: 8 },
+      { band: "enclosed" as const },
+      { band: "open" as const },
+    ]) {
+      const r = report(d);
+      expect(isUncaptured(viewQuality("V1", r)), JSON.stringify(d)).toBe(
+        !isRenderableDirection("V1", r),
+      );
+    }
   });
 });
