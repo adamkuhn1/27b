@@ -38,6 +38,12 @@ export const LOOSE_FACADE_CONCENTRATION = 0.8;
  * Silence is the default. An open view gets no note at all — a line of
  * reassurance under every frame would be noise, and would make the frames that
  * genuinely need a warning harder to notice.
+ *
+ * The enclosure measurement and the settle state are independent facts and are
+ * reported as such: the first is about the world, the second is about our own
+ * capture loop, and a slow settle does not make a neighbouring building any
+ * further away. When both hold they share one sentence, obstruction first,
+ * because the obstruction is the fact the reader came for.
  */
 export function directionNote(
   confidence: DirectionConfidence | undefined,
@@ -49,9 +55,24 @@ export function directionNote(
       ? narrowCourtNote(confidence.courtWidthM)
       : courtNote(confidence.courtWidthM);
   }
-  if (opts.settled === false) return "Still sharpening when this frame was captured.";
-  if (!confidence) return null;
 
+  const enclosure = confidence ? enclosureClause(confidence) : null;
+  if (opts.settled === false) {
+    return enclosure === null
+      ? STILL_SHARPENING_NOTE
+      : `${enclosure}${STILL_SHARPENING_CLAUSE}`;
+  }
+  return enclosure === null ? null : `${enclosure}.`;
+}
+
+/**
+ * What the footprint arithmetic establishes about one direction's enclosure, as
+ * a clause with no terminal punctuation, or null when the direction is open.
+ *
+ * Unpunctuated so the caller can end it, or continue it with the settle clause,
+ * without taking a sentence apart again.
+ */
+function enclosureClause(confidence: DirectionConfidence): string | null {
   switch (confidence.band) {
     case "enclosed":
       if (
@@ -60,15 +81,28 @@ export function directionNote(
       ) {
         return `Another building stands about ${Math.round(
           confidence.firstBlockingM,
-        )} m from this side.`;
+        )} m from this side`;
       }
-      return "This side looks into nearby buildings rather than out over the city.";
+      return "This side looks into nearby buildings rather than out over the city";
     case "partly-enclosed":
-      return "Partly enclosed — nearby rooftops fill much of this direction.";
+      return "Partly enclosed — nearby rooftops fill much of this direction";
     case "open":
       return null;
   }
 }
+
+/**
+ * Copy for a capture that ended on the hard timeout rather than on the quiet
+ * period, when there is nothing else to say about the direction.
+ */
+const STILL_SHARPENING_NOTE = "Still sharpening when this frame was captured.";
+
+/**
+ * The same fact appended to an enclosure clause. Shorter than the standalone
+ * sentence because it has to fit behind the longest of them and stay inside the
+ * one-short-sentence budget the whole set is held to.
+ */
+const STILL_SHARPENING_CLAUSE = "; this frame was still sharpening.";
 
 /**
  * Copy for a wall that is inside the building next door.
