@@ -1,0 +1,133 @@
+{
+  "_": "Product-level claims that the frame matrix cannot answer: no address substitution, and cache reuse gated on the algorithm fingerprint. Provider imagery is blocked throughout, so this run is free.",
+  "ranAt": "2026-08-09T22:43:47.525Z",
+  "url": "http://localhost:5177/",
+  "providerBlocked": "*tile.googleapis.com*",
+  "noSubstitution": [
+    {
+      "id": "invalid",
+      "address": "9999 5th Ave, Manhattan, New York, NY 10028",
+      "preRegistered": true,
+      "typed": "9999 5th Ave, Manhattan, New York, NY 10028",
+      "outcome": {
+        "refusalTitle": "Address not found",
+        "refusalBody": "We couldn't find that exact address in New York City. Check the street name and try again.",
+        "resolvedAddress": null,
+        "frameLine": null,
+        "metas": [],
+        "planAriaLabel": null,
+        "thumbs": 0,
+        "cacheKeys": []
+      },
+      "renderedAnyBuilding": false,
+      "tileRequests": 0,
+      "pipelineRequests": 1,
+      "cacheKeysAfter": []
+    },
+    {
+      "id": "wrong-number",
+      "address": "848 W 72nd St, Manhattan, New York, NY 10023",
+      "preRegistered": false,
+      "typed": "848 W 72nd St, Manhattan, New York, NY 10023",
+      "outcome": {
+        "refusalTitle": "Address not found",
+        "refusalBody": "We couldn't find that exact address in New York City. Check the street name and try again.",
+        "resolvedAddress": null,
+        "frameLine": null,
+        "metas": [],
+        "planAriaLabel": null,
+        "thumbs": 0,
+        "cacheKeys": []
+      },
+      "renderedAnyBuilding": false,
+      "tileRequests": 0,
+      "pipelineRequests": 1,
+      "cacheKeysAfter": []
+    }
+  ],
+  "cacheFingerprint": {
+    "case": {
+      "address": "425 E 79th St, Manhattan, New York, NY 10075",
+      "floor": 10
+    },
+    "steps": [
+      {
+        "step": "cold",
+        "note": "no 27B key in storage; the plan has to be computed",
+        "pipelineRequests": 3,
+        "metas": [
+          "Eye 30.3 m above ground · roof 39.0 m · BIN 1050349 · footprint rectangularity 0.97",
+          "Views look out along this building's own facades (from its footprint), so the bearings are not N/E/S/W. Camera height 42.5 m NAVD88 = 10.8 m WGS84 ellipsoidal (geoid -31.7 m).",
+          "Enclosure notes computed from 261 neighbouring footprints within 220 m (NYC Open Data). No imagery is analysed."
+        ],
+        "planAriaLabel": "Plan of this building's footprint with the four camera positions, facing NNE 29 degrees, ESE 119 degrees, SSW 209 degrees, WNW 299 degrees",
+        "cacheKeys": [
+          "27b:cache:v5-25d224c5:425 e 79th st, manhattan, new york, ny 10075::10"
+        ]
+      },
+      {
+        "step": "returning, fingerprint matches",
+        "note": "the stored entry's version equals this build's, so it is served",
+        "pipelineRequests": 0,
+        "metas": [
+          "Eye 30.3 m above ground · roof 39.0 m · BIN 1050349 · footprint rectangularity 0.97",
+          "Views look out along this building's own facades (from its footprint), so the bearings are not N/E/S/W. Camera height 42.5 m NAVD88 = 10.8 m WGS84 ellipsoidal (geoid -31.7 m).",
+          "Enclosure notes computed from 261 neighbouring footprints within 220 m (NYC Open Data). No imagery is analysed."
+        ],
+        "planAriaLabel": "Plan of this building's footprint with the four camera positions, facing NNE 29 degrees, ESE 119 degrees, SSW 209 degrees, WNW 299 degrees",
+        "cacheKeys": [
+          "27b:cache:v5-25d224c5:425 e 79th st, manhattan, new york, ny 10075::10"
+        ]
+      },
+      {
+        "step": "returning, fingerprint changed",
+        "note": "the same plan under a version this build does not recognise",
+        "rekey": {
+          "moved": true,
+          "from": "27b:cache:v5-25d224c5:425 e 79th st, manhattan, new york, ny 10075::10",
+          "to": "27b:cache:v5-deadbeef:425 e 79th st, manhattan, new york, ny 10075::10",
+          "planUnchanged": true
+        },
+        "pipelineRequests": 3,
+        "metas": [
+          "Eye 30.3 m above ground · roof 39.0 m · BIN 1050349 · footprint rectangularity 0.97",
+          "Views look out along this building's own facades (from its footprint), so the bearings are not N/E/S/W. Camera height 42.5 m NAVD88 = 10.8 m WGS84 ellipsoidal (geoid -31.7 m).",
+          "Enclosure notes computed from 261 neighbouring footprints within 220 m (NYC Open Data). No imagery is analysed."
+        ],
+        "planAriaLabel": "Plan of this building's footprint with the four camera positions, facing NNE 29 degrees, ESE 119 degrees, SSW 209 degrees, WNW 299 degrees",
+        "cacheKeys": [
+          "27b:cache:v5-25d224c5:425 e 79th st, manhattan, new york, ny 10075::10"
+        ]
+      }
+    ],
+    "reusedWhenFingerprintMatches": true,
+    "recomputedWhenFingerprintChanged": true
+  },
+  "consoleProblems": [
+    {
+      "level": "warning",
+      "text": "Only the Google geocoder can be used with Google Photorealistic 3D Tiles.  Set the `geocode` property of Viewer constructor options.  You can set additionalOptions.onlyUsingWithGoogleGeocoder to hide this warning once you have configured the geocoder."
+    },
+    {
+      "level": "error",
+      "text": "[27b] render session could not be opened: Request has failed."
+    },
+    {
+      "level": "warning",
+      "text": "Only the Google geocoder can be used with Google Photorealistic 3D Tiles.  Set the `geocode` property of Viewer constructor options.  You can set additionalOptions.onlyUsingWithGoogleGeocoder to hide this warning once you have configured the geocoder."
+    },
+    {
+      "level": "error",
+      "text": "[27b] render session could not be opened: Request has failed."
+    },
+    {
+      "level": "warning",
+      "text": "Only the Google geocoder can be used with Google Photorealistic 3D Tiles.  Set the `geocode` property of Viewer constructor options.  You can set additionalOptions.onlyUsingWithGoogleGeocoder to hide this warning once you have configured the geocoder."
+    },
+    {
+      "level": "error",
+      "text": "[27b] render session could not be opened: Request has failed."
+    }
+  ],
+  "providerRequestsSeen": 3
+}

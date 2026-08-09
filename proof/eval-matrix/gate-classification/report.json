@@ -1,0 +1,160 @@
+{
+  "_": "Human classification of every direction slot in pass gate-A, against the five-way rubric registered in proof/eval-matrix/pre-registration.json. Each frame PNG was opened and looked at; pixel statistics were not used to decide a class. The images live outside the repo, under .release-artifacts/closure/27b-gate/, because they are Google Maps Content.",
+  "classifiedAt": "2026-08-09",
+  "pass": "gate-A",
+  "imagesRoot": "/Users/adamk/Developer/portfolio-suite/.release-artifacts/closure/27b-gate/matrix-A",
+  "rubric": "pre-registration.json → frameClassification (Convincing / Plausible but provider-limited / Obstructed and honestly labelled / Unusable and correctly rejected / Incorrect)",
+  "method": [
+    "Every rendered frame in gate-A was opened as an image and judged against the rubric.",
+    "A direction with no frame was judged on whether the app said why, in the pane where the frame would have been.",
+    "gate-B is pixel-identical to gate-A on 41 of 44 direction slots and within 0.1 luma / 0.01 edge energy on the other three, so these classes carry to gate-B. The one frame classified Incorrect was re-opened in gate-B and is the same picture with the same absent declaration.",
+    "No frame was altered, upscaled, denoised or regenerated."
+  ],
+  "counts": {
+    "Convincing": 12,
+    "Plausible but provider-limited": 1,
+    "Obstructed and honestly labelled": 20,
+    "Unusable and correctly rejected": 11,
+    "Incorrect": 1,
+    "totalDirectionSlots": 45,
+    "note": "45 = 11 imagery cases x 4 directions, plus the invalid-address case, which has no directions and is counted once as a whole-case refusal."
+  },
+  "incorrect": [
+    {
+      "frame": "432park-f40-1-ese.png",
+      "case": "432park",
+      "floor": 40,
+      "direction": "ESE",
+      "headingDeg": 118,
+      "appSaid": {
+        "leadQuality": "normal",
+        "leadLabel": null,
+        "note": null,
+        "thumbState": null
+      },
+      "whatTheFrameShows": "A near building surface with a hard horizontal top edge occupies roughly the lower 55-60% of the picture. Its top edge sits above the far horizon visible on the right of the same frame, so it stands higher than the camera rather than being a rooftop below it. The surface itself is a low-detail smear at this range.",
+      "whyIncorrect": "Rubric class Incorrect covers 'an obstruction the app did not declare'. The other three directions of this same case are labelled Enclosed with a measured distance; this one carries the unqualified 'normal' quality and no note at all, in the lead pane and on the thumbnail.",
+      "reproduces": "Yes. gate-A and gate-B are byte-comparable (meanLuma 84.3, sdLuma 46.7, edgeEnergy 5.40 in both), and the prior closure-A and closure-B passes recorded the same statistics and the same absent declaration.",
+      "notAChange": "No code was touched. See the camera-and-enclosure proposal in this report's siblingProposal field."
+    }
+  ],
+  "siblingProposal": {
+    "_": "Stated as a proposal, not applied. It concerns the enclosure classifier, not the camera, but the same six conditions are the bar.",
+    "claim": "classifyBand in src/lib/confidence.ts can return 'open' — which renders as no label and no note — for a direction whose view is more than half filled by a neighbouring building, when that neighbour's obstruction angle above the eye is small and the first blocking distance is beyond OPEN_MIN_FIRST_BLOCKING_M (60 m).",
+    "sixConditions": {
+      "frozenFailingCase": "432 Park Ave, floor 40, ESE (118 deg). Frozen and reproduced in four independent cold passes.",
+      "beforeEvidence": "gate-A and gate-B reports, direction index 1 of case 432park-f40, plus the frame PNGs under .release-artifacts/closure/27b-gate/.",
+      "singleVariableChange": "NOT SUPPLIED. Would require deciding which single quantity moves — a coverage-fraction term added to the band rule, or ENCLOSED_MIN_ANGLE_DEG / OPEN_MIN_FIRST_BLOCKING_M — and that decision needs the per-direction firstBlockingM and maxObstructionAngleDeg for this case, which the DOM does not expose.",
+      "afterEvidence": "NOT SUPPLIED.",
+      "fullRegressionMatrix": "NOT SUPPLIED.",
+      "noLossOnPassingCases": "NOT SUPPLIED. The thresholds carry an explicit provenance warning in confidence.ts: they were fitted to sixteen directions with no held-out set, so any move needs the whole matrix re-judged, not one case fixed."
+    },
+    "verdict": "Four of the six conditions are unmet, so no change was made. Reported instead."
+  },
+  "byCase": [
+    {
+      "case": "432park", "floor": 80,
+      "directions": [
+        { "compass": "NNE", "headingDeg": 28, "class": "Convincing", "why": "Central Park and the Upper East Side from 254 m; park edge, reservoir and street grid all coherent." },
+        { "compass": "ESE", "headingDeg": 118, "class": "Convincing", "why": "East River, Roosevelt Island and Queens beyond; correct for the bearing." },
+        { "compass": "SSW", "headingDeg": 208, "class": "Convincing", "why": "Midtown south with the Empire State Building and Chrysler in their right relative positions." },
+        { "compass": "WNW", "headingDeg": 298, "class": "Convincing", "why": "Billionaires' Row — the slender 111 W 57th, Central Park Tower, and the park at frame right." }
+      ]
+    },
+    {
+      "case": "432park", "floor": 40,
+      "directions": [
+        { "compass": "NNE", "headingDeg": 28, "class": "Convincing", "why": "A near limestone tower fills the middle third, but the rest is coherent city and park, and the app declares Enclosed with 'about 24 m from this side'." },
+        { "compass": "ESE", "headingDeg": 118, "class": "Incorrect", "why": "Majority-frame near obstruction above the horizon, with no declaration. See the incorrect entry above." },
+        { "compass": "SSW", "headingDeg": 208, "class": "Obstructed and honestly labelled", "why": "Mostly a near curtain wall; Enclosed, 'about 13 m from this side'." },
+        { "compass": "WNW", "headingDeg": 298, "class": "Obstructed and honestly labelled", "why": "Almost entirely a near glass facade; Enclosed, 'This side looks into nearby buildings rather than out over the city.'" }
+      ]
+    },
+    {
+      "case": "432park", "floor": 3,
+      "directions": [
+        { "compass": "NNE", "headingDeg": 28, "class": "Obstructed and honestly labelled", "why": "Street-level facade opposite; Enclosed, 'about 24 m from this side', and the case note says you are looking across the street." },
+        { "compass": "ESE", "headingDeg": 118, "class": "Obstructed and honestly labelled", "why": "Entirely near surfaces; Enclosed, 'about 10 m from this side'." },
+        { "compass": "SSW", "headingDeg": 208, "class": "Obstructed and honestly labelled", "why": "Entirely a near facade; Enclosed, 'about 13 m from this side'." },
+        { "compass": "WNW", "headingDeg": 298, "class": "Unusable and correctly rejected", "why": "No frame requested or shown; the pane reads 'too narrow'." }
+      ]
+    },
+    {
+      "case": "esb", "floor": 80,
+      "directions": [
+        { "compass": "NNE", "headingDeg": 29, "class": "Convincing", "why": "Midtown north; One Vanderbilt and the Bank of America Tower are where they belong." },
+        { "compass": "ESE", "headingDeg": 119, "class": "Convincing", "why": "East River and the Long Island City skyline." },
+        { "compass": "SSW", "headingDeg": 209, "class": "Convincing", "why": "Downtown with the Flatiron, Met Life's gold pyramid, the Hudson at right and Lower Manhattan on the horizon." },
+        { "compass": "WNW", "headingDeg": 299, "class": "Convincing", "why": "Hudson Yards, the Hudson and New Jersey." }
+      ]
+    },
+    {
+      "case": "dakota", "floor": 7,
+      "directions": [
+        { "compass": "NNE", "headingDeg": 29, "class": "Obstructed and honestly labelled", "why": "Right half is a near facade; Enclosed, 'about 12 m from this side'." },
+        { "compass": "ESE", "headingDeg": 119, "class": "Plausible but provider-limited", "why": "Correct place and bearing — Central Park canopy with the Upper East Side skyline beyond — but the vegetation mesh is soft and blobby at treetop range. No obstruction to declare." },
+        { "compass": "SSW", "headingDeg": 209, "class": "Obstructed and honestly labelled", "why": "Entirely the facade across 72nd Street; Enclosed, 'about 24 m from this side'." },
+        { "compass": "WNW", "headingDeg": 299, "class": "Obstructed and honestly labelled", "why": "Entirely near facades; Enclosed, 'about 8 m from this side'." }
+      ]
+    },
+    {
+      "case": "flatiron", "floor": 18,
+      "directions": [
+        { "compass": "NNE", "headingDeg": 19, "class": "Convincing", "why": "The Empire State Building sits centre-frame, which is where 19 deg from 175 Fifth Ave puts it. Note declares partly-enclosed rooftops." },
+        { "compass": "ESE", "headingDeg": 109, "class": "Obstructed and honestly labelled", "why": "Dominated by the near residential facade; Enclosed, 'This side looks into nearby buildings rather than out over the city.'" },
+        { "compass": "SSW", "headingDeg": 199, "class": "Convincing", "why": "Low-rise rooftops and the downtown skyline, coherent; the partly-enclosed note is accurate." },
+        { "compass": "WNW", "headingDeg": 289, "class": "Convincing", "why": "Chelsea rooftops, water towers, open sky. Nothing above the eye to declare." }
+      ]
+    },
+    {
+      "case": "425e79", "floor": 10,
+      "directions": [
+        { "compass": "NNE", "headingDeg": 29, "class": "Obstructed and honestly labelled", "why": "Near building across the street, mesh badly smeared; Enclosed, 'about 12 m from this side'." },
+        { "compass": "ESE", "headingDeg": 119, "class": "Obstructed and honestly labelled", "why": "A near-featureless dark surface — the light-court wall; Close range, 'A light court about 4 m wide'." },
+        { "compass": "SSW", "headingDeg": 209, "class": "Obstructed and honestly labelled", "why": "Two near facades fill the frame; Enclosed, 'about 24 m from this side'." },
+        { "compass": "WNW", "headingDeg": 299, "class": "Obstructed and honestly labelled", "why": "Near facades with visible mesh distortion; Enclosed, 'This side looks into nearby buildings rather than out over the city.'" }
+      ]
+    },
+    {
+      "case": "425e79", "floor": 4,
+      "directions": [
+        { "compass": "NNE", "headingDeg": 29, "class": "Obstructed and honestly labelled", "why": "Near facade, very low contrast at 11 m eye height; Enclosed, 'about 12 m from this side'." },
+        { "compass": "ESE", "headingDeg": 119, "class": "Obstructed and honestly labelled", "why": "The light court again; Close range, 'about 4 m wide'." },
+        { "compass": "SSW", "headingDeg": 209, "class": "Obstructed and honestly labelled", "why": "Near facades; Enclosed, 'about 24 m from this side'." },
+        { "compass": "WNW", "headingDeg": 299, "class": "Unusable and correctly rejected", "why": "Party wall. No frame requested; the pane reads 'no window'." }
+      ]
+    },
+    {
+      "case": "bedford", "floor": 3,
+      "directions": [
+        { "compass": "ENE", "headingDeg": 67, "class": "Obstructed and honestly labelled", "why": "Entirely the facade across Bedford Street at 6 m, heavily melted; Enclosed, 'about 6 m from this side'." },
+        { "compass": "SSE", "headingDeg": 157, "class": "Obstructed and honestly labelled", "why": "Entirely a near surface; Enclosed, 'about 6 m from this side'." },
+        { "compass": "WSW", "headingDeg": 247, "class": "Unusable and correctly rejected", "why": "No frame; the pane reads 'too narrow'." },
+        { "compass": "NNW", "headingDeg": 337, "class": "Unusable and correctly rejected", "why": "Party wall. No frame; the pane reads 'no window'." }
+      ]
+    },
+    {
+      "case": "stuyvesant", "floor": 3,
+      "directions": [
+        { "compass": "E", "headingDeg": 86, "class": "Unusable and correctly rejected", "why": "Party wall. No frame; the pane reads 'no window'." },
+        { "compass": "S", "headingDeg": 176, "class": "Obstructed and honestly labelled", "why": "Near tree canopy and a neighbouring facade fill the frame; Enclosed, 'about 16 m from this side'." },
+        { "compass": "W", "headingDeg": 266, "class": "Unusable and correctly rejected", "why": "Party wall. No frame; the pane reads 'no window'." },
+        { "compass": "N", "headingDeg": 356, "class": "Obstructed and honestly labelled", "why": "Entirely the brick facade at 6 m; Enclosed, 'about 6 m from this side'." }
+      ]
+    },
+    {
+      "case": "noimagery", "floor": 7,
+      "directions": [
+        { "compass": "NNE", "headingDeg": 29, "class": "Unusable and correctly rejected", "why": "Empty pane, aria-label 'Imagery unavailable facing NNE', thumbnail reads 'didn't load'." },
+        { "compass": "ESE", "headingDeg": 119, "class": "Unusable and correctly rejected", "why": "Empty pane, aria-label 'Imagery unavailable facing ESE'." },
+        { "compass": "SSW", "headingDeg": 209, "class": "Unusable and correctly rejected", "why": "Empty pane, aria-label 'Imagery unavailable facing SSW'." },
+        { "compass": "WNW", "headingDeg": 299, "class": "Unusable and correctly rejected", "why": "Empty pane, aria-label 'Imagery unavailable facing WNW'." }
+      ],
+      "caseNote": "The page keeps the real measurements and the plan drawing and says 'The imagery didn't load. The measurements above are still real; nothing has been put in its place.' No attribution line is rendered, which is correct — no imagery is displayed."
+    },
+    {
+      "case": "invalid", "floor": 10,
+      "wholeCase": { "class": "Unusable and correctly rejected", "why": "'Address not found — We couldn't find that exact address in New York City. Check the street name and try again.' No result, no plan, no frames, and zero provider requests." }
+    }
+  ]
+}
