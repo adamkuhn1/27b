@@ -394,13 +394,16 @@ body {
   fill: var(--text-dim);
 }
 /*
-  A facade shared with the building next door. Drawn faintly and, unlike every
+  A side nothing was asked for: a facade shared with the building next door, or
+  a light court too narrow to stand a camera in. Drawn faintly and, unlike every
   other state here, never resolves into anything else — so it must not look like
-  a direction that is still working. See SlotPhase.
+  a direction that is still working. WHICH of the two it is, is a label rather
+  than a line weight at this size, and the label is on the frame and in the
+  strip. See RenderState.
 */
-.plan__axis--no-window .plan__stem,
-.plan__axis--no-window .plan__look,
-.plan__axis--no-window .plan__eye {
+.plan__axis--not-requested .plan__stem,
+.plan__axis--not-requested .plan__look,
+.plan__axis--not-requested .plan__eye {
   opacity: 0.28;
   stroke-dasharray: 2 3;
 }
@@ -552,6 +555,53 @@ body {
 }
 .lead[data-phase="capturing"] .view__canvas--empty {
   border-color: var(--line-strong);
+}
+/*
+  An empty frame SAYS WHICH EMPTY IT IS. The transparent box with a hairline
+  border is the correct rendering of "no imagery here" and a poor one of "no
+  imagery here yet": the first frame of a session can take the better part of a
+  minute, and for that whole time a reader was looking at a large blank
+  rectangle that is indistinguishable from an image which failed to decode.
+
+  Words, not a spinner and not a bar. The capture ends on either a quiet period
+  or a hard deadline, and neither is a fraction of a known total, so there is no
+  honest proportion to animate.
+*/
+.lead .view__canvas--empty {
+  display: grid;
+  place-items: center;
+}
+.view__state {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+/* The one state that is still moving gets the one moving thing on the page: a
+   slow pulse, so a long capture reads as underway rather than as stuck. */
+.lead[data-phase="capturing"] .view__state {
+  color: var(--text-dim);
+  animation: view-state-pulse 2.4s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .lead[data-phase="capturing"] .view__state {
+    animation: none;
+  }
+}
+@keyframes view-state-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+/* On a thumbnail the row's own label already carries the state, and the cell is
+   too small for a second copy of it. */
+.thumb__frame-state {
+  display: none;
 }
 /* Close range and no-window frames are marked on the frame itself, so the
    distinction survives someone scrolling past the caption. A doubled inset

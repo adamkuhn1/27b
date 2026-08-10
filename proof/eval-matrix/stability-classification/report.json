@@ -1,0 +1,67 @@
+{
+  "_": "Human classification of every direction slot in pass after-A, against the five-way rubric registered in proof/eval-matrix/pre-registration.json. Every frame was opened and looked at. Pixel statistics were not used to decide a class. The images live outside the repo, under .release-artifacts/closure/27b-final/matrix-after-A/, because they are Google Maps Content.",
+  "classifiedAt": "2026-08-10",
+  "pass": "after-A",
+  "imagesRoot": "/Users/adamk/Developer/portfolio-suite/.release-artifacts/closure/27b-final/matrix-after-A",
+  "contactSheets": "sheet-<case>-f<floor>.png in the same directory, one per case, produced by proof/contact-sheet.mjs from the frames already captured. No enhancement of any kind.",
+  "rubric": "pre-registration.json -> frameClassification",
+  "method": [
+    "Every rendered frame in after-A was opened as an image, in a per-case contact sheet carrying the direction's class, render state, note and pixel statistics beside it.",
+    "A direction with no frame was judged on whether the app said why, in the pane where the frame would have been.",
+    "after-B carries the same classes: all 44 direction slots are identical to after-A in class, render state, lead label, thumbnail state and note, and the 34 rendered frames differ by at most 0.01 edge energy and 0.0 luma. No frame was re-judged on that basis alone; the identical statistics are the evidence that there is nothing new to look at.",
+    "No frame was altered, upscaled, denoised or regenerated."
+  ],
+  "counts": {
+    "Convincing": 12,
+    "Plausible but provider-limited": 0,
+    "Obstructed and honestly labelled": 21,
+    "Unusable and correctly rejected": 11,
+    "Incorrect": 1,
+    "totalUnits": 45,
+    "note": "45 = 11 imagery cases x 4 directions, plus the invalid-address case, which has no directions and is counted once as a whole-case refusal."
+  },
+  "byCase": {
+    "432park-f80": { "NNE": "Convincing", "ESE": "Convincing", "SSW": "Convincing", "WNW": "Convincing" },
+    "432park-f40": { "NNE": "Obstructed and honestly labelled", "ESE": "Incorrect", "SSW": "Obstructed and honestly labelled", "WNW": "Obstructed and honestly labelled" },
+    "432park-f3": { "NNE": "Obstructed and honestly labelled", "ESE": "Obstructed and honestly labelled", "SSW": "Obstructed and honestly labelled", "WNW": "Unusable and correctly rejected" },
+    "esb-f80": { "NNE": "Convincing", "ESE": "Convincing", "SSW": "Convincing", "WNW": "Convincing" },
+    "dakota-f7": { "NNE": "Obstructed and honestly labelled", "ESE": "Convincing", "SSW": "Obstructed and honestly labelled", "WNW": "Obstructed and honestly labelled" },
+    "flatiron-f18": { "NNE": "Convincing", "ESE": "Obstructed and honestly labelled", "SSW": "Convincing", "WNW": "Convincing" },
+    "425e79-f10": { "NNE": "Obstructed and honestly labelled", "ESE": "Obstructed and honestly labelled", "SSW": "Obstructed and honestly labelled", "WNW": "Obstructed and honestly labelled" },
+    "425e79-f4": { "NNE": "Obstructed and honestly labelled", "ESE": "Obstructed and honestly labelled", "SSW": "Obstructed and honestly labelled", "WNW": "Unusable and correctly rejected" },
+    "bedford-f3": { "ENE": "Obstructed and honestly labelled", "SSE": "Obstructed and honestly labelled", "WSW": "Unusable and correctly rejected", "NNW": "Unusable and correctly rejected" },
+    "stuyvesant-f3": { "E": "Unusable and correctly rejected", "S": "Obstructed and honestly labelled", "W": "Unusable and correctly rejected", "N": "Obstructed and honestly labelled" },
+    "invalid-f10": { "whole case": "Unusable and correctly rejected" },
+    "noimagery-f7": { "NNE": "Unusable and correctly rejected", "ESE": "Unusable and correctly rejected", "SSW": "Unusable and correctly rejected", "WNW": "Unusable and correctly rejected" }
+  },
+  "incorrect": [
+    {
+      "frame": "432park-f40-1-ese.png",
+      "case": "432park",
+      "floor": 40,
+      "direction": "ESE",
+      "headingDeg": 118,
+      "appSaid": { "class": "open", "leadLabel": null, "note": "Still sharpening when this frame was captured.", "thumbState": null },
+      "whatTheFrameShows": "A near building surface with a hard horizontal top edge occupies roughly the lower 55-60% of the picture. Its top edge sits above the far horizon visible on the right of the same frame, so it stands higher than the camera rather than being a rooftop below it.",
+      "whyIncorrect": "Rubric class Incorrect covers 'an obstruction the app did not declare'. The other three directions of this same case are labelled Enclosed with a measured distance; this one carries the unqualified class and no obstruction note.",
+      "reproduces": "Yes, in both after-A and after-B (meanLuma 84.3, sdLuma 46.7, edgeEnergy 5.40 in both), and in the before pass of this sprint, and in the earlier closure-A/closure-B and gate-A/gate-B passes.",
+      "notTouched": "This is the open finding left for Adam. It is classifyBand() calling a half-blocked direction 'open'. The four band thresholds were fitted to sixteen directions with no held-out set, so moving one means re-judging the whole matrix. Nothing in this pass changed classifyBand, its thresholds, or any camera parameter."
+    }
+  ],
+  "borderline": [
+    {
+      "frame": "stuyvesant-f3 S",
+      "between": ["Obstructed and honestly labelled", "Plausible but provider-limited"],
+      "judgedAs": "Obstructed and honestly labelled",
+      "why": "The frame is partly a near surface and partly sky and trees, and the app declares 'Another building stands about 16 m from this side'. The declaration is present either way, so the class does not change any pass condition."
+    }
+  ],
+  "passConditions": {
+    "no case classified Incorrect": "FAIL — one, 432park floor 40 ESE, pre-existing and deliberately left for Adam. Reproduced in every pass on record.",
+    "every Obstructed frame carries its declaration in the copy above or beside it": "PASS — 21 of 21.",
+    "the invalid address produces a refusal and no imagery request": "PASS — 'Address not found', 0 root-tileset requests, 0 renderer tile requests, both passes.",
+    "the blocked-imagery case produces the honest failure state, empty frames, and no substituted content": "PASS — four empty frames, each reading DIDN'T LOAD inside the frame and keeping its own obstruction measurement, plus the whole-result guarantee at the head.",
+    "the Google attribution line is present and unclipped wherever a frame is displayed": "PASS — 707.2 x 20.4 CSS px, withinDocument true, all 10 rendering cases, all three passes.",
+    "no console error other than ones raised deliberately by a blocked case": "PASS — 1 console error across each 12-case pass, and it is the blocked case's own session failure. The Cesium geocoder warning is declared separately as an expected notice."
+  }
+}

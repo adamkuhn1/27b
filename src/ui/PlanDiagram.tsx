@@ -1,6 +1,6 @@
 import type { ViewPlan, ViewSlot } from "../lib/types";
 import { ringToLocalMeters } from "../lib/geometry";
-import type { SlotPhase } from "../lib/types";
+import type { RenderState } from "../lib/types";
 
 // A plan drawing: this building's real footprint, and where the four cameras
 // stand relative to it.
@@ -35,10 +35,10 @@ const PADDING = 38;
 
 interface PlanDiagramProps {
   plan: ViewPlan;
-  phaseBySlot: Partial<Record<ViewSlot, SlotPhase>>;
+  stateBySlot: Partial<Record<ViewSlot, RenderState>>;
 }
 
-export function PlanDiagram({ plan, phaseBySlot }: PlanDiagramProps) {
+export function PlanDiagram({ plan, stateBySlot }: PlanDiagramProps) {
   const ring = ringToLocalMeters(plan.footprint.ring, plan.footprint.centroid);
   if (ring.length < 3) return null;
 
@@ -86,9 +86,9 @@ export function PlanDiagram({ plan, phaseBySlot }: PlanDiagramProps) {
             dx * (view.standoffM + reach * 0.12),
             dy * (view.standoffM + reach * 0.12),
           );
-          const phase = phaseBySlot[view.slot] ?? "queued";
+          const state = stateBySlot[view.slot] ?? "queued";
           return (
-            <g key={view.slot} className={`plan__axis plan__axis--${phase}`}>
+            <g key={view.slot} className={`plan__axis plan__axis--${state}`}>
               <line x1={x0} y1={y0} x2={x1} y2={y1} className="plan__stem" />
               <line x1={x1} y1={y1} x2={x2} y2={y2} className="plan__look" />
               <circle cx={x1} cy={y1} r={3} className="plan__eye" />

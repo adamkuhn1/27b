@@ -9,13 +9,14 @@ import {
   type ReactNode,
 } from "react";
 import { googleMapsKey } from "../lib/config";
-import { isRenderableDirection } from "../lib/confidence";
+import { isDirectionRequested } from "../lib/directionClass";
 import { metrics } from "../lib/metrics";
 import { describeError } from "../lib/redact";
+import { captureOrder } from "../ui/leadDirection";
 import type {
   CaptureEvent,
+  RenderState,
   RenderSession,
-  SlotPhase,
   ViewPlan,
   ViewSlot,
 } from "../lib/types";
@@ -42,18 +43,32 @@ import type {
 // it arrives, so a direction appears the moment it exists.
 //
 // There are no fake stages and no percentage. What is displayed is what the app
-// actually knows: which direction is being captured right now (the loop index),
-// how many of four have landed (a count of completed work), and nothing else.
-// A progress *bar* is not available honestly — the capture ends on either a
-// quiet period or a hard timeout, and neither is a fraction of a known total.
+// actually knows: the state of each direction in words inside its own frame
+// (waiting, capturing, didn't load, or the geometry reason nothing was asked
+// for), and a count of how many of the requested directions have landed. A
+// progress *bar* is not available honestly — a capture ends on either a quiet
+// period or a hard deadline, and neither is a fraction of a known total.
+//
+// Two rules hold over the whole event stream, and both are enforced in
+// `applyCaptureEvent` rather than left to the caller:
+//
+//   1. Every one of the four directions has a state from the moment the plan
+//      resolves, including the ones nothing will ever be requested for.
+//   2. Once a direction holds a real capture, no later event removes it.
 
 /** Per-direction state, including the frame once there is one. */
 export interface SlotState {
-  phase: SlotPhase;
+  phase: RenderState;
   /** Present only when `phase === "ready"`. Real capture, or nothing. */
   dataUrl?: string;
   /** Whether OUR CAPTURE finished refining. Not a claim about the picture. */
   settled?: boolean;
+  /**
+   * A further attempt is running for a direction that already has a frame. The
+   * frame stays on screen while it runs; this only says another one is being
+   * taken.
+   */
+  recapturing?: boolean;
   /** How many attempts this direction has had in this session. */
   attempts: number;
 }
@@ -95,6 +110,19 @@ export function readyCount(bySlot: TileCaptures["bySlot"]): number {
 }
 
 /**
+ * Count of directions the provider was asked for.
+ *
+ * The denominator for every "n of m" the app says. Not four: a building with a
+ * party wall has fewer sides to photograph, and counting a wall that was never
+ * requested reports a failure where nothing failed.
+ */
+export function requestedCount(bySlot: TileCaptures["bySlot"]): number {
+  return Object.values(bySlot).filter(
+    (s) => s && s.phase !== "not-requested",
+  ).length;
+}
+
+/**
  * Provider that opens a render session for a plan and reveals each direction as
  * it lands.
  *
@@ -122,9 +150,28 @@ export function TileCapturesProvider({
 
   useEffect(() => {
     creditsRef.current = new Set();
-    setBySlot({});
     setAttribution(undefined);
     setSessionOpen(false);
+
+    // ALL FOUR directions get a state, before anything else happens and whether
+    // or not a render will follow. A direction absent from this map has no
+    // state at all, and every reader of it then has to invent one; that is how
+    // a court too narrow to stand in came to be drawn on the plan drawing with
+    // the party-wall stroke. `not-requested` is a state, and the reason it
+    // holds is the direction's geometry class, which lives in one place.
+    setBySlot(
+      Object.fromEntries(
+        plan.views.map((v) => [
+          v.slot,
+          {
+            phase: isDirectionRequested(v.slot, plan.confidence)
+              ? "queued"
+              : "not-requested",
+            attempts: 0,
+          },
+        ]),
+      ),
+    );
 
     if (disabled) {
       setPhase("idle");
@@ -146,19 +193,18 @@ export function TileCapturesProvider({
     // directions are not captured at all: the provider would return the
     // interior of a neighbouring mesh, which looks exactly like the "melted
     // grey landscape" this project must never present as a view. The pane says
-    // so instead. See DirectionConfidence.insideNeighborByM.
-    const renderable = plan.views.filter((v) =>
-      isRenderableDirection(v.slot, plan.confidence),
-    );
-
-    // Every direction is known and correctly labelled from the instant the plan
-    // resolves — the bearings come from the geometry pipeline, not the imagery.
-    // So the grid is real, specific content immediately; frames land into it.
-    setBySlot(
-      Object.fromEntries(
-        renderable.map((v) => [v.slot, { phase: "queued", attempts: 0 }]),
-      ),
-    );
+    // so instead. Which directions those are is decided by the geometry class
+    // (lib/directionClass.ts) and by nothing here.
+    //
+    // ORDER. Captured in the geometry's own preference order, so the direction
+    // the result opens on is the first one asked for rather than whichever slot
+    // happens to sort first. Both orders are decided by the same deterministic
+    // ranking over the same footprint arithmetic, before any imagery exists —
+    // no camera parameter moves, and nothing is reordered once frames start
+    // arriving. What it buys is the whole point of a progressive reveal: the
+    // frame shown large is the one that lands first, instead of the visitor
+    // watching an empty hero while three thumbnails fill in behind it.
+    const renderable = captureOrder(plan);
 
     if (renderable.length === 0) {
       // Nothing to ask the provider for. Not a failure — a building whose every
@@ -216,35 +262,19 @@ export function TileCapturesProvider({
         case "session-open":
           return;
         case "view-started":
-          setBySlot((prev) => ({
-            ...prev,
-            [event.slot]: {
-              ...(prev[event.slot] ?? { attempts: 0 }),
-              phase: "capturing",
-              attempts: event.attempt,
-            },
-          }));
+          setBySlot((prev) => applyCaptureEvent(prev, event));
           return;
         case "view-captured": {
-          const { result } = event;
           metrics.recordCaptureLatency(event.elapsedMs);
           // The Map Tiles policy asks for all attributions for displayed tiles,
           // aggregated and sorted, in a line. Recomputed per arrival now rather
           // than once at the end, so the credit line is correct for whatever is
           // actually on screen at any moment.
-          for (const credit of result.attribution) {
+          for (const credit of event.result.attribution) {
             if (credit) creditsRef.current.add(credit);
           }
           setAttribution(Array.from(creditsRef.current).sort().join(", "));
-          setBySlot((prev) => ({
-            ...prev,
-            [result.slot]: {
-              phase: "ready",
-              dataUrl: result.dataUrl,
-              settled: event.settled,
-              attempts: event.attempt,
-            },
-          }));
+          setBySlot((prev) => applyCaptureEvent(prev, event));
           return;
         }
         case "view-failed":
@@ -254,16 +284,7 @@ export function TileCapturesProvider({
             `[27b] direction ${event.slot} failed (attempt ${event.attempt}):`,
             event.failure.detail,
           );
-          setBySlot((prev) => ({
-            ...prev,
-            [event.slot]: {
-              // A direction that is going to be retried is still in flight, not
-              // finished. Showing it as failed and then un-failing it would be
-              // a state the app invented.
-              phase: event.willRetry ? "queued" : "failed",
-              attempts: event.attempt,
-            },
-          }));
+          setBySlot((prev) => applyCaptureEvent(prev, event));
           return;
         case "session-closed":
           sessionRef.current = null;
@@ -296,6 +317,88 @@ export function TileCapturesProvider({
 }
 
 /**
+ * Fold one session event into the per-direction map.
+ *
+ * Pure, and outside the component on purpose: this is where the rule that a
+ * landed frame is never taken away lives, and it is the rule most easily broken
+ * by an ordinary-looking edit. Having it as a function means it can be driven
+ * with an event sequence in a unit test rather than only by running a render.
+ *
+ * ONE INVARIANT ABOVE ALL: once a direction holds a real capture, no later
+ * event of any kind removes it. A direction can fail after it has already
+ * succeeded — a person spends the third attempt on a direction they thought
+ * looked soft, or a re-capture runs into the session deadline — and the whole
+ * slot used to be replaced, dropping the data URL with it. The picture then
+ * vanished from a pane that had been showing it, and the empty pane took the
+ * "didn't load" copy for a direction that plainly had. What failed is the
+ * latest attempt, not the frame in hand.
+ */
+export function applyCaptureEvent(
+  prev: TileCaptures["bySlot"],
+  event: CaptureEvent,
+): TileCaptures["bySlot"] {
+  switch (event.kind) {
+    case "session-open":
+    case "session-closed":
+      return prev;
+
+    case "view-started": {
+      const before = prev[event.slot];
+      // Re-capturing a direction that already has a frame leaves the frame on
+      // screen and marks it as being taken again. Swapping it for the empty
+      // capturing pane would remove a real picture the reader is looking at in
+      // order to report on an attempt that has produced nothing yet.
+      const keepsFrame = before?.phase === "ready" && !!before.dataUrl;
+      return {
+        ...prev,
+        [event.slot]: {
+          ...(before ?? { attempts: 0 }),
+          phase: keepsFrame ? "ready" : "capturing",
+          recapturing: keepsFrame || undefined,
+          attempts: event.attempt,
+        },
+      };
+    }
+
+    case "view-captured":
+      return {
+        ...prev,
+        [event.result.slot]: {
+          phase: "ready",
+          dataUrl: event.result.dataUrl,
+          settled: event.settled,
+          recapturing: undefined,
+          attempts: event.attempt,
+        },
+      };
+
+    case "view-failed": {
+      const before = prev[event.slot];
+      if (before?.phase === "ready" && before.dataUrl) {
+        return {
+          ...prev,
+          [event.slot]: {
+            ...before,
+            recapturing: undefined,
+            attempts: event.attempt,
+          },
+        };
+      }
+      return {
+        ...prev,
+        [event.slot]: {
+          // A direction that is going to be retried is still in flight, not
+          // finished. Showing it as failed and then un-failing it would be a
+          // state the app invented.
+          phase: event.willRetry ? "queued" : "failed",
+          attempts: event.attempt,
+        },
+      };
+    }
+  }
+}
+
+/**
  * Close out every direction that never reached a terminal event.
  *
  * A session can end with directions still `queued` — it was aborted, or one
@@ -307,10 +410,13 @@ export function TileCapturesProvider({
  * still arriving. The session is over; the honest phase is that they did not
  * load.
  *
+ * A direction that already holds a frame is left exactly as it is, and so is
+ * one nothing was ever requested for.
+ *
  * Returns the same object when there is nothing to change, so React does not
  * re-render on every settled session.
  */
-function concludeUnfinished(
+export function concludeUnfinished(
   prev: TileCaptures["bySlot"],
 ): TileCaptures["bySlot"] {
   let changed = false;

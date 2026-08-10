@@ -15,7 +15,10 @@ import {
   confidenceFor,
   directionNote,
   planNotes,
+  qualityLead,
+  renderStateLabel,
 } from "./notes";
+import type { DirectionClass } from "../lib/directionClass";
 import type { ConfidenceReport, DirectionConfidence, ViewPlan } from "../lib/types";
 import { buildCameraViews, estimateFloorElevation } from "../lib/geometry";
 import type { BuildingFootprint } from "../lib/types";
@@ -349,11 +352,16 @@ describe("nothing this module can say is a claim the data doesn't support", () =
         // carries the measurement AND the settle clause in one sentence, and
         // that longer sentence is held to the same length as the short ones.
         for (const settled of [undefined, true, false]) {
-          const n = directionNote(
-            conf({ band, firstBlockingM: first, maxObstructionAngleDeg: 48 }),
-            { settled },
-          );
-          if (n) out.push(n);
+          // ...and both load states: a direction whose frame never arrived
+          // keeps its measurement and adds a sentence, so the composed string
+          // is held to the same length as the short ones.
+          for (const didNotLoad of [false, true]) {
+            const n = directionNote(
+              conf({ band, firstBlockingM: first, maxObstructionAngleDeg: 48 }),
+              { settled, didNotLoad },
+            );
+            if (n) out.push(n);
+          }
         }
       }
     }
@@ -403,6 +411,43 @@ describe("nothing this module can say is a claim the data doesn't support", () =
       RETRY_THIS_DIRECTION,
       RENDER_ALL_AGAIN,
     );
+    // The running-progress note, and every word the app can write inside an
+    // empty frame or beside a direction's label. A string that reaches the
+    // screen and not this list is a string nothing checks.
+    out.push(
+      ...planNotes(plan({ confidence: report() }), {
+        loadedCount: 0,
+        totalCount: 4,
+        stillCapturing: true,
+      }).map((n) => n.text),
+      ...planNotes(plan({ confidence: report() }), {
+        loadedCount: 0,
+        totalCount: 1,
+        stillCapturing: true,
+      }).map((n) => n.text),
+    );
+    const CLASSES: DirectionClass[] = [
+      "open",
+      "qualified",
+      "close",
+      "no-room",
+      "no-window",
+      "unmeasured",
+    ];
+    for (const cls of CLASSES) {
+      const lead = qualityLead(cls);
+      if (lead) out.push(lead);
+      for (const state of [
+        "not-requested",
+        "queued",
+        "capturing",
+        "ready",
+        "failed",
+      ] as const) {
+        const label = renderStateLabel(state, cls);
+        if (label) out.push(label);
+      }
+    }
     return out;
   };
 
@@ -481,5 +526,125 @@ describe("a wall shared with the building next door", () => {
     expect(directionNote(conf({ band: "enclosed", firstBlockingM: 9 }))).not.toBe(
       ABUTTING_NOTE,
     );
+  });
+});
+
+
+describe("a direction that did not load keeps what was measured about it", () => {
+  // The measurement is a fact about the building and is exactly as true when
+  // the frame is missing. Saying only "this direction didn't load" spends the
+  // one line available on the renderer and throws away the answer the reader
+  // came for.
+  const enclosed = conf({
+    band: "enclosed",
+    firstBlockingM: 11.6,
+    maxObstructionAngleDeg: 27,
+  });
+
+  it("still names the distance to the building on that side", () => {
+    expect(directionNote(enclosed, { didNotLoad: true })).toBe(
+      "Another building stands about 12 m from this side. This direction didn't load.",
+    );
+  });
+
+  it("says the frame is missing when there was nothing else to say", () => {
+    expect(directionNote(undefined, { didNotLoad: true })).toBe(NO_IMAGERY_NOTE);
+  });
+
+  it("keeps the light-court measurement too", () => {
+    expect(directionNote(conf({ courtWidthM: 4.4 }), { didNotLoad: true })).toContain(
+      "A light court about 4 m wide",
+    );
+  });
+
+  it("says the same thing about the world whether the frame arrived or not", () => {
+    for (const c of [
+      enclosed,
+      conf({ band: "enclosed", firstBlockingM: 93, maxObstructionAngleDeg: 48 }),
+      conf({ band: "partly-enclosed" }),
+      conf({ insideNeighborByM: 8 }),
+    ]) {
+      const loaded = directionNote(c)!;
+      const missing = directionNote(c, { didNotLoad: true })!;
+      expect(missing).toContain(loaded);
+    }
+  });
+
+  it("does not also report a settle state for a frame that does not exist", () => {
+    expect(
+      directionNote(enclosed, { didNotLoad: true, settled: false }),
+    ).not.toMatch(/sharpening/i);
+  });
+});
+
+describe("what the app says while it is still capturing", () => {
+  it("says something rather than nothing before the first frame lands", () => {
+    // Four empty frames and no sentence is indistinguishable from a broken
+    // render, and the first frame of a session can take the better part of a
+    // minute.
+    const notes = planNotes(plan({ confidence: report() }), {
+      loadedCount: 0,
+      totalCount: 4,
+      stillCapturing: true,
+    });
+    expect(notes.map((n) => n.id)).toContain("capturing");
+    expect(notes.find((n) => n.id === "capturing")!.text).toBe(
+      "Capturing 4 directions now. Each one appears as it arrives.",
+    );
+  });
+
+  it("counts the directions actually requested, not always four", () => {
+    const notes = planNotes(plan({ confidence: report() }), {
+      loadedCount: 0,
+      totalCount: 2,
+      stillCapturing: true,
+    });
+    expect(notes.find((n) => n.id === "capturing")!.text).toContain(
+      "Capturing 2 directions",
+    );
+  });
+
+  it("stops saying it once a frame has landed", () => {
+    const notes = planNotes(plan({ confidence: report() }), {
+      loadedCount: 1,
+      totalCount: 4,
+      stillCapturing: true,
+    });
+    expect(notes.map((n) => n.id)).not.toContain("capturing");
+    expect(notes.map((n) => n.id)).toContain("partial");
+  });
+
+  it("says nothing about capturing when there is no render at all", () => {
+    expect(
+      planNotes(plan({ confidence: report() }), {
+        loadedCount: 0,
+        totalCount: 4,
+        stillCapturing: undefined,
+      }).map((n) => n.id),
+    ).not.toContain("capturing");
+  });
+});
+
+describe("every direction state has words for the empty frame", () => {
+  it("names each state a visitor can be looking at", () => {
+    expect(renderStateLabel("queued", "open")).toBe("Waiting to capture");
+    expect(renderStateLabel("capturing", "open")).toBe("Capturing");
+    expect(renderStateLabel("failed", "open")).toBe("Didn't load");
+    // A frame that exists needs no words over it.
+    expect(renderStateLabel("ready", "open")).toBeNull();
+  });
+
+  it("distinguishes the two reasons a direction was never requested", () => {
+    expect(renderStateLabel("not-requested", "no-window")).toBe("No window");
+    expect(renderStateLabel("not-requested", "no-room")).toBe(
+      "No frame on this side",
+    );
+  });
+
+  it("tells an unchecked direction apart from a measured open one", () => {
+    // Presenting them identically is what let a slow open-data response pass a
+    // party wall off as an ordinary view.
+    expect(qualityLead("open")).toBeNull();
+    expect(qualityLead("unmeasured")).toBe("Surroundings not checked");
   });
 });

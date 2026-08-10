@@ -434,6 +434,33 @@ so **we leave the flag unset and let the warning print.** The flag changes
 nothing except whether the message appears; setting it would be attesting to
 something untrue about this app in order to silence a message.
 
+**Exactly what it costs, measured.** It is `oneTimeWarning`, which caches by
+identifier in module scope, so it is emitted **once per page load** — not once
+per render, and not once per direction. A second lookup in the same tab is
+silent. Read from `@cesium/engine` `Source/Scene/createGooglePhotorealistic3D-
+Tileset.js` at cesium@1.143.0, where the whole of the mechanism is:
+
+```js
+if (!apiOptions.onlyUsingWithGoogleGeocoder) {
+  oneTimeWarning("google-tiles-with-google-geocoder", "Only the Google geocoder …");
+}
+```
+
+The one alternative that would remove it without asserting anything untrue is to
+stop calling the helper and construct the tileset from `GoogleMaps.mapTilesApi-
+Endpoint` directly, since the only other thing the helper does is fall back to a
+Cesium Ion–hosted copy when no key is resolvable — a fallback this app already
+refuses explicitly (`tileRenderer.ts`). **We have not done that.** Re-implementing
+a provider helper so a console stays quiet trades a visible, explained warning
+for an invisible divergence from the vendor's own code path, including its
+`cacheBytes` defaults and its attribution credit. The warning is the better
+failure mode.
+
+**So it is accounted for rather than filtered.** The acceptance harness
+(`proof/eval-matrix.mjs`) declares it in `EXPECTED_NOTICES` with this reasoning
+and reports it separately from console problems, so a run's console output is
+either on that list or is a defect. It is the only entry on the list.
+
 Re-checked 2026-08-04 for any Google-side basis for the restriction. None found
 in: [Photorealistic 3D Tiles](https://developers.google.com/maps/documentation/tile/3d-tiles)
 (updated 2026-07-31) · [3D Tiles overview](https://developers.google.com/maps/documentation/tile/3d-tiles-overview)
