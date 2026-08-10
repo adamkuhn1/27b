@@ -22,6 +22,28 @@
 //   node apps/27b/proof/eval-matrix.mjs --url=http://localhost:5177/ --pass=A
 //
 // Options: --url --pass --out --cases=<comma ids> --max-sessions --timeout --dpr
+//
+// WHAT THE STABILITY PASS ADDED, AND WHAT IT DID NOT. The case list, the
+// expectations and the classification rubric are untouched — they are
+// pre-registered in eval-matrix/pre-registration.json and are not revisable.
+// What is new is measurement of things the harness previously did not record:
+//
+//   * PER-DIRECTION ARRIVAL TIMES. The settle loop now polls at 500 ms instead
+//     of 1 s and, on every poll, records the first moment each direction's
+//     thumbnail holds an image. That yields time-to-first-direction,
+//     time-to-each-later-direction and time-to-lead-frame, none of which a
+//     single end-of-run `settleMs` can show. The probe reads `.thumb img` and
+//     `.plan__axis--ready`, both of which exist in the build this pass started
+//     from, so the same harness measures before and after.
+//   * TIME TO STRUCTURE. When the labelled grid, bearings and plan drawing
+//     first exist, which is the moment the page stops being blank.
+//   * CONSOLE TRIAGE. Console output is split into declared expected notices
+//     and everything else, so "eleven console problems" stops meaning one
+//     known upstream warning eleven times.
+//   * KEY SAFETY. Every console string and the visible page text are scanned
+//     for an unredacted `key=` and for the live key itself, supplied out of
+//     band as `KEY_CANARY` and never written to any output.
+//   * MEMORY. JS heap after each case.
 
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -140,6 +162,42 @@ async function waitForChrome() {
 /** Redact the key before anything is written to disk or printed. */
 const scrub = (s) => String(s).replace(/([?&]key=)[^&]+/gi, "$1<redacted>");
 
+/**
+ * Console output this app knowingly produces, with the reason.
+ *
+ * Declared here rather than filtered silently: an expected notice still has to
+ * be looked at, and a run whose only console output is on this list is a
+ * different result from a run with none. Anything not matched here counts as a
+ * problem.
+ */
+const EXPECTED_NOTICES = [
+  {
+    id: "cesium-google-geocoder",
+    match: /Only the Google geocoder can be used with Google Photorealistic 3D Tiles/i,
+    why:
+      "CesiumJS oneTimeWarning, emitted once per page load because 27B does not pass " +
+      "onlyUsingWithGoogleGeocoder. The flag is a self-attestation and 27B geocodes with " +
+      "NYC Planning GeoSearch, so setting it would assert something untrue to silence a " +
+      "message. See README, 'The Cesium Google geocoder only warning'.",
+  },
+];
+
+/**
+ * The live key, for leak detection only.
+ *
+ * Passed in the environment rather than read from a file so it exists in this
+ * process and nowhere else. It is compared against, never recorded: the report
+ * carries a boolean and a count.
+ */
+const KEY_CANARY = process.env.KEY_CANARY ?? "";
+
+/** Any `key=` that survived redaction, or the key itself, in a string. */
+function leaks(text) {
+  const s = String(text ?? "");
+  if (KEY_CANARY && s.includes(KEY_CANARY)) return true;
+  return /[?&]key=(?!<redacted>)[A-Za-z0-9_\-]{8,}/.test(s);
+}
+
 const results = [];
 let rootRequests = 0;
 let rendererTiles = 0;
@@ -240,7 +298,20 @@ try {
       return kill.length;
     })()`);
     await page.goto(BASE_URL);
-    await sleep(1000);
+    // Wait for the form rather than sleeping a fixed interval. A dev server
+    // serving unbundled modules for the first time can take several seconds to
+    // paint, and a fixed sleep turns that into a crash on the first case
+    // instead of a slower one.
+    const formDeadline = Date.now() + 30000;
+    for (;;) {
+      const ready = await page.eval(
+        `Boolean(document.querySelector("#addr") && document.querySelector("#floor") && document.querySelector(".form .btn"))`,
+      );
+      if (ready === true) break;
+      if (Date.now() > formDeadline) throw new Error("address form never appeared");
+      await sleep(250);
+    }
+    await sleep(400);
 
     const t0 = Date.now();
     await page.eval(`(() => {
@@ -258,9 +329,19 @@ try {
 
     let settled = false;
     let failedState = null;
+    // WHEN EACH DIRECTION ARRIVED, not just when the last one did. Indexed by
+    // thumbnail position, so it lines up with the per-direction records below.
+    const arrivalMs = [null, null, null, null];
+    // When the labelled grid, the bearings and the plan drawing first exist —
+    // the moment the page stops being blank, which is a different moment from
+    // the first frame.
+    let structureMs = null;
+    // Which direction the result opened on, read before anything is clicked.
+    let leadIndex = null;
+    let progressCopy = null;
     const deadline = Date.now() + SETTLE_TIMEOUT_MS;
     while (Date.now() < deadline) {
-      await sleep(1000);
+      await sleep(500);
       const st = JSON.parse(
         await page.eval(`JSON.stringify((() => {
           const bad = document.querySelector(".state");
@@ -274,8 +355,18 @@ try {
           if (!lead) return { none: true };
           const axes = [...document.querySelectorAll(".plan__axis")].map((g) =>
             (g.className.baseVal || "").replace(/.*plan__axis--/, ""));
+          const thumbs = [...document.querySelectorAll(".thumb")];
           return {
             axes,
+            // A frame exists for this direction. Read off the thumbnail rather
+            // than the lead pane, because the lead shows one direction at a
+            // time and this has to see all four at once.
+            ready: thumbs.map((t) => Boolean(t.querySelector("img"))),
+            selected: thumbs.findIndex((t) => t.getAttribute("data-selected") === "true"),
+            // Whatever the result says about itself while it is working.
+            notes: [...document.querySelectorAll(".notes li")].map((n) => n.textContent),
+            // The words drawn inside the empty lead frame, if any.
+            leadStateWords: lead.querySelector(".view__state")?.textContent ?? null,
             // A session that could not be opened at all: the app says so once,
             // at the head of the result, and no direction will ever move off
             // its starting phase. Without this the loop would sit out the full
@@ -290,6 +381,23 @@ try {
         failedState = st.unavailable;
         break;
       }
+      const at = Date.now() - t0;
+      if (!st.none) {
+        if (structureMs === null) {
+          structureMs = at;
+          leadIndex = st.selected >= 0 ? st.selected : null;
+        }
+        (st.ready ?? []).forEach((isReady, i) => {
+          if (isReady && arrivalMs[i] === null) arrivalMs[i] = at;
+        });
+        if (progressCopy === null) {
+          const running = (st.notes ?? []).find((n) => /capturing/i.test(n ?? ""));
+          if (running) progressCopy = { atMs: at, text: running };
+          else if (st.leadStateWords) {
+            progressCopy = { atMs: at, text: st.leadStateWords };
+          }
+        }
+      }
       if (st.sessionFailed) {
         settled = true;
         break;
@@ -301,6 +409,22 @@ try {
       }
     }
     const settleMs = Date.now() - t0;
+    const landedTimes = arrivalMs.filter((v) => v !== null).sort((a, b) => a - b);
+    const timing = {
+      structureMs,
+      firstDirectionMs: landedTimes[0] ?? null,
+      laterDirectionsMs: landedTimes.slice(1),
+      leadFrameMs: leadIndex === null ? null : arrivalMs[leadIndex],
+      leadIndex,
+      completeMs: settleMs,
+      arrivalMs,
+      firstProgressStatement: progressCopy,
+    };
+    const heapBytes = Number(
+      await page.eval(
+        `performance.memory ? performance.memory.usedJSHeapSize : -1`,
+      ),
+    );
     await sleep(1200);
 
     // The camera plan as the app itself stored it. Read through the dev-only
@@ -481,6 +605,29 @@ try {
       writeFileSync(join(OUT, `${slug}-page.png`), Buffer.from(data, "base64"));
     }
 
+    // Console output raised during THIS case, split into what the app is known
+    // to produce and what it is not.
+    const consoleThisCase = consoleErrors.slice(errorsAt);
+    const expectedNotices = [];
+    const consoleProblems = [];
+    for (const entry of consoleThisCase) {
+      const known = EXPECTED_NOTICES.find((n) => n.match.test(entry.text));
+      if (known) expectedNotices.push({ ...entry, notice: known.id });
+      else consoleProblems.push(entry);
+    }
+
+    // Nothing carrying a key may reach a log or the screen. Both surfaces are
+    // checked, and only the verdict is recorded.
+    const pageText = await page.eval(
+      `document.body.innerText + " " + [...document.querySelectorAll("img")].map((i) => i.alt).join(" ")`,
+    );
+    const keySafety = {
+      canarySupplied: KEY_CANARY.length > 0,
+      consoleStringsScanned: consoleThisCase.length,
+      leakInConsole: consoleThisCase.some((e) => leaks(e.text)),
+      leakOnPage: leaks(pageText),
+    };
+
     const record = {
       case: kase.id,
       category: kase.category,
@@ -489,6 +636,8 @@ try {
       floor: kase.floor,
       settled,
       settleMs,
+      timing,
+      heapBytes,
       failedState,
       plan,
       ...summary,
@@ -497,17 +646,23 @@ try {
         rootTilesetRequests: rootRequests - beforeRoot,
         rendererTileRequests: rendererTiles - beforeTiles,
       },
-      consoleProblems: consoleErrors.slice(errorsAt),
+      keySafety,
+      expectedNotices,
+      consoleProblems,
     };
     results.push(record);
 
     const landed = directions.filter((d) => d.image).length;
-    const noWindow = directions.filter((d) => d.leadPhase === "no-window").length;
+    const notRequested = directions.filter((d) => d.promoted === false).length;
+    const t = record.timing;
     console.error(
       `[matrix ${PASS}] ${slug.padEnd(16)} ${settled ? "settled" : "TIMED OUT"} ` +
         `in ${(settleMs / 1000).toFixed(1)}s · ${landed}/${directions.length} frames · ` +
-        `${noWindow} no-window · ${record.provider.rootTilesetRequests} session · ` +
-        `${record.consoleProblems.length} console problem(s)`,
+        `${notRequested} not-requested · ${record.provider.rootTilesetRequests} session · ` +
+        `structure ${t.structureMs === null ? "-" : (t.structureMs / 1000).toFixed(1) + "s"} · ` +
+        `first ${t.firstDirectionMs === null ? "-" : (t.firstDirectionMs / 1000).toFixed(1) + "s"} · ` +
+        `lead ${t.leadFrameMs === null ? "-" : (t.leadFrameMs / 1000).toFixed(1) + "s"} · ` +
+        `${consoleProblems.length} console problem(s), ${expectedNotices.length} expected`,
     );
   }
 
@@ -518,6 +673,22 @@ try {
     url: BASE_URL,
     devicePixelRatio: DPR,
     webglRenderer: renderer,
+    expectedConsoleNotices: EXPECTED_NOTICES.map(({ id, why }) => ({ id, why })),
+    keySafety: {
+      canarySupplied: KEY_CANARY.length > 0,
+      anyLeak: results.some((r) => r.keySafety.leakInConsole || r.keySafety.leakOnPage),
+    },
+    latency: {
+      _: "ms from pressing the button. structure = the labelled grid and plan drawing exist; first = the first direction with a frame; lead = the direction the result opened on; complete = every direction reached a terminal state.",
+      perCase: results.map((r) => ({
+        case: `${r.case}-f${r.floor}`,
+        structureMs: r.timing?.structureMs ?? null,
+        firstDirectionMs: r.timing?.firstDirectionMs ?? null,
+        laterDirectionsMs: r.timing?.laterDirectionsMs ?? [],
+        leadFrameMs: r.timing?.leadFrameMs ?? null,
+        completeMs: r.timing?.completeMs ?? null,
+      })),
+    },
     billing: {
       rootTilesetRequests: rootRequests,
       note: "Root-tileset requests are the billable unit. 1,000/month free, $6.00/1,000 after.",

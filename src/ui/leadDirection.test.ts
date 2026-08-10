@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { chooseLeadDirection, isUncaptured, viewQuality } from "./leadDirection";
-import { isRenderableDirection } from "../lib/confidence";
+import { captureOrder, chooseLeadDirection } from "./leadDirection";
 import type {
   CameraView,
   ConfidenceReport,
@@ -186,59 +185,60 @@ describe("choosing the direction to show large", () => {
   });
 });
 
-describe("how a direction is presented", () => {
-  const report = (d: Partial<DirectionConfidence>): ConfidenceReport =>
-    plan({ V1: d }).confidence!;
-
-  it("marks a light court as close range rather than as a bad view", () => {
-    expect(viewQuality("V1", report({ courtWidthM: 4.4, band: "enclosed" }))).toBe(
-      "close",
-    );
+describe("the order the four directions are asked for", () => {
+  // The reveal is progressive, so the direction shown large should be the one
+  // captured first. It used to be captured in plan order, which meant the hero
+  // frame could be the fourth to land — a large empty rectangle held on screen
+  // for the whole session while the three thumbnails beside it filled in.
+  it("asks for the direction it opens on first", () => {
+    const p = plan({
+      V1: { band: "enclosed", firstBlockingM: 10 },
+      V2: { band: "enclosed", firstBlockingM: 12 },
+      V3: { band: "open", firstBlockingM: null },
+      V4: { band: "partly-enclosed", firstBlockingM: 40 },
+    });
+    expect(captureOrder(p)[0].slot).toBe(chooseLeadDirection(p));
+    expect(captureOrder(p).map((v) => v.slot)).toEqual(["V3", "V4", "V2", "V1"]);
   });
 
-  it("marks a wall inside the neighbour as having no window", () => {
-    expect(viewQuality("V1", report({ insideNeighborByM: 8 }))).toBe("no-window");
+  it("never asks for a direction nothing can be captured for", () => {
+    const p = plan({
+      V1: { insideNeighborByM: 8 },
+      V2: { courtWidthM: 2 },
+      V3: { band: "open" },
+      V4: { band: "enclosed", firstBlockingM: 9 },
+    });
+    expect(captureOrder(p).map((v) => v.slot)).toEqual(["V3", "V4"]);
   });
 
-  it("separates close range from merely enclosed", () => {
-    expect(viewQuality("V1", report({ band: "enclosed" }))).toBe("qualified");
-    expect(viewQuality("V1", report({ band: "partly-enclosed" }))).toBe("normal");
-    expect(viewQuality("V1", report({ band: "open" }))).toBe("normal");
-  });
-
-  it("says nothing about a direction it has no data for", () => {
-    expect(viewQuality("V1", null)).toBe("normal");
-    expect(viewQuality("V4", report({ band: "enclosed" }))).toBe("normal");
-  });
-
-  // A court under about three metres has no camera position that clears both
-  // walls, so the renderer never asks for it. Calling that "close range" — as
-  // this did — left an empty pane announcing that it was waiting to capture,
-  // under a note describing a picture that was never coming. Two buildings in
-  // the acceptance matrix hit it: 432 Park at floor 3 and 63 Bedford St.
-  it("separates a court a camera fits in from one it does not", () => {
-    expect(viewQuality("V1", report({ courtWidthM: 4.4 }))).toBe("close");
-    expect(viewQuality("V1", report({ courtWidthM: 2 }))).toBe("no-room");
-    expect(viewQuality("V1", report({ courtWidthM: 0.4 }))).toBe("no-room");
-  });
-
-  it("agrees with the predicate that decides what is requested", () => {
-    // The label and the renderer must not be able to disagree: anything the
-    // renderer skips has to be presented as a direction with no frame.
-    for (const d of [
-      { courtWidthM: 0.4 },
-      { courtWidthM: 2 },
-      { courtWidthM: 3 },
-      { courtWidthM: 4.4 },
-      { courtWidthM: 12 },
-      { insideNeighborByM: 8 },
-      { band: "enclosed" as const },
-      { band: "open" as const },
+  it("is the same order every time, including when nothing is measured", () => {
+    for (const p of [
+      plan(null),
+      plan({
+        V1: { band: "open", firstBlockingM: null },
+        V2: { band: "open", firstBlockingM: null },
+        V3: { band: "open", firstBlockingM: null },
+        V4: { band: "open", firstBlockingM: null },
+      }),
     ]) {
-      const r = report(d);
-      expect(isUncaptured(viewQuality("V1", r)), JSON.stringify(d)).toBe(
-        !isRenderableDirection("V1", r),
-      );
+      const first = captureOrder(p).map((v) => v.slot);
+      for (let i = 0; i < 5; i += 1) {
+        expect(captureOrder(p).map((v) => v.slot)).toEqual(first);
+      }
+      // Everything equal: plan order, not whatever the engine felt like.
+      expect(first).toEqual(["V1", "V2", "V3", "V4"]);
     }
+  });
+
+  it("keeps every requested direction, in one pass", () => {
+    const p = plan({
+      V1: { band: "enclosed", firstBlockingM: 10 },
+      V2: { courtWidthM: 4.4 },
+      V3: { band: "open", firstBlockingM: 300 },
+      V4: { band: "partly-enclosed", firstBlockingM: 45 },
+    });
+    const order = captureOrder(p);
+    expect(new Set(order.map((v) => v.slot)).size).toBe(order.length);
+    expect(order.length).toBe(4);
   });
 });

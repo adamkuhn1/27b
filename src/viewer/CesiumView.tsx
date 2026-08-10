@@ -1,6 +1,11 @@
-import type { CameraView } from "../lib/types";
+import type { CameraView, RenderState } from "../lib/types";
+import type { DirectionClass } from "../lib/directionClass";
 import { useTileCaptures } from "./useTileCaptures";
-import { ABUTTING_NOTE, NARROW_COURT_REASON } from "../ui/notes";
+import {
+  ABUTTING_NOTE,
+  NARROW_COURT_REASON,
+  renderStateLabel,
+} from "../ui/notes";
 
 /**
  * Where the frame is being shown.
@@ -35,12 +40,24 @@ interface CesiumViewProps {
    * lib/confidence.ts.
    */
   uncaptured?: "no-window" | "no-room";
+  /**
+   * This direction's geometry class, so an empty frame can name the state it is
+   * actually in rather than being an unexplained blank rectangle.
+   */
+  directionClass?: DirectionClass;
   size?: ViewSize;
 }
 
-const CLASSES: Record<ViewSize, { image: string; empty: string }> = {
-  lead: { image: "view__canvas", empty: "view__canvas view__canvas--empty" },
-  thumb: { image: "thumb__img", empty: "thumb__empty" },
+const CLASSES: Record<
+  ViewSize,
+  { image: string; empty: string; state: string }
+> = {
+  lead: {
+    image: "view__canvas",
+    empty: "view__canvas view__canvas--empty",
+    state: "view__state",
+  },
+  thumb: { image: "thumb__img", empty: "thumb__empty", state: "thumb__frame-state" },
 };
 
 /**
@@ -61,52 +78,65 @@ export function CesiumView({
   view,
   disabled,
   uncaptured,
+  directionClass,
   size = "lead",
 }: CesiumViewProps) {
   const captures = useTileCaptures(disabled);
   const cls = CLASSES[size];
   const decorative = size === "thumb";
 
-  /** An empty frame, described unless something else already describes it. */
-  const empty = (label: string | null) =>
-    decorative || label === null ? (
-      <div className={cls.empty} aria-hidden="true" />
-    ) : (
-      <div className={cls.empty} role="img" aria-label={label} />
+  /**
+   * An empty frame.
+   *
+   * `label` describes it to a screen reader unless something else already
+   * describes it. `state` is the same fact in two or three words, drawn INSIDE
+   * the frame for everyone else — a blank rectangle that says nothing is
+   * indistinguishable from an image that failed to decode, and a visitor can
+   * wait tens of seconds in front of one.
+   */
+  const empty = (label: string | null, state?: RenderState) => {
+    const words = state ? renderStateLabel(state, directionClass ?? "open") : null;
+    const described = !decorative && label !== null;
+    return (
+      <div
+        className={cls.empty}
+        role={described ? "img" : undefined}
+        aria-label={described ? label : undefined}
+        aria-hidden={described ? undefined : "true"}
+        data-state={state}
+      >
+        {words && <span className={cls.state}>{words}</span>}
+      </div>
     );
+  };
 
   if (disabled) return empty(null);
 
   if (uncaptured === "no-window") {
-    return empty(`No window facing ${view.compass}. ${ABUTTING_NOTE}`);
+    return empty(
+      `No window facing ${view.compass}. ${ABUTTING_NOTE}`,
+      "not-requested",
+    );
   }
   if (uncaptured === "no-room") {
     return empty(
       `No frame facing ${view.compass}. ${NARROW_COURT_REASON}`,
+      "not-requested",
     );
   }
 
   const slot = captures.bySlot[view.slot];
 
   if (captures.phase === "failed" || slot?.phase === "failed") {
-    return empty(`Imagery unavailable facing ${view.compass}`);
+    return empty(`Imagery unavailable facing ${view.compass}`, "failed");
   }
 
   if (!slot || slot.phase === "queued" || slot.phase === "capturing") {
-    const label =
-      slot?.phase === "capturing"
-        ? `Capturing the view facing ${view.compass}`
-        : `Waiting to capture the view facing ${view.compass}`;
-    return decorative ? (
-      <div className={cls.empty} aria-hidden="true" />
-    ) : (
-      <div
-        className={cls.empty}
-        role="img"
-        aria-label={label}
-        data-capturing={slot?.phase === "capturing" ? "true" : undefined}
-      />
-    );
+    const capturing = slot?.phase === "capturing";
+    const label = capturing
+      ? `Capturing the view facing ${view.compass}`
+      : `Waiting to capture the view facing ${view.compass}`;
+    return empty(label, capturing ? "capturing" : "queued");
   }
 
   if (!slot.dataUrl) {
