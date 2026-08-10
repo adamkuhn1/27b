@@ -3,7 +3,7 @@ import { planView } from "./planView";
 import { GeocodeError } from "../lib/geocode";
 import { FootprintError } from "../lib/footprint";
 import { NeighborError } from "../lib/neighbors";
-import { isRenderableDirection } from "../lib/confidence";
+import { isDirectionRequested } from "../lib/directionClass";
 import { clearCache } from "../lib/cache";
 import { metrics } from "../lib/metrics";
 import type {
@@ -333,9 +333,9 @@ describe("planView — a camera that would stand inside the building opposite", 
     expect(res.ok).toBe(true);
     if (!res.ok) return;
 
-    expect(isRenderableDirection("V2", res.plan.confidence)).toBe(true);
+    expect(isDirectionRequested("V2", res.plan.confidence)).toBe(true);
     const requested = res.plan.views.filter((v) =>
-      isRenderableDirection(v.slot, res.plan.confidence),
+      isDirectionRequested(v.slot, res.plan.confidence),
     );
     expect(requested).toHaveLength(4);
   });

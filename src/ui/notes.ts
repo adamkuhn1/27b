@@ -21,9 +21,11 @@
 import type {
   ConfidenceReport,
   DirectionConfidence,
+  RenderState,
   ViewPlan,
   ViewSlot,
 } from "../lib/types";
+import type { DirectionClass } from "../lib/directionClass";
 import { ENCLOSED_MAX_FIRST_BLOCKING_M } from "../lib/confidence";
 
 /** Eye height below which you are looking across the street, not over the city. */
@@ -47,7 +49,39 @@ export const LOOSE_FACADE_CONCENTRATION = 0.8;
  */
 export function directionNote(
   confidence: DirectionConfidence | undefined,
-  opts: { settled?: boolean; capturable?: boolean } = {},
+  opts: {
+    settled?: boolean;
+    capturable?: boolean;
+    /**
+     * The imagery for this direction did not arrive. Adds a sentence; it never
+     * replaces one. See the composition below.
+     */
+    didNotLoad?: boolean;
+  } = {},
+): string | null {
+  // A DIRECTION THAT DID NOT LOAD KEEPS WHAT WAS MEASURED ABOUT IT. The
+  // obstruction is a fact about the building and is exactly as true when the
+  // frame is missing. Announcing only the missing frame spends the one line
+  // available on the renderer and throws away the answer the reader came for —
+  // the same mistake the settle state used to make, arrived at from the other
+  // side. Both are said, the measurement first, because the measurement is the
+  // part that is about the building.
+  // A direction with no frame has no settle state to report either: `settled`
+  // describes the capture that produced a picture, and there is no picture.
+  // Dropping it here rather than trusting every caller keeps the two sentences
+  // from ever being three.
+  const measured = measuredNote(confidence, {
+    ...opts,
+    settled: opts.didNotLoad ? undefined : opts.settled,
+  });
+  if (!opts.didNotLoad) return measured;
+  return measured === null ? NO_IMAGERY_NOTE : `${measured} ${NO_IMAGERY_NOTE}`;
+}
+
+/** What is true of the direction itself, independent of whether it rendered. */
+function measuredNote(
+  confidence: DirectionConfidence | undefined,
+  opts: { settled?: boolean; capturable?: boolean },
 ): string | null {
   if (confidence?.insideNeighborByM != null) return ABUTTING_NOTE;
   if (confidence?.courtWidthM != null) {
@@ -184,9 +218,7 @@ export const RENDER_ALL_AGAIN = "Render all four again";
  * light court reads as the answer. `directionNote` still carries the
  * measurement itself — this is only the heading over it.
  */
-export function qualityLead(
-  quality: "normal" | "qualified" | "close" | "no-window" | "no-room",
-): string | null {
+export function qualityLead(quality: DirectionClass): string | null {
   switch (quality) {
     case "close":
       return "Close range";
@@ -196,7 +228,44 @@ export function qualityLead(
       return "No window on this side";
     case "no-room":
       return "Too narrow to capture";
-    case "normal":
+    case "unmeasured":
+      // Said per direction as well as once at the head of the result, because
+      // the head note is easy to scroll past and this is the difference between
+      // "measured, and there is nothing in the way" and "not measured". An open
+      // view and an unchecked one must not read the same.
+      return "Surroundings not checked";
+    case "open":
+      return null;
+  }
+}
+
+/**
+ * What the app is doing about one direction, in words, inside the frame.
+ *
+ * The empty frame is a transparent 4:3 box with a hairline border, which is the
+ * correct rendering of "no imagery here" and a poor rendering of "no imagery
+ * here YET". For up to about forty seconds the first time, a reader saw a large
+ * blank rectangle with nothing said in it, which is indistinguishable from a
+ * picture that failed to decode. These are the words that go in it.
+ *
+ * They are states, not progress: no percentage, no fraction, no ETA. The
+ * capture ends on either a quiet period or a hard deadline and neither is a
+ * fraction of a known total, so there is no honest bar to draw.
+ */
+export function renderStateLabel(
+  state: RenderState,
+  cls: DirectionClass,
+): string | null {
+  switch (state) {
+    case "queued":
+      return "Waiting to capture";
+    case "capturing":
+      return "Capturing";
+    case "failed":
+      return "Didn't load";
+    case "not-requested":
+      return cls === "no-room" ? "No frame on this side" : "No window";
+    case "ready":
       return null;
   }
 }
@@ -274,7 +343,18 @@ export function planNotes(
 
   const { loadedCount, totalCount, stillCapturing } = opts;
   if (loadedCount !== undefined && totalCount !== undefined && totalCount > 0) {
-    if (loadedCount > 0 && loadedCount < totalCount) {
+    if (loadedCount === 0 && stillCapturing) {
+      // The first frame of a session takes tens of seconds, and until this line
+      // existed the result said nothing at all about it: four empty frames, a
+      // plan drawing, and no statement that anything was happening. It is a
+      // count of completed work against a known denominator — the number of
+      // directions actually asked for — and it is the only progress claim the
+      // app can make honestly.
+      notes.push({
+        id: "capturing",
+        text: capturingNote(totalCount),
+      });
+    } else if (loadedCount > 0 && loadedCount < totalCount) {
       notes.push({
         id: "partial",
         text:
@@ -295,6 +375,21 @@ export function planNotes(
   }
 
   return notes;
+}
+
+/**
+ * Copy for a session that is running and has produced nothing yet.
+ *
+ * States the denominator, because the denominator is known and is not always
+ * four — a building with a party wall has fewer directions to capture, and
+ * saying "four" there would be wrong. States no numerator, because zero of four
+ * reads as a failure rather than as a beginning, and no ETA, because the app
+ * does not have one.
+ */
+function capturingNote(total: number): string {
+  return total === 1
+    ? "Capturing this direction now. Each one appears as it arrives."
+    : `Capturing ${total} directions now. Each one appears as it arrives.`;
 }
 
 /**

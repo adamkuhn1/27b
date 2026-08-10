@@ -360,7 +360,12 @@ export type SessionCloseReason =
   /** The caller aborted (superseded search, unmount, StrictMode double-invoke). */
   | "aborted"
   /** A failure that would repeat for every remaining direction. */
-  | "fatal";
+  | "fatal"
+  /**
+   * The whole-session budget elapsed with work still outstanding. Whatever
+   * landed before it is kept; what had not is reported as not loaded.
+   */
+  | "deadline";
 
 /** A live render session. Closing it destroys the WebGL context. */
 export interface RenderSession {
@@ -379,19 +384,25 @@ export interface RenderSession {
   close(): void;
 }
 
-/** Per-slot UI phase. */
 /**
- * Per-direction UI phase.
+ * Where one direction stands with the RENDERER. Not a description of the
+ * building — that is `DirectionClass` in lib/directionClass.ts, and the two are
+ * deliberately different types so a geometry finding can never be stored in a
+ * field that timing writes to.
  *
- * `no-window` is not a stage of loading and never becomes one: the facade is
- * shared with the building next door, so nothing was requested for it and
- * nothing will arrive. It is separate from `failed` because nothing failed, and
- * separate from `queued` because a queued direction is one the app is still
- * working on. See DirectionConfidence.insideNeighborByM.
+ * `not-requested` is not a stage of loading and never becomes one: the geometry
+ * established that there is nothing on that side to photograph, so nothing was
+ * asked for and nothing will arrive. It is separate from `failed` because
+ * nothing failed, and separate from `queued` because a queued direction is one
+ * the app is still working on. WHY it was not requested is carried by the
+ * direction's class, not by this value.
+ *
+ * Every one of the four directions has one of these from the moment the plan
+ * resolves. There is no absent state.
  */
-export type SlotPhase =
+export type RenderState =
+  | "not-requested"
   | "queued"
   | "capturing"
   | "ready"
-  | "failed"
-  | "no-window";
+  | "failed";

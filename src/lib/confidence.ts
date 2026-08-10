@@ -238,29 +238,13 @@ export function assessConfidence(input: ConfidenceInput): ConfidenceReport {
   };
 }
 
-/**
- * Directions worth asking the provider for.
- *
- * One predicate, used by both the renderer (which must not open a capture for a
- * direction with no window) and the UI (which must say why the pane is empty).
- * Two callers agreeing by construction is the point; the alternative is a
- * renderer that skips a slot and a UI that shows it as still loading, forever.
- */
-export function isRenderableDirection(
-  slot: ViewSlot,
-  confidence: ConfidenceReport | null | undefined,
-): boolean {
-  const d = confidence?.bySlot[slot];
-  if (!d) return true;
-  if (d.insideNeighborByM != null) return false;
-  // A court wide enough to stand in is a view, however close. One too narrow
-  // has no camera position that is both outside our own wall and outside the
-  // one opposite, so there is nothing to ask the provider for.
-  if (d.courtWidthM != null && courtStandoffM(d.courtWidthM) === null) {
-    return false;
-  }
-  return true;
-}
+// WHICH DIRECTIONS THE RENDERER ASKS FOR IS NOT DECIDED HERE.
+//
+// This module measures. `lib/directionClass.ts` turns a measurement into a
+// class, and derives the render decision from the class — one arrow, geometry
+// to presentation to renderer, never back. The predicate that used to live here
+// was consulted by the classifier as well as by the renderer, which made the
+// class a consequence of a render decision instead of its cause.
 
 /**
  * Smallest standoff that still clears the subject building's own mesh, metres.

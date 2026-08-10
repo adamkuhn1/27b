@@ -1,7 +1,8 @@
-import type { ConfidenceReport, ViewPlan, ViewSlot } from "../lib/types";
-import { isRenderableDirection } from "../lib/confidence";
+import type { CameraView, ConfidenceReport, ViewPlan, ViewSlot } from "../lib/types";
+import { isDirectionRequested } from "../lib/directionClass";
 
-// Which direction the result opens on.
+// Which direction the result opens on, and in which order the four are asked
+// for.
 //
 // The result shows ONE view large and the rest as thumbnails, so something has
 // to choose which one you see first. It is decided from geometry alone, before
@@ -50,25 +51,44 @@ function rank(
  * is deterministic for a given building and floor.
  */
 export function chooseLeadDirection(plan: ViewPlan): ViewSlot | null {
-  const candidates = plan.views.filter((v) =>
-    isRenderableDirection(v.slot, plan.confidence),
-  );
-  if (candidates.length === 0) return null;
+  return captureOrder(plan)[0]?.slot ?? null;
+}
 
-  let best = candidates[0];
-  let bestRank = rank(best.slot, plan.confidence);
-  let bestOpenness = openness(best.slot, plan.confidence);
-
-  for (const view of candidates.slice(1)) {
-    const r = rank(view.slot, plan.confidence);
-    const o = openness(view.slot, plan.confidence);
-    if (r < bestRank || (r === bestRank && o > bestOpenness)) {
-      best = view;
-      bestRank = r;
-      bestOpenness = o;
-    }
-  }
-  return best.slot;
+/**
+ * The directions to ask the provider for, best first.
+ *
+ * The same ranking that picks the lead, applied to all of them, so the order
+ * frames are requested in matches the order the reader cares about them. The
+ * direction shown large is therefore the first one captured and the first one
+ * to appear, rather than whichever slot sorts first alphabetically — which is
+ * what left a large empty frame on screen while the three thumbnails beside it
+ * filled in.
+ *
+ * This changes nothing about any camera: the bearings, standoffs and heights
+ * are already fixed by the geometry pipeline before this runs, and the ranking
+ * reads the same footprint arithmetic the lead choice has always read. It is
+ * settled once, from geometry, before any imagery exists, and never revisited
+ * as frames arrive.
+ *
+ * `Array.prototype.sort` is stable in every engine this ships to (required by
+ * the spec since ES2019), so equal-ranked directions keep plan order.
+ */
+export function captureOrder(plan: ViewPlan): CameraView[] {
+  return plan.views
+    .filter((v) => isDirectionRequested(v.slot, plan.confidence))
+    .map((view, index) => ({ view, index }))
+    .sort((a, b) => {
+      const byRank =
+        rank(a.view.slot, plan.confidence) - rank(b.view.slot, plan.confidence);
+      if (byRank !== 0) return byRank;
+      // Subtracting these would produce NaN when both are unbounded, and a NaN
+      // comparator leaves the order up to the engine.
+      const oa = openness(a.view.slot, plan.confidence);
+      const ob = openness(b.view.slot, plan.confidence);
+      if (oa !== ob) return ob > oa ? 1 : -1;
+      return a.index - b.index;
+    })
+    .map((entry) => entry.view);
 }
 
 /** Distance to the nearest obstruction above the eye; unbounded when there is none. */
@@ -79,45 +99,8 @@ function openness(
   return confidence?.bySlot[slot]?.firstBlockingM ?? Infinity;
 }
 
-/**
- * How a direction should be presented, given what was measured about it.
- *
- * `close` exists so a frame taken from two metres off the wall opposite is
- * labelled as one before it is looked at, rather than read as an ordinary view
- * that came out badly. That distinction is the difference between a limitation
- * and a defect, and only the app knows which this is.
- */
-export type ViewQuality =
-  | "normal"
-  | "qualified"
-  | "close"
-  | "no-window"
-  | "no-room";
-
-/**
- * `close` and `no-room` are both light courts and the difference between them
- * is whether a camera fits. `isRenderableDirection` is the predicate that
- * decides what the renderer asks for, so it is the predicate the label has to
- * agree with: a court under about three metres gets no camera, therefore no
- * frame, ever. Reporting it as `close` — as this did — left the pane empty and
- * still announcing that it was waiting to capture, with a note describing a
- * picture that was never coming.
- */
-export function viewQuality(
-  slot: ViewSlot,
-  confidence: ConfidenceReport | null | undefined,
-): ViewQuality {
-  const d = confidence?.bySlot[slot];
-  if (!d) return "normal";
-  if (d.insideNeighborByM != null) return "no-window";
-  if (d.courtWidthM != null) {
-    return isRenderableDirection(slot, confidence) ? "close" : "no-room";
-  }
-  if (d.band === "enclosed") return "qualified";
-  return "normal";
-}
-
-/** True when nothing was requested for this direction and nothing will arrive. */
-export function isUncaptured(quality: ViewQuality): boolean {
-  return quality === "no-window" || quality === "no-room";
-}
+// How a direction is presented — `open`, `qualified`, `close`, `no-room`,
+// `no-window`, `unmeasured` — is not decided here either. It is one function in
+// `lib/directionClass.ts`, reading the footprint arithmetic and nothing else,
+// and both this file's ranking and the renderer's request list are derived from
+// it.

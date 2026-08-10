@@ -74,11 +74,78 @@ export const MAX_AUTO_ATTEMPTS_PER_SLOT = 2;
 /** Hard ceiling per direction per session, automatic and manual combined. */
 export const MAX_ATTEMPTS_PER_SLOT = 3;
 
+/**
+ * Longest one attempt at one direction may take before the session gives up on
+ * it and moves to the next, milliseconds.
+ *
+ * This is a BACKSTOP, not a capture budget. The renderer already bounds its own
+ * wait — `RENDER_TUNING.settleTimeoutMs` (16 s), multiplied by
+ * `FIRST_CAPTURE_SETTLE_FACTOR` (2.5) for the first direction of a session,
+ * plus a second of texture-upload settling — which puts the renderer's own
+ * worst case at roughly 42 s for the first direction and 17 s for every one
+ * after it. 60 s sits above both, so this fires only when the renderer has
+ * stopped returning at all, which is the one case its own timeout cannot cover.
+ *
+ * Without it a single wedged capture holds the other three directions behind it
+ * for as long as the page is open, and every one of them shows as still
+ * queued — the app claiming work is in progress that is not.
+ */
+export const DIRECTION_DEADLINE_MS = 60_000;
+
+/**
+ * Longest a whole session may run before it closes with whatever it has,
+ * milliseconds.
+ *
+ * The per-direction deadline bounds one attempt; this bounds their sum. Four
+ * directions at the renderer's own worst case is about 3 s of warm-up plus 42 s
+ * plus three times 17 s, i.e. ~96 s with no retries at all, and the retry
+ * budget can add two more attempts on top. 105 s is above the no-retry worst
+ * case and below the retrying one on purpose: a retry that would push the wait
+ * past this point is not worth the visitor's time, and three directions in 105
+ * seconds is a real result where four in three minutes is an abandoned page.
+ *
+ * The longest end-to-end time actually measured over the pre-registered matrix
+ * is 65 s, so on the evidence available this truncates nothing that works.
+ */
+export const SESSION_DEADLINE_MS = 105_000;
+
 export interface RenderSessionOptions {
   signal?: AbortSignal;
   maxAutoAttemptsPerSlot?: number;
   maxAttemptsPerSlot?: number;
+  /** Backstop for one attempt at one direction. See DIRECTION_DEADLINE_MS. */
+  directionDeadlineMs?: number;
+  /** Backstop for the whole session. See SESSION_DEADLINE_MS. */
+  sessionDeadlineMs?: number;
   now?: () => number;
+}
+
+/**
+ * Resolve to `work`'s value, or to the `timeout` sentinel once `ms` have
+ * elapsed, whichever happens first.
+ *
+ * The losing capture is NOT cancelled — the renderer has no cancel short of
+ * destroying the WebGL context, and destroying it would take the directions
+ * that have not run yet with it. It is abandoned instead: its eventual
+ * settlement is dropped on the floor here, so a capture that comes back after
+ * its deadline can neither emit an event nor overwrite a slot that has since
+ * moved on. The rejection handler is what keeps that abandonment from surfacing
+ * as an unhandled rejection.
+ */
+function withDeadline<T>(
+  work: Promise<T>,
+  ms: number,
+): Promise<{ done: true; value: T } | { done: false }> {
+  let timer: ReturnType<typeof setTimeout>;
+  const expiry = new Promise<{ done: false }>((resolve) => {
+    timer = setTimeout(() => resolve({ done: false } as const), ms);
+  });
+  const wrapped = work.then((value) => ({ done: true, value }) as const);
+  // Marks the abandoned branch as handled without consuming it: the race below
+  // still sees the rejection when the capture loses on time rather than on the
+  // clock.
+  wrapped.catch(() => {});
+  return Promise.race([wrapped, expiry]).finally(() => clearTimeout(timer));
 }
 
 /**
@@ -147,6 +214,8 @@ export function createRenderSession(
     signal,
     maxAutoAttemptsPerSlot = MAX_AUTO_ATTEMPTS_PER_SLOT,
     maxAttemptsPerSlot = MAX_ATTEMPTS_PER_SLOT,
+    directionDeadlineMs = DIRECTION_DEADLINE_MS,
+    sessionDeadlineMs = SESSION_DEADLINE_MS,
     now = () => (typeof performance !== "undefined" ? performance.now() : Date.now()),
   } = opts;
 
@@ -215,9 +284,23 @@ export function createRenderSession(
   }
 
   async function worker(): Promise<void> {
+    const sessionStarted = now();
+    /** What is left of the whole-session budget, never below zero. */
+    const sessionRemainingMs = () =>
+      Math.max(0, sessionDeadlineMs - (now() - sessionStarted));
+
     channel.push({ kind: "session-open", rootRequests: 1 });
 
     while (open) {
+      if (sessionRemainingMs() === 0) {
+        // Out of time with work still queued. Close rather than start a capture
+        // whose result nobody will wait for; the consumer marks everything that
+        // never reached a terminal event as not loaded, and keeps every frame
+        // that did land.
+        closeSession("deadline");
+        break;
+      }
+
       const item = queue.shift();
       if (!item) {
         // Nothing queued. If every direction has reached a terminal state and
@@ -234,11 +317,25 @@ export function createRenderSession(
       channel.push({ kind: "view-started", slot: view.slot, attempt });
 
       const started = now();
+      // One race, two bounds: this attempt gets the smaller of its own deadline
+      // and whatever is left of the session's. Taking the minimum is what stops
+      // a last direction started at second 104 from running to second 164.
+      const budgetMs = Math.min(directionDeadlineMs, sessionRemainingMs());
       let event: CaptureEvent;
       try {
-        const { result, settled } = await source.capture(view);
+        const outcome = await withDeadline(source.capture(view), budgetMs);
         if (!open) break; // aborted while this capture was in flight
         inFlight = null;
+        if (!outcome.done) {
+          throw new CaptureFailedError({
+            kind: "capture-failed",
+            detail:
+              `Direction ${view.slot} did not return within ${Math.round(budgetMs)} ms ` +
+              `(attempt ${attempt}). The capture was abandoned, not cancelled.`,
+            fatalForSession: false,
+          });
+        }
+        const { result, settled } = outcome.value;
         event = {
           kind: "view-captured",
           result,

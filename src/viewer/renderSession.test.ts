@@ -315,3 +315,110 @@ describe("render session — the billable-unit invariant", () => {
     expect(source.closed).toBe(1);
   });
 });
+
+describe("deadlines — a wedged capture cannot hold the page open forever", () => {
+  /**
+   * A source whose captures take `ms`, or never return at all for the slots in
+   * `wedged`. Real timers and tiny budgets rather than fake timers: the code
+   * under test races a promise against a timer, and a fake clock would prove
+   * the race is wired up without proving it resolves.
+   */
+  function slowSource(
+    ms: number,
+    wedged: ViewSlot[] = [],
+  ): FrameSource & { calls: ViewSlot[] } {
+    const calls: ViewSlot[] = [];
+    return {
+      calls,
+      async capture(v: CameraView) {
+        calls.push(v.slot);
+        if (wedged.includes(v.slot)) {
+          // Never settles. This is the case the renderer's own settle timeout
+          // cannot cover, because it is the renderer that has stopped.
+          return new Promise(() => {});
+        }
+        await new Promise<void>((r) => setTimeout(r, ms));
+        return { result: frame(v.slot), settled: true };
+      },
+      close() {},
+    };
+  }
+
+  it("gives up on one wedged direction and captures the other three", async () => {
+    const source = slowSource(5, ["V2"]);
+    const events = await drain(
+      createRenderSession(VIEWS, source, {
+        directionDeadlineMs: 60,
+        maxAutoAttemptsPerSlot: 1,
+      }).events,
+    );
+    expect(captured(events).map((e) => e.result.slot)).toEqual(["V1", "V3", "V4"]);
+    const gaveUp = failedFinal(events);
+    expect(gaveUp.map((e) => e.slot)).toEqual(["V2"]);
+    expect(gaveUp[0].failure.detail).toContain("did not return within");
+    expect(events.at(-1)).toEqual({ kind: "session-closed", reason: "complete" });
+  });
+
+  it("keeps every frame that landed before the whole-session budget ran out", async () => {
+    // Each capture takes 40 ms against a 100 ms session budget, so the first
+    // two land and the rest do not.
+    const events = await drain(
+      createRenderSession(VIEWS, slowSource(40), {
+        sessionDeadlineMs: 100,
+        maxAutoAttemptsPerSlot: 1,
+      }).events,
+    );
+    const landed = captured(events).map((e) => e.result.slot);
+    expect(landed.length).toBeGreaterThanOrEqual(1);
+    expect(landed.length).toBeLessThan(4);
+    expect(landed).toEqual(VIEWS.map((v) => v.slot).slice(0, landed.length));
+    expect(events.at(-1)).toEqual({ kind: "session-closed", reason: "deadline" });
+  });
+
+  it("does not start a direction it has no time left to finish", async () => {
+    const source = slowSource(40);
+    await drain(
+      createRenderSession(VIEWS, source, {
+        sessionDeadlineMs: 100,
+        maxAutoAttemptsPerSlot: 1,
+      }).events,
+    );
+    // Whatever it managed, it stopped asking once the budget was gone rather
+    // than opening a capture whose result nobody would wait for.
+    expect(source.calls.length).toBeLessThan(4);
+  });
+
+  it("closes the session when the budget runs out, so nothing keeps a WebGL context alive", async () => {
+    let closed = 0;
+    const inner = slowSource(40);
+    const session = createRenderSession(
+      VIEWS,
+      { capture: inner.capture, close: () => { closed += 1; } },
+      { sessionDeadlineMs: 60, maxAutoAttemptsPerSlot: 1 },
+    );
+    await drain(session.events);
+    expect(session.isOpen).toBe(false);
+    expect(closed).toBe(1);
+  });
+
+  it("takes the smaller of the two budgets for a direction started late", async () => {
+    // The per-direction deadline is generous and the session's is nearly gone:
+    // the attempt must be bounded by what is left of the session, not by its
+    // own allowance, or a last direction starting at second 104 runs to 164.
+    const t0 = Date.now();
+    await drain(
+      createRenderSession(VIEWS, slowSource(30, ["V4"]), {
+        directionDeadlineMs: 10_000,
+        sessionDeadlineMs: 200,
+        maxAutoAttemptsPerSlot: 1,
+      }).events,
+    );
+    expect(Date.now() - t0).toBeLessThan(2_000);
+  });
+
+  it("leaves an unbudgeted session alone — the deadlines are a backstop, not a schedule", async () => {
+    const events = await drain(createRenderSession(VIEWS, slowSource(5)).events);
+    expect(captured(events)).toHaveLength(4);
+    expect(events.at(-1)).toEqual({ kind: "session-closed", reason: "complete" });
+  });
+});

@@ -1,0 +1,2437 @@
+{
+  "_": "Pre-registered evaluation matrix, typed addresses, one cold browser session per invocation. See eval-matrix.mjs.",
+  "pass": "before",
+  "ranAt": "2026-08-10T21:17:56.661Z",
+  "url": "http://localhost:5903/",
+  "devicePixelRatio": 2,
+  "webglRenderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M2, Unspecified Version)",
+  "expectedConsoleNotices": [
+    {
+      "id": "cesium-google-geocoder",
+      "why": "CesiumJS oneTimeWarning, emitted once per page load because 27B does not pass onlyUsingWithGoogleGeocoder. The flag is a self-attestation and 27B geocodes with NYC Planning GeoSearch, so setting it would assert something untrue to silence a message. See README, 'The Cesium Google geocoder only warning'."
+    }
+  ],
+  "keySafety": {
+    "canarySupplied": true,
+    "anyLeak": false
+  },
+  "latency": {
+    "_": "ms from pressing the button. structure = the labelled grid and plan drawing exist; first = the first direction with a frame; lead = the direction the result opened on; complete = every direction reached a terminal state.",
+    "perCase": [
+      {
+        "case": "432park-f80",
+        "structureMs": 5065,
+        "firstDirectionMs": 13336,
+        "laterDirectionsMs": [
+          17430,
+          23120,
+          28535
+        ],
+        "leadFrameMs": 13336,
+        "completeMs": 28535
+      },
+      {
+        "case": "432park-f40",
+        "structureMs": 3600,
+        "firstDirectionMs": 47515,
+        "laterDirectionsMs": [
+          52142,
+          57937,
+          63328
+        ],
+        "leadFrameMs": 52142,
+        "completeMs": 63328
+      },
+      {
+        "case": "432park-f3",
+        "structureMs": 550,
+        "firstDirectionMs": 44988,
+        "laterDirectionsMs": [
+          49110,
+          54774
+        ],
+        "leadFrameMs": 44988,
+        "completeMs": 54774
+      },
+      {
+        "case": "esb-f80",
+        "structureMs": 1566,
+        "firstDirectionMs": 46106,
+        "laterDirectionsMs": [
+          49716,
+          54034,
+          59834
+        ],
+        "leadFrameMs": 46106,
+        "completeMs": 59834
+      },
+      {
+        "case": "dakota-f7",
+        "structureMs": 4416,
+        "firstDirectionMs": 48876,
+        "laterDirectionsMs": [
+          52435,
+          57161,
+          62245
+        ],
+        "leadFrameMs": 52435,
+        "completeMs": 62245
+      },
+      {
+        "case": "flatiron-f18",
+        "structureMs": 4576,
+        "firstDirectionMs": 48585,
+        "laterDirectionsMs": [
+          53289,
+          58949,
+          64490
+        ],
+        "leadFrameMs": 64490,
+        "completeMs": 64490
+      },
+      {
+        "case": "425e79-f10",
+        "structureMs": 4565,
+        "firstDirectionMs": 48926,
+        "laterDirectionsMs": [
+          52488,
+          57160,
+          62355
+        ],
+        "leadFrameMs": 62355,
+        "completeMs": 62355
+      },
+      {
+        "case": "425e79-f4",
+        "structureMs": 4052,
+        "firstDirectionMs": 47961,
+        "laterDirectionsMs": [
+          51012,
+          56141
+        ],
+        "leadFrameMs": 56141,
+        "completeMs": 56142
+      },
+      {
+        "case": "bedford-f3",
+        "structureMs": 3606,
+        "firstDirectionMs": 47951,
+        "laterDirectionsMs": [
+          52948
+        ],
+        "leadFrameMs": 52948,
+        "completeMs": 52948
+      },
+      {
+        "case": "stuyvesant-f3",
+        "structureMs": 2050,
+        "firstDirectionMs": 46430,
+        "laterDirectionsMs": [
+          53349
+        ],
+        "leadFrameMs": 46430,
+        "completeMs": 53350
+      },
+      {
+        "case": "invalid-f10",
+        "structureMs": null,
+        "firstDirectionMs": null,
+        "laterDirectionsMs": [],
+        "leadFrameMs": null,
+        "completeMs": 2541
+      },
+      {
+        "case": "noimagery-f7",
+        "structureMs": 509,
+        "firstDirectionMs": null,
+        "laterDirectionsMs": [],
+        "leadFrameMs": null,
+        "completeMs": 509
+      }
+    ]
+  },
+  "billing": {
+    "rootTilesetRequests": 11,
+    "note": "Root-tileset requests are the billable unit. 1,000/month free, $6.00/1,000 after.",
+    "worstCaseUsd": 0.066
+  },
+  "rendererTileRequests": 29257,
+  "results": [
+    {
+      "case": "432park",
+      "category": "taller freestanding tower / grid 28 deg / high, middle and low floor",
+      "expect": "frames",
+      "address": "432 Park Ave, Manhattan, New York, NY 10022",
+      "floor": 80,
+      "settled": true,
+      "settleMs": 28535,
+      "timing": {
+        "structureMs": 5065,
+        "firstDirectionMs": 13336,
+        "laterDirectionsMs": [
+          17430,
+          23120,
+          28535
+        ],
+        "leadFrameMs": 13336,
+        "leadIndex": 0,
+        "completeMs": 28535,
+        "arrivalMs": [
+          13336,
+          17430,
+          23120,
+          28535
+        ],
+        "firstProgressStatement": null
+      },
+      "heapBytes": 605694865,
+      "failedState": null,
+      "plan": {
+        "source": "dom",
+        "metas": [
+          "Eye 254.3 m above ground · roof 425.5 m · BIN 1088817 · footprint rectangularity 1.00",
+          "Views look out along this building's own facades (from its footprint), so the bearings are not N/E/S/W. Camera height 269.2 m NAVD88 = 237.5 m WGS84 ellipsoidal (geoid -31.7 m).",
+          "Enclosure notes computed from 146 neighbouring footprints within 220 m (NYC Open Data). No imagery is analysed."
+        ],
+        "bin": "1088817",
+        "eyeAboveGroundM": 254.3,
+        "roofHeightM": 425.5,
+        "rectangularity": 1,
+        "eyeNavd88M": 269.2,
+        "basis": "facade",
+        "bearingsDeg": [
+          {
+            "compass": "NNE",
+            "headingDeg": 28
+          },
+          {
+            "compass": "ESE",
+            "headingDeg": 118
+          },
+          {
+            "compass": "SSW",
+            "headingDeg": 208
+          },
+          {
+            "compass": "WNW",
+            "headingDeg": 298
+          }
+        ],
+        "planAriaLabel": "Plan of this building's footprint with the four camera positions, facing NNE 28 degrees, ESE 118 degrees, SSW 208 degrees, WNW 298 degrees"
+      },
+      "heading": "432 PARK AVENUE, New York, NY, USA",
+      "frameLine": "Floor 80 · approximate view, not a specific apartment",
+      "notes": [],
+      "attribution": "Imagery: Google Maps · Data SIO, NOAA, U.S. Navy, NGA, GEBCO, Google, IBCAO, Landsat / Copernicus, Vexcel Imaging US, Inc.",
+      "attributionBox": {
+        "w": 707.2,
+        "h": 20.4,
+        "withinDocument": true
+      },
+      "directions": [
+        {
+          "compass": "NNE",
+          "thumbState": null,
+          "thumbQuality": "normal",
+          "thumbPhase": null,
+          "promoted": true,
+          "frameDescription": null,
+          "thumbHasImage": true,
+          "leadPhase": "ready",
+          "leadQuality": "normal",
+          "bearing": "28° true",
+          "leadLabel": null,
+          "note": null,
+          "emptyFrameDescription": null,
+          "image": {
+            "w": 800,
+            "h": 623
+          },
+          "rect": {
+            "x": 232,
+            "y": 672.7578125,
+            "w": 752,
+            "h": 616.2890625
+          },
+          "pixels": {
+            "meanLuma": 123.4,
+            "sdLuma": 47.7,
+            "edgeEnergy": 7.96
+          },
+          "shot": "/Users/adamk/Developer/portfolio-suite/.release-artifacts/closure/27b-final/matrix-before/432park-f80-0-nne.png"
+        },
+        {
+          "compass": "ESE",
+          "thumbState": null,
+          "thumbQuality": "normal",
+          "thumbPhase": null,
+          "promoted": true,
+          "frameDescription": null,
+          "thumbHasImage": true,
+          "leadPhase": "ready",
+          "leadQuality": "normal",
+          "bearing": "118° true",
+          "leadLabel": null,
+          "note": null,
+          "emptyFrameDescription": null,
+          "image": {
+            "w": 800,
+            "h": 623
+          },
+          "rect": {
+            "x": 232,
+            "y": 672.7578125,
+            "w": 752,
+            "h": 616.2890625
+          },
+          "pixels": {
+            "meanLuma": 122.5,
+            "sdLuma": 48.5,
+            "edgeEnergy": 7.78
+          },
+          "shot": "/Users/adamk/Developer/portfolio-suite/.release-artifacts/closure/27b-final/matrix-before/432park-f80-1-ese.png"
+        },
+        {
+          "compass": "SSW",
+          "thumbState": null,
+          "thumbQuality": "normal",
+          "thumbPhase": null,
+          "promoted": true,
+          "frameDescription": null,
+          "thumbHasImage": true,
+          "leadPhase": "ready",
+          "leadQuality": "normal",
+          "bearing": "208° true",
+          "leadLabel": null,
+          "note": null,
+          "emptyFrameDescription": null,
+          "image": {
+            "w": 800,
+            "h": 623
+          },
+          "rect": {
+            "x": 232,
+            "y": 672.7578125,
+            "w": 752,
+            "h": 616.2890625
+          },
+          "pixels": {
+            "meanLuma": 119,
+            "sdLuma": 49.9,
+            "edgeEnergy": 8.06
+          },
+          "shot": "/Users/adamk/Developer/portfolio-suite/.release-artifacts/closure/27b-final/matrix-before/432park-f80-2-ssw.png"
+        },
+        {
+          "compass": "WNW",
+          "thumbState": null,
+          "thumbQuality": "normal",
+          "thumbPhase": null,
+          "promoted": true,
+          "frameDescription": null,
+          "thumbHasImage": true,
+          "leadPhase": "ready",
+          "leadQuality": "normal",
+          "bearing": "298° true",
+          "leadLabel": null,
+          "note": null,
+          "emptyFrameDescription": null,
+          "image": {
+            "w": 800,
+            "h": 623
+          },
+          "rect": {
+            "x": 232,
+            "y": 672.7578125,
+            "w": 752,
+            "h": 616.2890625
+          },
+          "pixels": {
+            "meanLuma": 118.1,
+            "sdLuma": 51.6,
+            "edgeEnergy": 11.17
+          },
+          "shot": "/Users/adamk/Developer/portfolio-suite/.release-artifacts/closure/27b-final/matrix-before/432park-f80-3-wnw.png"
+        }
+      ],
+      "provider": {
+        "rootTilesetRequests": 1,
+        "rendererTileRequests": 2834
+      },
+      "keySafety": {
+        "canarySupplied": true,
+        "consoleStringsScanned": 1,
+        "leakInConsole": false,
+        "leakOnPage": false
+      },
+      "expectedNotices": [
+        {
+          "level": "warning",
+          "text": "Only the Google geocoder can be used with Google Photorealistic 3D Tiles.  Set the `geocode` property of Viewer constructor options.  You can set additionalOptions.onlyUsingWithGoogleGeocoder to hide this warning once you have configured the geocoder.",
+          "notice": "cesium-google-geocoder"
+        }
+      ],
+      "consoleProblems": []
+    },
+    {
+      "case": "432park",
+      "category": "taller freestanding tower / grid 28 deg / high, middle and low floor",
+      "expect": "frames",
+      "address": "432 Park Ave, Manhattan, New York, NY 10022",
+      "floor": 40,
+      "settled": true,
+      "settleMs": 63328,
+      "timing": {
+        "structureMs": 3600,
+        "firstDirectionMs": 47515,
+        "laterDirectionsMs": [
+          52142,
+          57937,
+          63328
+        ],
+        "leadFrameMs": 52142,
+        "leadIndex": 1,
+        "completeMs": 63328,
+        "arrivalMs": [
+          47515,
+          52142,
+          57937,
+          63328
+        ],
+        "firstProgressStatement": null
+      },
+      "heapBytes": 660231995,
+      "failedState": null,
+      "plan": {
+        "source": "dom",
+        "metas": [
+          "Eye 126.3 m above ground · roof 425.5 m · BIN 1088817 · footprint rectangularity 1.00",
+          "Views look out along this building's own facades (from its footprint), so the bearings are not N/E/S/W. Camera height 141.2 m NAVD88 = 109.5 m WGS84 ellipsoidal (geoid -31.7 m).",
+          "Enclosure notes computed from 146 neighbouring footprints within 220 m (NYC Open Data). No imagery is analysed."
+        ],
+        "bin": "1088817",
+        "eyeAboveGroundM": 126.3,
+        "roofHeightM": 425.5,
+        "rectangularity": 1,
+        "eyeNavd88M": 141.2,
+        "basis": "facade",
+        "bearingsDeg": [
+          {
+            "compass": "NNE",
+            "headingDeg": 28
+          },
+          {
+            "compass": "ESE",
+            "headingDeg": 118
+          },
+          {
+            "compass": "SSW",
+            "headingDeg": 208
+          },
+          {
+            "compass": "WNW",
+            "headingDeg": 298
+          }
+        ],
+        "planAriaLabel": "Plan of this building's footprint with the four camera positions, facing NNE 28 degrees, ESE 118 degrees, SSW 208 degrees, WNW 298 degrees"
+      },
+      "heading": "432 PARK AVENUE, New York, NY, USA",
+      "frameLine": "Floor 40 · approximate view, not a specific apartment",
+      "notes": [],
+      "attribution": "Imagery: Google Maps · Data SIO, NOAA, U.S. Navy, NGA, GEBCO, Google, IBCAO, Landsat / Copernicus, Vexcel Imaging US, Inc.",
+      "attributionBox": {
+        "w": 707.2,
+        "h": 20.4,
+        "withinDocument": true
+      },
+      "directions": [
+        {
+          "compass": "NNE",
+          "thumbState": null,
+          "thumbQuality": "qualified",
+          "thumbPhase": null,
+          "promoted": true,
+          "frameDescription": null,
+          "thumbHasImage": true,
+          "leadPhase": "ready",
+          "leadQuality": "qualified",
+          "bearing": "28° true",
+          "leadLabel": "Enclosed",
+          "note": "Another building stands about 24 m from this side; this frame was still sharpening.",
+          "emptyFrameDescription": null,
+          "image": {
+            "w": 800,
+            "h": 623
+          },
+          "rect": {
+            "x": 232,
+            "y": 672.7578125,
+            "w": 752,
+            "h": 666.125
+          },
+          "pixels": {
+            "meanLuma": 113.4,
+            "sdLuma": 45.5,
+            "edgeEnergy": 11.52
+          },
+          "shot": "/Users/adamk/Developer/portfolio-suite/.release-artifacts/closure/27b-final/matrix-before/432park-f40-0-nne.png"
+        },
+        {
+          "compass": "ESE",
+          "thumbState": null,
+          "thumbQuality": "normal",
+          "thumbPhase": null,
+          "promoted": true,
+          "frameDescription": null,
+          "thumbHasImage": true,
+          "leadPhase": "ready",
+          "leadQuality": "normal",
+          "bearing": "118° true",
+          "leadLabel": null,
+          "note": null,
+          "emptyFrameDescription": null,
+          "image": {
+            "w": 800,
+            "h": 623
+          },
+          "rect": {
+            "x": 232,
+            "y": 672.7578125,
+            "w": 752,
+            "h": 616.2890625
+          },
+          "pixels": {
+            "meanLuma": 84.3,
+            "sdLuma": 46.7,
+            "edgeEnergy": 5.4
+          },
+          "shot": "/Users/adamk/Developer/portfolio-suite/.release-artifacts/closure/27b-final/matrix-before/432park-f40-1-ese.png"
+        },
+        {
+          "compass": "SSW",
+          "thumbState": null,
+          "thumbQuality": "qualified",
+          "thumbPhase": null,
+          "promoted": true,
+          "frameDescription": null,
+          "thumbHasImage": true,
+          "leadPhase": "ready",
+          "leadQuality": "qualified",
+          "bearing": "208° true",
+          "leadLabel": "Enclosed",
+          "note": "Another building stands about 13 m from this side.",
+          "emptyFrameDescription": null,
+          "image": {
+            "w": 800,
+            "h": 623
+          },
+          "rect": {
+            "x": 232,
+            "y": 672.7578125,
+            "w": 752,
+            "h": 644.8046875
+          },
+          "pixels": {
+            "meanLuma": 61.6,
+            "sdLuma": 35.4,
+            "edgeEnergy": 8.61
+          },
+          "shot": "/Users/adamk/Developer/portfolio-suite/.release-artifacts/closure/27b-final/matrix-before/432park-f40-2-ssw.png"
+        },
+        {
+          "compass": "WNW",
+          "thumbState": null,
+          "thumbQuality": "qualified",
+          "thumbPhase": null,
+          "promoted": true,
+          "frameDescription": null,
+          "thumbHasImage": true,
+          "leadPhase": "ready",
+          "leadQuality": "qualified",
+          "bearing": "298° true",
+          "leadLabel": "Enclosed",
+          "note": "This side looks into nearby buildings rather than out over the city.",
+          "emptyFrameDescription": null,
+          "image": {
+            "w": 800,
+            "h": 623
+          },
+          "rect": {
+            "x": 232,
+            "y": 672.7578125,
+            "w": 752,
+            "h": 644.8046875
+          },
+          "pixels": {
+            "meanLuma": 73.6,
+            "sdLuma": 34,
+            "edgeEnergy": 8.84
+          },
+          "shot": "/Users/adamk/Developer/portfolio-suite/.release-artifacts/closure/27b-final/matrix-before/432park-f40-3-wnw.png"
+        }
+      ],
+      "provider": {
+        "rootTilesetRequests": 1,
+        "rendererTileRequests": 4289
+      },
+      "keySafety": {
+        "canarySupplied": true,
+        "consoleStringsScanned": 1,
+        "leakInConsole": false,
+        "leakOnPage": false
+      },
+      "expectedNotices": [
+        {
+          "level": "warning",
+          "text": "Only the Google geocoder can be used with Google Photorealistic 3D Tiles.  Set the `geocode` property of Viewer constructor options.  You can set additionalOptions.onlyUsingWithGoogleGeocoder to hide this warning once you have configured the geocoder.",
+          "notice": "cesium-google-geocoder"
+        }
+      ],
+      "consoleProblems": []
+    },
+    {
+      "case": "432park",
+      "category": "taller freestanding tower / grid 28 deg / high, middle and low floor",
+      "expect": "frames",
+      "address": "432 Park Ave, Manhattan, New York, NY 10022",
+      "floor": 3,
+      "settled": true,
+      "settleMs": 54774,
+      "timing": {
+        "structureMs": 550,
+        "firstDirectionMs": 44988,
+        "laterDirectionsMs": [
+          49110,
+          54774
+        ],
+        "leadFrameMs": 44988,
+        "leadIndex": 0,
+        "completeMs": 54774,
+        "arrivalMs": [
+          44988,
+          49110,
+          54774,
+          null
+        ],
+        "firstProgressStatement": null
+      },
+      "heapBytes": 484292940,
+      "failedState": null,
+      "plan": {
+        "source": "dom",
+        "metas": [
+          "Eye 7.9 m above ground · roof 425.5 m · BIN 1088817 · footprint rectangularity 1.00",
+          "Views look out along this building's own facades (from its footprint), so the bearings are not N/E/S/W. Camera height 22.8 m NAVD88 = -8.9 m WGS84 ellipsoidal (geoid -31.7 m).",
+          "Enclosure notes computed from 146 neighbouring footprints within 220 m (NYC Open Data). No imagery is analysed."
+        ],
+        "bin": "1088817",
+        "eyeAboveGroundM": 7.9,
+        "roofHeightM": 425.5,
+        "rectangularity": 1,
+        "eyeNavd88M": 22.8,
+        "basis": "facade",
+        "bearingsDeg": [
+          {
+            "compass": "NNE",
+            "headingDeg": 28
+          },
+          {
+            "compass": "ESE",
+            "headingDeg": 118
+          },
+          {
+            "compass": "SSW",
+            "headingDeg": 208
+          },
+          {
+            "compass": "WNW",
+            "headingDeg": 298
+          }
+        ],
+        "planAriaLabel": "Plan of this building's footprint with the four camera positions, facing NNE 28 degrees, ESE 118 degrees, SSW 208 degrees, WNW 298 degrees"
+      },
+      "heading": "432 PARK AVENUE, New York, NY, USA",
+      "frameLine": "Floor 3 · approximate view, not a specific apartment",
+      "notes": [
+        "At this height you're looking across the street, not over the city."
+      ],
+      "attribution": "Imagery: Google Maps · Data SIO, NOAA, U.S. Navy, NGA, GEBCO, Google, IBCAO, Landsat / Copernicus, Vexcel Imaging US, Inc.",
+      "attributionBox": {
+        "w": 707.2,
+        "h": 20.4,
+        "withinDocument": true
+      },
+      "directions": [
+        {
+          "compass": "NNE",
+          "thumbState": null,
+          "thumbQuality": "qualified",
+          "thumbPhase": null,
+          "promoted": true,
+          "frameDescription": null,
+          "thumbHasImage": true,
+          "leadPhase": "ready",
+          "leadQuality": "qualified",
+          "bearing": "28° true",
+          "leadLabel": "Enclosed",
+          "note": "Another building stands about 24 m from this side; this frame was still sharpening.",
+          "emptyFrameDescription": null,
+          "image": {
+            "w": 800,
+            "h": 623
+          },
+          "rect": {
+            "x": 232,
+            "y": 714.2578125,
+            "w": 752,
+            "h": 666.125
+          },
+          "pixels": {
+            "meanLuma": 54.3,
+            "sdLuma": 20.9,
+            "edgeEnergy": 4.54
+          },
+          "shot": "/Users/adamk/Developer/portfolio-suite/.release-artifacts/closure/27b-final/matrix-before/432park-f3-0-nne.png"
+        },
+        {
+          "compass": "ESE",
+          "thumbState": null,
+          "thumbQuality": "qualified",
+          "thumbPhase": null,
+          "promoted": true,
+          "frameDescription": null,
+          "thumbHasImage": true,
+          "leadPhase": "ready",
+          "leadQuality": "qualified",
+          "bearing": "118° true",
+          "leadLabel": "Enclosed",
+          "note": "Another building stands about 10 m from this side.",
+          "emptyFrameDescription": null,
+          "image": {
+            "w": 800,
+            "h": 623
+          },
+          "rect": {
+            "x": 232,
+            "y": 714.2578125,
+            "w": 752,
+            "h": 644.8046875
+          },
+          "pixels": {
+            "meanLuma": 51.8,
+            "sdLuma": 31.7,
+            "edgeEnergy": 5.19
+          },
+          "shot": "/Users/adamk/Developer/portfolio-suite/.release-artifacts/closure/27b-final/matrix-before/432park-f3-1-ese.png"
+        },
+        {
+          "compass": "SSW",
+          "thumbState": null,
+          "thumbQuality": "qualified",
+          "thumbPhase": null,
+          "promoted": true,
+          "frameDescription": null,
+          "thumbHasImage": true,
+          "leadPhase": "ready",
+          "leadQuality": "qualified",
+          "bearing": "208° true",
+          "leadLabel": "Enclosed",
+          "note": "Another building stands about 13 m from this side.",
+          "emptyFrameDescription": null,
+          "image": {
+            "w": 800,
+            "h": 623
+          },
+          "rect": {
+            "x": 232,
+            "y": 714.2578125,
+            "w": 752,
+            "h": 644.8046875
+          },
+          "pixels": {
+            "meanLuma": 51.7,
+            "sdLuma": 25.5,
+            "edgeEnergy": 6.04
+          },
+          "shot": "/Users/adamk/Developer/portfolio-suite/.release-artifacts/closure/27b-final/matrix-before/432park-f3-2-ssw.png"
+        },
+        {
+          "compass": "WNW",
+          "thumbState": "too narrow",
+          "thumbQuality": "no-room",
+          "thumbPhase": null,
+          "promoted": false,
+          "frameDescription": null,
+          "thumbHasImage": false
+        }
+      ],
+      "provider": {
+        "rootTilesetRequests": 1,
+        "rendererTileRequests": 3330
+      },
+      "keySafety": {
+        "canarySupplied": true,
+        "consoleStringsScanned": 1,
+        "leakInConsole": false,
+        "leakOnPage": false
+      },
+      "expectedNotices": [
+        {
+          "level": "warning",
+          "text": "Only the Google geocoder can be used with Google Photorealistic 3D Tiles.  Set the `geocode` property of Viewer constructor options.  You can set additionalOptions.onlyUsingWithGoogleGeocoder to hide this warning once you have configured the geocoder.",
+          "notice": "cesium-google-geocoder"
+        }
+      ],
+      "consoleProblems": []
+    },
+    {
+      "case": "esb",
+      "category": "tall landmark, dense Midtown / grid 29 deg / high floor",
+      "expect": "frames",
+      "address": "350 5th Ave, Manhattan, New York, NY 10118",
+      "floor": 80,
+      "settled": true,
+      "settleMs": 59834,
+      "timing": {
+        "structureMs": 1566,
+        "firstDirectionMs": 46106,
+        "laterDirectionsMs": [
+          49716,
+          54034,
+          59834
+        ],
+        "leadFrameMs": 46106,
+        "leadIndex": 0,
+        "completeMs": 59834,
+        "arrivalMs": [
+          46106,
+          49716,
+          54034,
+          59834
+        ],
+        "firstProgressStatement": null
+      },
+      "heapBytes": 684351689,
+      "failedState": null,
+      "plan": {
+        "source": "dom",
+        "metas": [
+          "Eye 254.3 m above ground · roof 377.6 m · BIN 1015862 · footprint rectangularity 1.00",
+          "Views look out along this building's own facades (from its footprint), so the bearings are not N/E/S/W. Camera height 269.5 m NAVD88 = 237.8 m WGS84 ellipsoidal (geoid -31.8 m).",
+          "Enclosure notes computed from 199 neighbouring footprints within 220 m (NYC Open Data). No imagery is analysed."
+        ],
+        "bin": "1015862",
+        "eyeAboveGroundM": 254.3,
+        "roofHeightM": 377.6,
+        "rectangularity": 1,
+        "eyeNavd88M": 269.5,
+        "basis": "facade",
+        "bearingsDeg": [
+          {
+            "compass": "NNE",
+            "headingDeg": 29
+          },
+          {
+            "compass": "ESE",
+            "headingDeg": 119
+          },
+          {
+            "compass": "SSW",
+            "headingDeg": 209
+          },
+          {
+            "compass": "WNW",
+            "headingDeg": 299
+          }
+        ],
+        "planAriaLabel": "Plan of this building's footprint with the four camera positions, facing NNE 29 degrees, ESE 119 degrees, SSW 209 degrees, WNW 299 degrees"
+      },
+      "heading": "350 5 AVENUE, New York, NY, USA",
+      "frameLine": "Floor 80 · approximate view, not a specific apartment",
+      "notes": [],
+      "attribution": "Imagery: Google Maps · Data SIO, NOAA, U.S. Navy, NGA, GEBCO, Google, IBCAO, Landsat / Copernicus, Vexcel Imaging US, Inc.",
+      "attributionBox": {
+        "w": 707.2,
+        "h": 20.4,
+        "withinDocument": true
+      },
+      "directions": [
+        {
+          "compass": "NNE",
+          "thumbState": null,
+          "thumbQuality": "normal",
+          "thumbPhase": null,
+          "promoted": true,
+          "frameDescription": null,
+          "thumbHasImage": true,
+          "leadPhase": "ready",
+          "leadQuality": "normal",
+          "bearing": "29° true",
+          "leadLabel": null,
+          "note": "Still sharpening when this frame was captured.",
+          "emptyFrameDescription": null,
+          "image": {
+            "w": 800,
+            "h": 623
+          },
+          "rect": {
+            "x": 232,
+            "y": 672.7578125,
+            "w": 752,
+            "h": 644.8046875
+          },
+          "pixels": {
+            "meanLuma": 119.6,
+            "sdLuma": 45.9,
+            "edgeEnergy": 8.85
+          },
+          "shot": "/Users/adamk/Developer/portfolio-suite/.release-artifacts/closure/27b-final/matrix-before/esb-f80-0-nne.png"
+        },
+        {
+          "compass": "ESE",
+          "thumbState": null,
+          "thumbQuality": "normal",
+          "thumbPhase": null,
+          "promoted": true,
+          "frameDescription": null,
+          "thumbHasImage": true,
+          "leadPhase": "ready",
+          "leadQuality": "normal",
+          "bearing": "119° true",
+          "leadLabel": null,
+          "note": null,
+          "emptyFrameDescription": null,
+          "image": {
+            "w": 800,
+            "h": 623
+          },
+          "rect": {
+            "x": 232,
+            "y": 672.7578125,
+            "w": 752,
+            "h": 616.2890625
+          },
+          "pixels": {
+            "meanLuma": 118.9,
+            "sdLuma": 49.2,
+            "edgeEnergy": 7.48
+          },
+          "shot": "/Users/adamk/Developer/portfolio-suite/.release-artifacts/closure/27b-final/matrix-before/esb-f80-1-ese.png"
+        },
+        {
+          "compass": "SSW",
+          "thumbState": null,
+          "thumbQuality": "normal",
+          "thumbPhase": null,
+          "promoted": true,
+          "frameDescription": null,
+          "thumbHasImage": true,
+          "leadPhase": "ready",
+          "leadQuality": "normal",
+          "bearing": "209° true",
+          "leadLabel": null,
+          "note": null,
+          "emptyFrameDescription": null,
+          "image": {
+            "w": 800,
+            "h": 623
+          },
+          "rect": {
+            "x": 232,
+            "y": 672.7578125,
+            "w": 752,
+            "h": 616.2890625
+          },
+          "pixels": {
+            "meanLuma": 119.5,
+            "sdLuma": 49,
+            "edgeEnergy": 8.06
+          },
+          "shot": "/Users/adamk/Developer/portfolio-suite/.release-artifacts/closure/27b-final/matrix-before/esb-f80-2-ssw.png"
+        },
+        {
+          "compass": "WNW",
+          "thumbState": null,
+          "thumbQuality": "normal",
+          "thumbPhase": null,
+          "promoted": true,
+          "frameDescription": null,
+          "thumbHasImage": true,
+          "leadPhase": "ready",
+          "leadQuality": "normal",
+          "bearing": "299° true",
+          "leadLabel": null,
+          "note": null,
+          "emptyFrameDescription": null,
+          "image": {
+            "w": 800,
+            "h": 623
+          },
+          "rect": {
+            "x": 232,
+            "y": 672.7578125,
+            "w": 752,
+            "h": 616.2890625
+          },
+          "pixels": {
+            "meanLuma": 117.9,
+            "sdLuma": 48.2,
+            "edgeEnergy": 8.16
+          },
+          "shot": "/Users/adamk/Developer/portfolio-suite/.release-artifacts/closure/27b-final/matrix-before/esb-f80-3-wnw.png"
+        }
+      ],
+      "provider": {
+        "rootTilesetRequests": 1,
+        "rendererTileRequests": 2445
+      },
+      "keySafety": {
+        "canarySupplied": true,
+        "consoleStringsScanned": 1,
+        "leakInConsole": false,
+        "leakOnPage": false
+      },
+      "expectedNotices": [
+        {
+          "level": "warning",
+          "text": "Only the Google geocoder can be used with Google Photorealistic 3D Tiles.  Set the `geocode` property of Viewer constructor options.  You can set additionalOptions.onlyUsingWithGoogleGeocoder to hide this warning once you have configured the geocoder.",
+          "notice": "cesium-google-geocoder"
+        }
+      ],
+      "consoleProblems": []
+    },
+    {
+      "case": "dakota",
+      "category": "irregular footprint (courtyard) / grid 29 deg / middle floor",
+      "expect": "frames",
+      "address": "1 W 72nd St, Manhattan, New York, NY 10023",
+      "floor": 7,
+      "settled": true,
+      "settleMs": 62245,
+      "timing": {
+        "structureMs": 4416,
+        "firstDirectionMs": 48876,
+        "laterDirectionsMs": [
+          52435,
+          57161,
+          62245
+        ],
+        "leadFrameMs": 52435,
+        "leadIndex": 1,
+        "completeMs": 62245,
+        "arrivalMs": [
+          48876,
+          52435,
+          57161,
+          62245
+        ],
+        "firstProgressStatement": null
+      },
+      "heapBytes": 546193778,
+      "failedState": null,
+      "plan": {
+        "source": "dom",
+        "metas": [
+          "Eye 20.7 m above ground · roof 50.9 m · BIN 1028637 · footprint rectangularity 1.00",
+          "Views look out along this building's own facades (from its footprint), so the bearings are not N/E/S/W. Camera height 47.5 m NAVD88 = 15.8 m WGS84 ellipsoidal (geoid -31.7 m).",
+          "Enclosure notes computed from 240 neighbouring footprints within 220 m (NYC Open Data). No imagery is analysed."
+        ],
+        "bin": "1028637",
+        "eyeAboveGroundM": 20.7,
+        "roofHeightM": 50.9,
+        "rectangularity": 1,
+        "eyeNavd88M": 47.5,
+        "basis": "facade",
+        "bearingsDeg": [
+          {
+            "compass": "NNE",
+            "headingDeg": 29
+          },
+          {
+            "compass": "ESE",
+            "headingDeg": 119
+          },
+          {
+            "compass": "SSW",
+            "headingDeg": 209
+          },
+          {
+            "compass": "WNW",
+            "headingDeg": 299
+          }
+        ],
+        "planAriaLabel": "Plan of this building's footprint with the four camera positions, facing NNE 29 degrees, ESE 119 degrees, SSW 209 degrees, WNW 299 degrees"
+      },
+      "heading": "1 WEST 72 STREET, New York, NY, USA",
+      "frameLine": "Floor 7 · approximate view, not a specific apartment",
+      "notes": [],
+      "attribution": "Imagery: Google Maps · Data SIO, NOAA, U.S. Navy, NGA, GEBCO, Google, IBCAO, Landsat / Copernicus, Vexcel Imaging US, Inc.",
+      "attributionBox": {
+        "w": 707.2,
+        "h": 20.4,
+        "withinDocument": true
+      },
+      "directions": [
+        {
+          "compass": "NNE",
+          "thumbState": null,
+          "thumbQuality": "qualified",
+          "thumbPhase": null,
+          "promoted": true,
+          "frameDescription": null,
+          "thumbHasImage": true,
+          "leadPhase": "ready",
+          "leadQuality": "qualified",
+          "bearing": "29° true",
+          "leadLabel": "Enclosed",
+          "note": "Another building stands about 12 m from this side; this frame was still sharpening.",
+          "emptyFrameDescription": null,
+          "image": {
+            "w": 800,
+            "h": 623
+          },
+          "rect": {
+            "x": 232,
+            "y": 672.7578125,
+            "w": 752,
+            "h": 666.125
+          },
+          "pixels": {
+            "meanLuma": 76.7,
+            "sdLuma": 36,
+            "edgeEnergy": 4.71
+          },
+          "shot": "/Users/adamk/Developer/portfolio-suite/.release-artifacts/closure/27b-final/matrix-before/dakota-f7-0-nne.png"
+        },
+        {
+          "compass": "ESE",
+          "thumbState": null,
+          "thumbQuality": "normal",
+          "thumbPhase": null,
+          "promoted": true,
+          "frameDescription": null,
+          "thumbHasImage": true,
+          "leadPhase": "ready",
+          "leadQuality": "normal",
+          "bearing": "119° true",
+          "leadLabel": null,
+          "note": null,
+          "emptyFrameDescription": null,
+          "image": {
+            "w": 800,
+            "h": 623
+          },
+          "rect": {
+            "x": 232,
+            "y": 672.7578125,
+            "w": 752,
+            "h": 616.2890625
+          },
+          "pixels": {
+            "meanLuma": 98.5,
+            "sdLuma": 51.5,
+            "edgeEnergy": 5.83
+          },
+          "shot": "/Users/adamk/Developer/portfolio-suite/.release-artifacts/closure/27b-final/matrix-before/dakota-f7-1-ese.png"
+        },
+        {
+          "compass": "SSW",
+          "thumbState": null,
+          "thumbQuality": "qualified",
+          "thumbPhase": null,
+          "promoted": true,
+          "frameDescription": null,
+          "thumbHasImage": true,
+          "leadPhase": "ready",
+          "leadQuality": "qualified",
+          "bearing": "209° true",
+          "leadLabel": "Enclosed",
+          "note": "Another building stands about 24 m from this side.",
+          "emptyFrameDescription": null,
+          "image": {
+            "w": 800,
+            "h": 623
+          },
+          "rect": {
+            "x": 232,
+            "y": 672.7578125,
+            "w": 752,
+            "h": 644.8046875
+          },
+          "pixels": {
+            "meanLuma": 63.8,
+            "sdLuma": 15.6,
+            "edgeEnergy": 8.61
+          },
+          "shot": "/Users/adamk/Developer/portfolio-suite/.release-artifacts/closure/27b-final/matrix-before/dakota-f7-2-ssw.png"
+        },
+        {
+          "compass": "WNW",
+          "thumbState": null,
+          "thumbQuality": "qualified",
+          "thumbPhase": null,
+          "promoted": true,
+          "frameDescription": null,
+          "thumbHasImage": true,
+          "leadPhase": "ready",
+          "leadQuality": "qualified",
+          "bearing": "299° true",
+          "leadLabel": "Enclosed",
+          "note": "Another building stands about 8 m from this side.",
+          "emptyFrameDescription": null,
+          "image": {
+            "w": 800,
+            "h": 623
+          },
+          "rect": {
+            "x": 232,
+            "y": 672.7578125,
+            "w": 752,
+            "h": 644.8046875
+          },
+          "pixels": {
+            "meanLuma": 158.7,
+            "sdLuma": 64.3,
+            "edgeEnergy": 13.78
+          },
+          "shot": "/Users/adamk/Developer/portfolio-suite/.release-artifacts/closure/27b-final/matrix-before/dakota-f7-3-wnw.png"
+        }
+      ],
+      "provider": {
+        "rootTilesetRequests": 1,
+        "rendererTileRequests": 3068
+      },
+      "keySafety": {
+        "canarySupplied": true,
+        "consoleStringsScanned": 1,
+        "leakInConsole": false,
+        "leakOnPage": false
+      },
+      "expectedNotices": [
+        {
+          "level": "warning",
+          "text": "Only the Google geocoder can be used with Google Photorealistic 3D Tiles.  Set the `geocode` property of Viewer constructor options.  You can set additionalOptions.onlyUsingWithGoogleGeocoder to hide this warning once you have configured the geocoder.",
+          "notice": "cesium-google-geocoder"
+        }
+      ],
+      "consoleProblems": []
+    },
+    {
+      "case": "flatiron",
+      "category": "irregular footprint (triangle, rectangularity 0.60) / grid 19 deg / middle floor",
+      "expect": "frames",
+      "address": "175 5th Ave, Manhattan, New York, NY 10010",
+      "floor": 18,
+      "settled": true,
+      "settleMs": 64490,
+      "timing": {
+        "structureMs": 4576,
+        "firstDirectionMs": 48585,
+        "laterDirectionsMs": [
+          53289,
+          58949,
+          64490
+        ],
+        "leadFrameMs": 64490,
+        "leadIndex": 3,
+        "completeMs": 64490,
+        "arrivalMs": [
+          48585,
+          53289,
+          58949,
+          64490
+        ],
+        "firstProgressStatement": null
+      },
+      "heapBytes": 593266272,
+      "failedState": null,
+      "plan": {
+        "source": "dom",
+        "metas": [
+          "Eye 55.9 m above ground · roof 91.5 m · BIN 1016278 · footprint rectangularity 0.60",
+          "Views look out along this building's own facades (from its footprint), so the bearings are not N/E/S/W. Camera height 68.7 m NAVD88 = 36.9 m WGS84 ellipsoidal (geoid -31.8 m).",
+          "Enclosure notes computed from 202 neighbouring footprints within 220 m (NYC Open Data). No imagery is analysed."
+        ],
+        "bin": "1016278",
+        "eyeAboveGroundM": 55.9,
+        "roofHeightM": 91.5,
+        "rectangularity": 0.6,
+        "eyeNavd88M": 68.7,
+        "basis": "facade",
+        "bearingsDeg": [
+          {
+            "compass": "NNE",
+            "headingDeg": 19
+          },
+          {
+            "compass": "ESE",
+            "headingDeg": 109
+          },
+          {
+            "compass": "SSW",
+            "headingDeg": 199
+          },
+          {
+            "compass": "WNW",
+            "headingDeg": 289
+          }
+        ],
+        "planAriaLabel": "Plan of this building's footprint with the four camera positions, facing NNE 19 degrees, ESE 109 degrees, SSW 199 degrees, WNW 289 degrees"
+      },
+      "heading": "175 5 AVENUE, New York, NY, USA",
+      "frameLine": "Floor 18 · approximate view, not a specific apartment",
+      "notes": [
+        "This building isn't a simple rectangle, so these four directions are a best fit to its walls.",
+        "Some nearby buildings have no height on file, so the notes below may miss an obstruction."
+      ],
+      "attribution": "Imagery: Google Maps · Data SIO, NOAA, U.S. Navy, NGA, GEBCO, Google, IBCAO, Landsat / Copernicus, Vexcel Imaging US, Inc.",
+      "attributionBox": {
+        "w": 707.2,
+        "h": 20.4,
+        "withinDocument": true
+      },
+      "directions": [
+        {
+          "compass": "NNE",
+          "thumbState": null,
+          "thumbQuality": "normal",
+          "thumbPhase": null,
+          "promoted": true,
+          "frameDescription": null,
+          "thumbHasImage": true,
+          "leadPhase": "ready",
+          "leadQuality": "normal",
+          "bearing": "19° true",
+          "leadLabel": null,
+          "note": "Partly enclosed — nearby rooftops fill much of this direction; this frame was still sharpening.",
+          "emptyFrameDescription": null,
+          "image": {
+            "w": 800,
+            "h": 623
+          },
+          "rect": {
+            "x": 232,
+            "y": 781.953125,
+            "w": 752,
+            "h": 666.125
+          },
+          "pixels": {
+            "meanLuma": 103.9,
+            "sdLuma": 41.1,
+            "edgeEnergy": 11.14
+          },
+          "shot": "/Users/adamk/Developer/portfolio-suite/.release-artifacts/closure/27b-final/matrix-before/flatiron-f18-0-nne.png"
+        },
+        {
+          "compass": "ESE",
+          "thumbState": null,
+          "thumbQuality": "qualified",
+          "thumbPhase": null,
+          "promoted": true,
+          "frameDescription": null,
+          "thumbHasImage": true,
+          "leadPhase": "ready",
+          "leadQuality": "qualified",
+          "bearing": "109° true",
+          "leadLabel": "Enclosed",
+          "note": "This side looks into nearby buildings rather than out over the city.",
+          "emptyFrameDescription": null,
+          "image": {
+            "w": 800,
+            "h": 623
+          },
+          "rect": {
+            "x": 232,
+            "y": 781.953125,
+            "w": 752,
+            "h": 644.8046875
+          },
+          "pixels": {
+            "meanLuma": 73.9,
+            "sdLuma": 32.6,
+            "edgeEnergy": 11.58
+          },
+          "shot": "/Users/adamk/Developer/portfolio-suite/.release-artifacts/closure/27b-final/matrix-before/flatiron-f18-1-ese.png"
+        },
+        {
+          "compass": "SSW",
+          "thumbState": null,
+          "thumbQuality": "normal",
+          "thumbPhase": null,
+          "promoted": true,
+          "frameDescription": null,
+          "thumbHasImage": true,
+          "leadPhase": "ready",
+          "leadQuality": "normal",
+          "bearing": "199° true",
+          "leadLabel": null,
+          "note": "Partly enclosed — nearby rooftops fill much of this direction.",
+          "emptyFrameDescription": null,
+          "image": {
+            "w": 800,
+            "h": 623
+          },
+          "rect": {
+            "x": 232,
+            "y": 781.953125,
+            "w": 752,
+            "h": 644.8046875
+          },
+          "pixels": {
+            "meanLuma": 107.5,
+            "sdLuma": 44,
+            "edgeEnergy": 8.65
+          },
+          "shot": "/Users/adamk/Developer/portfolio-suite/.release-artifacts/closure/27b-final/matrix-before/flatiron-f18-2-ssw.png"
+        },
+        {
+          "compass": "WNW",
+          "thumbState": null,
+          "thumbQuality": "normal",
+          "thumbPhase": null,
+          "promoted": true,
+          "frameDescription": null,
+          "thumbHasImage": true,
+          "leadPhase": "ready",
+          "leadQuality": "normal",
+          "bearing": "289° true",
+          "leadLabel": null,
+          "note": null,
+          "emptyFrameDescription": null,
+          "image": {
+            "w": 800,
+            "h": 623
+          },
+          "rect": {
+            "x": 232,
+            "y": 781.953125,
+            "w": 752,
+            "h": 616.2890625
+          },
+          "pixels": {
+            "meanLuma": 116,
+            "sdLuma": 43.5,
+            "edgeEnergy": 9.42
+          },
+          "shot": "/Users/adamk/Developer/portfolio-suite/.release-artifacts/closure/27b-final/matrix-before/flatiron-f18-3-wnw.png"
+        }
+      ],
+      "provider": {
+        "rootTilesetRequests": 1,
+        "rendererTileRequests": 3617
+      },
+      "keySafety": {
+        "canarySupplied": true,
+        "consoleStringsScanned": 1,
+        "leakInConsole": false,
+        "leakOnPage": false
+      },
+      "expectedNotices": [
+        {
+          "level": "warning",
+          "text": "Only the Google geocoder can be used with Google Photorealistic 3D Tiles.  Set the `geocode` property of Viewer constructor options.  You can set additionalOptions.onlyUsingWithGoogleGeocoder to hide this warning once you have configured the geocoder.",
+          "notice": "cesium-google-geocoder"
+        }
+      ],
+      "consoleProblems": []
+    },
+    {
+      "case": "425e79",
+      "category": "dense row building, party wall and light court / grid 29 deg / middle and low floor",
+      "expect": "frames",
+      "address": "425 E 79th St, Manhattan, New York, NY 10075",
+      "floor": 10,
+      "settled": true,
+      "settleMs": 62355,
+      "timing": {
+        "structureMs": 4565,
+        "firstDirectionMs": 48926,
+        "laterDirectionsMs": [
+          52488,
+          57160,
+          62355
+        ],
+        "leadFrameMs": 62355,
+        "leadIndex": 3,
+        "completeMs": 62355,
+        "arrivalMs": [
+          48926,
+          52488,
+          57160,
+          62355
+        ],
+        "firstProgressStatement": null
+      },
+      "heapBytes": 626542978,
+      "failedState": null,
+      "plan": {
+        "source": "dom",
+        "metas": [
+          "Eye 30.3 m above ground · roof 39.0 m · BIN 1050349 · footprint rectangularity 0.97",
+          "Views look out along this building's own facades (from its footprint), so the bearings are not N/E/S/W. Camera height 42.5 m NAVD88 = 10.8 m WGS84 ellipsoidal (geoid -31.7 m).",
+          "Enclosure notes computed from 261 neighbouring footprints within 220 m (NYC Open Data). No imagery is analysed."
+        ],
+        "bin": "1050349",
+        "eyeAboveGroundM": 30.3,
+        "roofHeightM": 39,
+        "rectangularity": 0.97,
+        "eyeNavd88M": 42.5,
+        "basis": "facade",
+        "bearingsDeg": [
+          {
+            "compass": "NNE",
+            "headingDeg": 29
+          },
+          {
+            "compass": "ESE",
+            "headingDeg": 119
+          },
+          {
+            "compass": "SSW",
+            "headingDeg": 209
+          },
+          {
+            "compass": "WNW",
+            "headingDeg": 299
+          }
+        ],
+        "planAriaLabel": "Plan of this building's footprint with the four camera positions, facing NNE 29 degrees, ESE 119 degrees, SSW 209 degrees, WNW 299 degrees"
+      },
+      "heading": "425 EAST 79 STREET, New York, NY, USA",
+      "frameLine": "Floor 10 · approximate view, not a specific apartment",
+      "notes": [],
+      "attribution": "Imagery: Google Maps · Data SIO, NOAA, U.S. Navy, NGA, GEBCO, Google, IBCAO, Landsat / Copernicus, Vexcel Imaging US, Inc.",
+      "attributionBox": {
+        "w": 707.2,
+        "h": 20.4,
+        "withinDocument": true
+      },
+      "directions": [
+        {
+          "compass": "NNE",
+          "thumbState": null,
+          "thumbQuality": "qualified",
+          "thumbPhase": null,
+          "promoted": true,
+          "frameDescription": null,
+          "thumbHasImage": true,
+          "leadPhase": "ready",
+          "leadQuality": "qualified",
+          "bearing": "29° true",
+          "leadLabel": "Enclosed",
+          "note": "Another building stands about 12 m from this side; this frame was still sharpening.",
+          "emptyFrameDescription": null,
+          "image": {
+            "w": 800,
+            "h": 623
+          },
+          "rect": {
+            "x": 232,
+            "y": 672.7578125,
+            "w": 752,
+            "h": 666.125
+          },
+          "pixels": {
+            "meanLuma": 82.2,
+            "sdLuma": 31.4,
+            "edgeEnergy": 5.18
+          },
+          "shot": "/Users/adamk/Developer/portfolio-suite/.release-artifacts/closure/27b-final/matrix-before/425e79-f10-0-nne.png"
+        },
+        {
+          "compass": "ESE",
+          "thumbState": "close range",
+          "thumbQuality": "close",
+          "thumbPhase": null,
+          "promoted": true,
+          "frameDescription": null,
+          "thumbHasImage": true,
+          "leadPhase": "ready",
+          "leadQuality": "close",
+          "bearing": "119° true",
+          "leadLabel": "Close range",
+          "note": "A light court about 4 m wide — the building opposite is very close.",
+          "emptyFrameDescription": null,
+          "image": {
+            "w": 800,
+            "h": 623
+          },
+          "rect": {
+            "x": 232,
+            "y": 672.7578125,
+            "w": 752,
+            "h": 644.8046875
+          },
+          "pixels": {
+            "meanLuma": 42,
+            "sdLuma": 7.6,
+            "edgeEnergy": 0.9
+          },
+          "shot": "/Users/adamk/Developer/portfolio-suite/.release-artifacts/closure/27b-final/matrix-before/425e79-f10-1-ese.png"
+        },
+        {
+          "compass": "SSW",
+          "thumbState": null,
+          "thumbQuality": "qualified",
+          "thumbPhase": null,
+          "promoted": true,
+          "frameDescription": null,
+          "thumbHasImage": true,
+          "leadPhase": "ready",
+          "leadQuality": "qualified",
+          "bearing": "209° true",
+          "leadLabel": "Enclosed",
+          "note": "Another building stands about 24 m from this side.",
+          "emptyFrameDescription": null,
+          "image": {
+            "w": 800,
+            "h": 623
+          },
+          "rect": {
+            "x": 232,
+            "y": 672.7578125,
+            "w": 752,
+            "h": 644.8046875
+          },
+          "pixels": {
+            "meanLuma": 63.9,
+            "sdLuma": 38,
+            "edgeEnergy": 9.47
+          },
+          "shot": "/Users/adamk/Developer/portfolio-suite/.release-artifacts/closure/27b-final/matrix-before/425e79-f10-2-ssw.png"
+        },
+        {
+          "compass": "WNW",
+          "thumbState": null,
+          "thumbQuality": "qualified",
+          "thumbPhase": null,
+          "promoted": true,
+          "frameDescription": null,
+          "thumbHasImage": true,
+          "leadPhase": "ready",
+          "leadQuality": "qualified",
+          "bearing": "299° true",
+          "leadLabel": "Enclosed",
+          "note": "This side looks into nearby buildings rather than out over the city.",
+          "emptyFrameDescription": null,
+          "image": {
+            "w": 800,
+            "h": 623
+          },
+          "rect": {
+            "x": 232,
+            "y": 672.7578125,
+            "w": 752,
+            "h": 644.8046875
+          },
+          "pixels": {
+            "meanLuma": 165.1,
+            "sdLuma": 55.9,
+            "edgeEnergy": 18.67
+          },
+          "shot": "/Users/adamk/Developer/portfolio-suite/.release-artifacts/closure/27b-final/matrix-before/425e79-f10-3-wnw.png"
+        }
+      ],
+      "provider": {
+        "rootTilesetRequests": 1,
+        "rendererTileRequests": 3276
+      },
+      "keySafety": {
+        "canarySupplied": true,
+        "consoleStringsScanned": 1,
+        "leakInConsole": false,
+        "leakOnPage": false
+      },
+      "expectedNotices": [
+        {
+          "level": "warning",
+          "text": "Only the Google geocoder can be used with Google Photorealistic 3D Tiles.  Set the `geocode` property of Viewer constructor options.  You can set additionalOptions.onlyUsingWithGoogleGeocoder to hide this warning once you have configured the geocoder.",
+          "notice": "cesium-google-geocoder"
+        }
+      ],
+      "consoleProblems": []
+    },
+    {
+      "case": "425e79",
+      "category": "dense row building, party wall and light court / grid 29 deg / middle and low floor",
+      "expect": "frames",
+      "address": "425 E 79th St, Manhattan, New York, NY 10075",
+      "floor": 4,
+      "settled": true,
+      "settleMs": 56142,
+      "timing": {
+        "structureMs": 4052,
+        "firstDirectionMs": 47961,
+        "laterDirectionsMs": [
+          51012,
+          56141
+        ],
+        "leadFrameMs": 56141,
+        "leadIndex": 2,
+        "completeMs": 56142,
+        "arrivalMs": [
+          47961,
+          51012,
+          56141,
+          null
+        ],
+        "firstProgressStatement": null
+      },
+      "heapBytes": 397197641,
+      "failedState": null,
+      "plan": {
+        "source": "dom",
+        "metas": [
+          "Eye 11.1 m above ground · roof 39.0 m · BIN 1050349 · footprint rectangularity 0.97",
+          "Views look out along this building's own facades (from its footprint), so the bearings are not N/E/S/W. Camera height 23.3 m NAVD88 = -8.4 m WGS84 ellipsoidal (geoid -31.7 m).",
+          "Enclosure notes computed from 261 neighbouring footprints within 220 m (NYC Open Data). No imagery is analysed."
+        ],
+        "bin": "1050349",
+        "eyeAboveGroundM": 11.1,
+        "roofHeightM": 39,
+        "rectangularity": 0.97,
+        "eyeNavd88M": 23.3,
+        "basis": "facade",
+        "bearingsDeg": [
+          {
+            "compass": "NNE",
+            "headingDeg": 29
+          },
+          {
+            "compass": "ESE",
+            "headingDeg": 119
+          },
+          {
+            "compass": "SSW",
+            "headingDeg": 209
+          },
+          {
+            "compass": "WNW",
+            "headingDeg": 299
+          }
+        ],
+        "planAriaLabel": "Plan of this building's footprint with the four camera positions, facing NNE 29 degrees, ESE 119 degrees, SSW 209 degrees, WNW 299 degrees"
+      },
+      "heading": "425 EAST 79 STREET, New York, NY, USA",
+      "frameLine": "Floor 4 · approximate view, not a specific apartment",
+      "notes": [
+        "At this height you're looking across the street, not over the city."
+      ],
+      "attribution": "Imagery: Google Maps · Data SIO, NOAA, U.S. Navy, NGA, GEBCO, Google, IBCAO, Landsat / Copernicus, Vexcel Imaging US, Inc.",
+      "attributionBox": {
+        "w": 707.2,
+        "h": 20.4,
+        "withinDocument": true
+      },
+      "directions": [
+        {
+          "compass": "NNE",
+          "thumbState": null,
+          "thumbQuality": "qualified",
+          "thumbPhase": null,
+          "promoted": true,
+          "frameDescription": null,
+          "thumbHasImage": true,
+          "leadPhase": "ready",
+          "leadQuality": "qualified",
+          "bearing": "29° true",
+          "leadLabel": "Enclosed",
+          "note": "Another building stands about 12 m from this side; this frame was still sharpening.",
+          "emptyFrameDescription": null,
+          "image": {
+            "w": 800,
+            "h": 623
+          },
+          "rect": {
+            "x": 232,
+            "y": 714.2578125,
+            "w": 752,
+            "h": 666.125
+          },
+          "pixels": {
+            "meanLuma": 49.4,
+            "sdLuma": 14.5,
+            "edgeEnergy": 3.55
+          },
+          "shot": "/Users/adamk/Developer/portfolio-suite/.release-artifacts/closure/27b-final/matrix-before/425e79-f4-0-nne.png"
+        },
+        {
+          "compass": "ESE",
+          "thumbState": "close range",
+          "thumbQuality": "close",
+          "thumbPhase": null,
+          "promoted": true,
+          "frameDescription": null,
+          "thumbHasImage": true,
+          "leadPhase": "ready",
+          "leadQuality": "close",
+          "bearing": "119° true",
+          "leadLabel": "Close range",
+          "note": "A light court about 4 m wide — the building opposite is very close.",
+          "emptyFrameDescription": null,
+          "image": {
+            "w": 800,
+            "h": 623
+          },
+          "rect": {
+            "x": 232,
+            "y": 714.2578125,
+            "w": 752,
+            "h": 644.8046875
+          },
+          "pixels": {
+            "meanLuma": 37.3,
+            "sdLuma": 8.7,
+            "edgeEnergy": 0.68
+          },
+          "shot": "/Users/adamk/Developer/portfolio-suite/.release-artifacts/closure/27b-final/matrix-before/425e79-f4-1-ese.png"
+        },
+        {
+          "compass": "SSW",
+          "thumbState": null,
+          "thumbQuality": "qualified",
+          "thumbPhase": null,
+          "promoted": true,
+          "frameDescription": null,
+          "thumbHasImage": true,
+          "leadPhase": "ready",
+          "leadQuality": "qualified",
+          "bearing": "209° true",
+          "leadLabel": "Enclosed",
+          "note": "Another building stands about 24 m from this side.",
+          "emptyFrameDescription": null,
+          "image": {
+            "w": 800,
+            "h": 623
+          },
+          "rect": {
+            "x": 232,
+            "y": 714.2578125,
+            "w": 752,
+            "h": 644.8046875
+          },
+          "pixels": {
+            "meanLuma": 60.9,
+            "sdLuma": 35.2,
+            "edgeEnergy": 9.71
+          },
+          "shot": "/Users/adamk/Developer/portfolio-suite/.release-artifacts/closure/27b-final/matrix-before/425e79-f4-2-ssw.png"
+        },
+        {
+          "compass": "WNW",
+          "thumbState": "no window",
+          "thumbQuality": "no-window",
+          "thumbPhase": null,
+          "promoted": false,
+          "frameDescription": null,
+          "thumbHasImage": false
+        }
+      ],
+      "provider": {
+        "rootTilesetRequests": 1,
+        "rendererTileRequests": 2612
+      },
+      "keySafety": {
+        "canarySupplied": true,
+        "consoleStringsScanned": 1,
+        "leakInConsole": false,
+        "leakOnPage": false
+      },
+      "expectedNotices": [
+        {
+          "level": "warning",
+          "text": "Only the Google geocoder can be used with Google Photorealistic 3D Tiles.  Set the `geocode` property of Viewer constructor options.  You can set additionalOptions.onlyUsingWithGoogleGeocoder to hide this warning once you have configured the geocoder.",
+          "notice": "cesium-google-geocoder"
+        }
+      ],
+      "consoleProblems": []
+    },
+    {
+      "case": "bedford",
+      "category": "West Village row house, party wall / grid 67 deg / low floor",
+      "expect": "frames",
+      "address": "63 Bedford St, Manhattan, New York, NY 10014",
+      "floor": 3,
+      "settled": true,
+      "settleMs": 52948,
+      "timing": {
+        "structureMs": 3606,
+        "firstDirectionMs": 47951,
+        "laterDirectionsMs": [
+          52948
+        ],
+        "leadFrameMs": 52948,
+        "leadIndex": 1,
+        "completeMs": 52948,
+        "arrivalMs": [
+          47951,
+          52948,
+          null,
+          null
+        ],
+        "firstProgressStatement": null
+      },
+      "heapBytes": 304760099,
+      "failedState": null,
+      "plan": {
+        "source": "dom",
+        "metas": [
+          "Eye 7.9 m above ground · roof 17.6 m · BIN 1009837 · footprint rectangularity 1.00",
+          "Views look out along this building's own facades (from its footprint), so the bearings are not N/E/S/W. Camera height 12.5 m NAVD88 = -19.4 m WGS84 ellipsoidal (geoid -31.8 m).",
+          "Enclosure notes computed from 502 neighbouring footprints within 220 m (NYC Open Data). No imagery is analysed."
+        ],
+        "bin": "1009837",
+        "eyeAboveGroundM": 7.9,
+        "roofHeightM": 17.6,
+        "rectangularity": 1,
+        "eyeNavd88M": 12.5,
+        "basis": "facade",
+        "bearingsDeg": [
+          {
+            "compass": "ENE",
+            "headingDeg": 67
+          },
+          {
+            "compass": "SSE",
+            "headingDeg": 157
+          },
+          {
+            "compass": "WSW",
+            "headingDeg": 247
+          },
+          {
+            "compass": "NNW",
+            "headingDeg": 337
+          }
+        ],
+        "planAriaLabel": "Plan of this building's footprint with the four camera positions, facing ENE 67 degrees, SSE 157 degrees, WSW 247 degrees, NNW 337 degrees"
+      },
+      "heading": "63 BEDFORD STREET, New York, NY, USA",
+      "frameLine": "Floor 3 · approximate view, not a specific apartment",
+      "notes": [
+        "At this height you're looking across the street, not over the city."
+      ],
+      "attribution": "Imagery: Google Maps · Data SIO, NOAA, U.S. Navy, NGA, GEBCO, Google, IBCAO, Landsat / Copernicus, Vexcel Imaging US, Inc.",
+      "attributionBox": {
+        "w": 707.2,
+        "h": 20.4,
+        "withinDocument": true
+      },
+      "directions": [
+        {
+          "compass": "ENE",
+          "thumbState": null,
+          "thumbQuality": "qualified",
+          "thumbPhase": null,
+          "promoted": true,
+          "frameDescription": null,
+          "thumbHasImage": true,
+          "leadPhase": "ready",
+          "leadQuality": "qualified",
+          "bearing": "67° true",
+          "leadLabel": "Enclosed",
+          "note": "Another building stands about 6 m from this side; this frame was still sharpening.",
+          "emptyFrameDescription": null,
+          "image": {
+            "w": 800,
+            "h": 623
+          },
+          "rect": {
+            "x": 232,
+            "y": 714.2578125,
+            "w": 752,
+            "h": 666.125
+          },
+          "pixels": {
+            "meanLuma": 62.5,
+            "sdLuma": 36.4,
+            "edgeEnergy": 7.4
+          },
+          "shot": "/Users/adamk/Developer/portfolio-suite/.release-artifacts/closure/27b-final/matrix-before/bedford-f3-0-ene.png"
+        },
+        {
+          "compass": "SSE",
+          "thumbState": null,
+          "thumbQuality": "qualified",
+          "thumbPhase": null,
+          "promoted": true,
+          "frameDescription": null,
+          "thumbHasImage": true,
+          "leadPhase": "ready",
+          "leadQuality": "qualified",
+          "bearing": "157° true",
+          "leadLabel": "Enclosed",
+          "note": "Another building stands about 6 m from this side.",
+          "emptyFrameDescription": null,
+          "image": {
+            "w": 800,
+            "h": 623
+          },
+          "rect": {
+            "x": 232,
+            "y": 714.2578125,
+            "w": 752,
+            "h": 644.8046875
+          },
+          "pixels": {
+            "meanLuma": 48.3,
+            "sdLuma": 14.8,
+            "edgeEnergy": 2.13
+          },
+          "shot": "/Users/adamk/Developer/portfolio-suite/.release-artifacts/closure/27b-final/matrix-before/bedford-f3-1-sse.png"
+        },
+        {
+          "compass": "WSW",
+          "thumbState": "too narrow",
+          "thumbQuality": "no-room",
+          "thumbPhase": null,
+          "promoted": false,
+          "frameDescription": null,
+          "thumbHasImage": false
+        },
+        {
+          "compass": "NNW",
+          "thumbState": "no window",
+          "thumbQuality": "no-window",
+          "thumbPhase": null,
+          "promoted": false,
+          "frameDescription": null,
+          "thumbHasImage": false
+        }
+      ],
+      "provider": {
+        "rootTilesetRequests": 1,
+        "rendererTileRequests": 1624
+      },
+      "keySafety": {
+        "canarySupplied": true,
+        "consoleStringsScanned": 1,
+        "leakInConsole": false,
+        "leakOnPage": false
+      },
+      "expectedNotices": [
+        {
+          "level": "warning",
+          "text": "Only the Google geocoder can be used with Google Photorealistic 3D Tiles.  Set the `geocode` property of Viewer constructor options.  You can set additionalOptions.onlyUsingWithGoogleGeocoder to hide this warning once you have configured the geocoder.",
+          "notice": "cesium-google-geocoder"
+        }
+      ],
+      "consoleProblems": []
+    },
+    {
+      "case": "stuyvesant",
+      "category": "off-grid street, near-cardinal bearings / grid 86 deg / low floor",
+      "expect": "frames",
+      "address": "21 Stuyvesant St, Manhattan, New York, NY 10003",
+      "floor": 3,
+      "settled": true,
+      "settleMs": 53350,
+      "timing": {
+        "structureMs": 2050,
+        "firstDirectionMs": 46430,
+        "laterDirectionsMs": [
+          53349
+        ],
+        "leadFrameMs": 46430,
+        "leadIndex": 1,
+        "completeMs": 53350,
+        "arrivalMs": [
+          null,
+          46430,
+          null,
+          53349
+        ],
+        "firstProgressStatement": null
+      },
+      "heapBytes": 426536801,
+      "failedState": null,
+      "plan": {
+        "source": "dom",
+        "metas": [
+          "Eye 7.9 m above ground · roof 16.7 m · BIN 1006785 · footprint rectangularity 1.00",
+          "Views look out along this building's own facades (from its footprint), so the bearings are not N/E/S/W. Camera height 18.9 m NAVD88 = -12.9 m WGS84 ellipsoidal (geoid -31.8 m).",
+          "Enclosure notes computed from 333 neighbouring footprints within 220 m (NYC Open Data). No imagery is analysed."
+        ],
+        "bin": "1006785",
+        "eyeAboveGroundM": 7.9,
+        "roofHeightM": 16.7,
+        "rectangularity": 1,
+        "eyeNavd88M": 18.9,
+        "basis": "facade",
+        "bearingsDeg": [
+          {
+            "compass": "E",
+            "headingDeg": 86
+          },
+          {
+            "compass": "S",
+            "headingDeg": 176
+          },
+          {
+            "compass": "W",
+            "headingDeg": 266
+          },
+          {
+            "compass": "N",
+            "headingDeg": 356
+          }
+        ],
+        "planAriaLabel": "Plan of this building's footprint with the four camera positions, facing E 86 degrees, S 176 degrees, W 266 degrees, N 356 degrees"
+      },
+      "heading": "21 STUYVESANT STREET, New York, NY, USA",
+      "frameLine": "Floor 3 · approximate view, not a specific apartment",
+      "notes": [
+        "At this height you're looking across the street, not over the city.",
+        "Some nearby buildings have no height on file, so the notes below may miss an obstruction."
+      ],
+      "attribution": "Imagery: Google Maps · Data SIO, NOAA, U.S. Navy, NGA, GEBCO, Google, IBCAO, Landsat / Copernicus, Vexcel Imaging US, Inc.",
+      "attributionBox": {
+        "w": 707.2,
+        "h": 20.4,
+        "withinDocument": true
+      },
+      "directions": [
+        {
+          "compass": "E",
+          "thumbState": "no window",
+          "thumbQuality": "no-window",
+          "thumbPhase": null,
+          "promoted": false,
+          "frameDescription": null,
+          "thumbHasImage": false
+        },
+        {
+          "compass": "S",
+          "thumbState": null,
+          "thumbQuality": "qualified",
+          "thumbPhase": null,
+          "promoted": true,
+          "frameDescription": null,
+          "thumbHasImage": true,
+          "leadPhase": "ready",
+          "leadQuality": "qualified",
+          "bearing": "176° true",
+          "leadLabel": "Enclosed",
+          "note": "Another building stands about 16 m from this side; this frame was still sharpening.",
+          "emptyFrameDescription": null,
+          "image": {
+            "w": 800,
+            "h": 623
+          },
+          "rect": {
+            "x": 232,
+            "y": 760.453125,
+            "w": 752,
+            "h": 666.125
+          },
+          "pixels": {
+            "meanLuma": 86.1,
+            "sdLuma": 44.4,
+            "edgeEnergy": 6.49
+          },
+          "shot": "/Users/adamk/Developer/portfolio-suite/.release-artifacts/closure/27b-final/matrix-before/stuyvesant-f3-1-s.png"
+        },
+        {
+          "compass": "W",
+          "thumbState": "no window",
+          "thumbQuality": "no-window",
+          "thumbPhase": null,
+          "promoted": false,
+          "frameDescription": null,
+          "thumbHasImage": false
+        },
+        {
+          "compass": "N",
+          "thumbState": null,
+          "thumbQuality": "qualified",
+          "thumbPhase": null,
+          "promoted": true,
+          "frameDescription": null,
+          "thumbHasImage": true,
+          "leadPhase": "ready",
+          "leadQuality": "qualified",
+          "bearing": "356° true",
+          "leadLabel": "Enclosed",
+          "note": "Another building stands about 6 m from this side.",
+          "emptyFrameDescription": null,
+          "image": {
+            "w": 800,
+            "h": 623
+          },
+          "rect": {
+            "x": 232,
+            "y": 760.453125,
+            "w": 752,
+            "h": 644.8046875
+          },
+          "pixels": {
+            "meanLuma": 52.5,
+            "sdLuma": 24.8,
+            "edgeEnergy": 7.01
+          },
+          "shot": "/Users/adamk/Developer/portfolio-suite/.release-artifacts/closure/27b-final/matrix-before/stuyvesant-f3-3-n.png"
+        }
+      ],
+      "provider": {
+        "rootTilesetRequests": 1,
+        "rendererTileRequests": 2162
+      },
+      "keySafety": {
+        "canarySupplied": true,
+        "consoleStringsScanned": 1,
+        "leakInConsole": false,
+        "leakOnPage": false
+      },
+      "expectedNotices": [
+        {
+          "level": "warning",
+          "text": "Only the Google geocoder can be used with Google Photorealistic 3D Tiles.  Set the `geocode` property of Viewer constructor options.  You can set additionalOptions.onlyUsingWithGoogleGeocoder to hide this warning once you have configured the geocoder.",
+          "notice": "cesium-google-geocoder"
+        }
+      ],
+      "consoleProblems": []
+    },
+    {
+      "case": "invalid",
+      "category": "well-formed address that does not exist — must refuse, never substitute",
+      "expect": "unavailable",
+      "address": "9999 5th Ave, Manhattan, New York, NY 10028",
+      "floor": 10,
+      "settled": true,
+      "settleMs": 2541,
+      "timing": {
+        "structureMs": null,
+        "firstDirectionMs": null,
+        "laterDirectionsMs": [],
+        "leadFrameMs": null,
+        "leadIndex": null,
+        "completeMs": 2541,
+        "arrivalMs": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "firstProgressStatement": null
+      },
+      "heapBytes": 25030692,
+      "failedState": {
+        "title": "Address not found",
+        "body": "We couldn't find that exact address in New York City. Check the street name and try again."
+      },
+      "plan": {
+        "source": "dom",
+        "metas": [],
+        "bin": null,
+        "eyeAboveGroundM": null,
+        "roofHeightM": null,
+        "rectangularity": null,
+        "eyeNavd88M": null,
+        "basis": null,
+        "bearingsDeg": [],
+        "planAriaLabel": ""
+      },
+      "heading": null,
+      "frameLine": null,
+      "notes": [],
+      "attribution": null,
+      "attributionBox": null,
+      "directions": [],
+      "provider": {
+        "rootTilesetRequests": 0,
+        "rendererTileRequests": 0
+      },
+      "keySafety": {
+        "canarySupplied": true,
+        "consoleStringsScanned": 0,
+        "leakInConsole": false,
+        "leakOnPage": false
+      },
+      "expectedNotices": [],
+      "consoleProblems": []
+    },
+    {
+      "case": "noimagery",
+      "category": "imagery unavailable — provider blocked at the network layer",
+      "expect": "no-imagery",
+      "address": "1 W 72nd St, Manhattan, New York, NY 10023",
+      "floor": 7,
+      "settled": true,
+      "settleMs": 509,
+      "timing": {
+        "structureMs": 509,
+        "firstDirectionMs": null,
+        "laterDirectionsMs": [],
+        "leadFrameMs": null,
+        "leadIndex": 1,
+        "completeMs": 509,
+        "arrivalMs": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "firstProgressStatement": null
+      },
+      "heapBytes": 35212341,
+      "failedState": null,
+      "plan": {
+        "source": "dom",
+        "metas": [
+          "Eye 20.7 m above ground · roof 50.9 m · BIN 1028637 · footprint rectangularity 1.00",
+          "Views look out along this building's own facades (from its footprint), so the bearings are not N/E/S/W. Camera height 47.5 m NAVD88 = 15.8 m WGS84 ellipsoidal (geoid -31.7 m).",
+          "Enclosure notes computed from 240 neighbouring footprints within 220 m (NYC Open Data). No imagery is analysed."
+        ],
+        "bin": "1028637",
+        "eyeAboveGroundM": 20.7,
+        "roofHeightM": 50.9,
+        "rectangularity": 1,
+        "eyeNavd88M": 47.5,
+        "basis": "facade",
+        "bearingsDeg": [
+          {
+            "compass": "NNE",
+            "headingDeg": 29
+          },
+          {
+            "compass": "ESE",
+            "headingDeg": 119
+          },
+          {
+            "compass": "SSW",
+            "headingDeg": 209
+          },
+          {
+            "compass": "WNW",
+            "headingDeg": 299
+          }
+        ],
+        "planAriaLabel": "Plan of this building's footprint with the four camera positions, facing NNE 29 degrees, ESE 119 degrees, SSW 209 degrees, WNW 299 degrees"
+      },
+      "heading": "1 WEST 72 STREET, New York, NY, USA",
+      "frameLine": "Floor 7 · approximate view, not a specific apartment",
+      "notes": [
+        "The imagery didn't load. The measurements above are still real; nothing has been put in its place."
+      ],
+      "attribution": null,
+      "attributionBox": null,
+      "directions": [
+        {
+          "compass": "NNE",
+          "thumbState": "didn’t load",
+          "thumbQuality": "qualified",
+          "thumbPhase": "failed",
+          "promoted": true,
+          "frameDescription": null,
+          "thumbHasImage": false,
+          "leadPhase": "failed",
+          "leadQuality": "qualified",
+          "bearing": "29° true",
+          "leadLabel": "Enclosed",
+          "note": null,
+          "emptyFrameDescription": "Imagery unavailable facing NNE",
+          "image": null,
+          "rect": {
+            "x": 232,
+            "y": 735.7578125,
+            "w": 752,
+            "h": 594.2265625
+          },
+          "shot": "/Users/adamk/Developer/portfolio-suite/.release-artifacts/closure/27b-final/matrix-before/noimagery-f7-0-nne.png"
+        },
+        {
+          "compass": "ESE",
+          "thumbState": "didn’t load",
+          "thumbQuality": "normal",
+          "thumbPhase": "failed",
+          "promoted": true,
+          "frameDescription": null,
+          "thumbHasImage": false,
+          "leadPhase": "failed",
+          "leadQuality": "normal",
+          "bearing": "119° true",
+          "leadLabel": null,
+          "note": null,
+          "emptyFrameDescription": "Imagery unavailable facing ESE",
+          "image": null,
+          "rect": {
+            "x": 232,
+            "y": 735.7578125,
+            "w": 752,
+            "h": 594.2265625
+          },
+          "shot": "/Users/adamk/Developer/portfolio-suite/.release-artifacts/closure/27b-final/matrix-before/noimagery-f7-1-ese.png"
+        },
+        {
+          "compass": "SSW",
+          "thumbState": "didn’t load",
+          "thumbQuality": "qualified",
+          "thumbPhase": "failed",
+          "promoted": true,
+          "frameDescription": null,
+          "thumbHasImage": false,
+          "leadPhase": "failed",
+          "leadQuality": "qualified",
+          "bearing": "209° true",
+          "leadLabel": "Enclosed",
+          "note": null,
+          "emptyFrameDescription": "Imagery unavailable facing SSW",
+          "image": null,
+          "rect": {
+            "x": 232,
+            "y": 735.7578125,
+            "w": 752,
+            "h": 594.2265625
+          },
+          "shot": "/Users/adamk/Developer/portfolio-suite/.release-artifacts/closure/27b-final/matrix-before/noimagery-f7-2-ssw.png"
+        },
+        {
+          "compass": "WNW",
+          "thumbState": "didn’t load",
+          "thumbQuality": "qualified",
+          "thumbPhase": "failed",
+          "promoted": true,
+          "frameDescription": null,
+          "thumbHasImage": false,
+          "leadPhase": "failed",
+          "leadQuality": "qualified",
+          "bearing": "299° true",
+          "leadLabel": "Enclosed",
+          "note": null,
+          "emptyFrameDescription": "Imagery unavailable facing WNW",
+          "image": null,
+          "rect": {
+            "x": 232,
+            "y": 735.7578125,
+            "w": 752,
+            "h": 594.2265625
+          },
+          "shot": "/Users/adamk/Developer/portfolio-suite/.release-artifacts/closure/27b-final/matrix-before/noimagery-f7-3-wnw.png"
+        }
+      ],
+      "provider": {
+        "rootTilesetRequests": 1,
+        "rendererTileRequests": 0
+      },
+      "keySafety": {
+        "canarySupplied": true,
+        "consoleStringsScanned": 2,
+        "leakInConsole": false,
+        "leakOnPage": false
+      },
+      "expectedNotices": [
+        {
+          "level": "warning",
+          "text": "Only the Google geocoder can be used with Google Photorealistic 3D Tiles.  Set the `geocode` property of Viewer constructor options.  You can set additionalOptions.onlyUsingWithGoogleGeocoder to hide this warning once you have configured the geocoder.",
+          "notice": "cesium-google-geocoder"
+        }
+      ],
+      "consoleProblems": [
+        {
+          "level": "error",
+          "text": "[27b] render session could not be opened: Request has failed."
+        }
+      ]
+    }
+  ]
+}

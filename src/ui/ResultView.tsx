@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react";
-import type { CameraView, SlotPhase, ViewPlan, ViewSlot } from "../lib/types";
-import { isRenderableDirection } from "../lib/confidence";
+import type { CameraView, RenderState, ViewPlan, ViewSlot } from "../lib/types";
+import { classifyDirection, isCaptureRequested } from "../lib/directionClass";
 import { CesiumView } from "../viewer/CesiumView";
 import {
   TileCapturesProvider,
   readyCount,
+  requestedCount,
   useTileCaptures,
 } from "../viewer/useTileCaptures";
 import { PlanDiagram } from "./PlanDiagram";
-import { chooseLeadDirection, isUncaptured, viewQuality } from "./leadDirection";
+import { chooseLeadDirection } from "./leadDirection";
 import {
-  NO_IMAGERY_NOTE,
   RENDER_ALL_AGAIN,
   RETRY_THIS_DIRECTION,
   confidenceFor,
@@ -85,9 +85,7 @@ function ResultBody({
   // the number of facades. A wall shared with the building next door was never
   // requested, and counting it here would report "3 of 4 directions loaded" —
   // which reads as one having failed when nothing did.
-  const requested = plan.views.filter((v) =>
-    isRenderableDirection(v.slot, plan.confidence),
-  ).length;
+  const requested = requestedCount(captures.bySlot);
 
   // Three-way on purpose: true while frames are still arriving, false once the
   // render is over, and undefined when there is no render to speak of (no
@@ -111,11 +109,14 @@ function ResultBody({
   // axis will never resolve" and does not distinguish a party wall from a court
   // too narrow to stand in — on a 260-unit drawing that distinction is a label,
   // not a line weight, and the label is on the frame and in the strip.
-  const phaseBySlot: Partial<Record<ViewSlot, SlotPhase>> = {};
+  //
+  // Read straight off the render state now. It used to be recomputed here from
+  // the geometry, which is how the drawing came to mark a too-narrow court with
+  // the party-wall stroke: two places deciding the same thing, and only one of
+  // them knowing the difference.
+  const stateBySlot: Partial<Record<ViewSlot, RenderState>> = {};
   for (const view of plan.views) {
-    phaseBySlot[view.slot] = isRenderableDirection(view.slot, plan.confidence)
-      ? captures.bySlot[view.slot]?.phase ?? "queued"
-      : "no-window";
+    stateBySlot[view.slot] = captures.bySlot[view.slot]?.phase ?? "queued";
   }
 
   const leadView =
@@ -142,7 +143,7 @@ function ResultBody({
         {leadView && <LeadView plan={plan} view={leadView} />}
 
         <aside className="result__aside">
-          <PlanDiagram plan={plan} phaseBySlot={phaseBySlot} />
+          <PlanDiagram plan={plan} stateBySlot={stateBySlot} />
         </aside>
       </div>
 
@@ -208,29 +209,30 @@ function ResultBody({
 function LeadView({ plan, view }: { plan: ViewPlan; view: CameraView }) {
   const captures = useTileCaptures();
   const slot = captures.bySlot[view.slot];
-  const quality = viewQuality(view.slot, plan.confidence);
-  const uncaptured = isUncaptured(quality);
+  // Two independent facts, read from two independent sources, and never mixed
+  // into one value: what the geometry says this side of the building is, and
+  // where the renderer has got to with it.
+  const cls = classifyDirection(view.slot, plan.confidence);
+  const uncaptured = !isCaptureRequested(cls);
   const sessionFailed = captures.phase === "failed";
   const failed = !uncaptured && (slot?.phase === "failed" || sessionFailed);
-  const lead = qualityLead(quality);
+  const state: RenderState = uncaptured
+    ? "not-requested"
+    : failed
+      ? "failed"
+      : slot?.phase ?? "queued";
+  const lead = qualityLead(cls);
 
-  const note = failed
-    ? sessionFailed
-      ? null
-      : NO_IMAGERY_NOTE
-    : directionNote(confidenceFor(plan.confidence, view.slot), {
-        settled: slot?.phase === "ready" ? slot.settled : undefined,
-        capturable: !uncaptured,
-      });
+  const note = directionNote(confidenceFor(plan.confidence, view.slot), {
+    settled: slot?.phase === "ready" ? slot.settled : undefined,
+    capturable: !uncaptured,
+    // When the whole session never opened, the result head already says so
+    // once; repeating it under every frame would say it four times.
+    didNotLoad: failed && !sessionFailed,
+  });
 
   return (
-    <figure
-      className="lead"
-      data-quality={quality}
-      data-phase={
-        uncaptured ? quality : failed ? "failed" : slot?.phase ?? "queued"
-      }
-    >
+    <figure className="lead" data-quality={cls} data-phase={state}>
       <figcaption className="lead__caption">
         <span className="lead__compass">Looking {view.compass}</span>
         <span className="lead__bearing">
@@ -242,7 +244,8 @@ function LeadView({ plan, view }: { plan: ViewPlan; view: CameraView }) {
       <CesiumView
         view={view}
         disabled={captures.phase === "idle"}
-        uncaptured={uncaptured ? (quality as "no-window" | "no-room") : undefined}
+        uncaptured={uncaptured ? (cls as "no-window" | "no-room") : undefined}
+        directionClass={cls}
       />
 
       {note && <p className="lead__note">{note}</p>}
@@ -289,8 +292,8 @@ function DirectionStrip({
   return (
     <div className="thumbs" role="group" aria-label="The four directions">
       {plan.views.map((view) => {
-        const quality = viewQuality(view.slot, plan.confidence);
-        const uncaptured = isUncaptured(quality);
+        const cls = classifyDirection(view.slot, plan.confidence);
+        const uncaptured = !isCaptureRequested(cls);
         const isSelected = view.slot === selected;
         // Said on the thumbnail itself, not only under the large view. Two
         // empty cells in a row of four are the whole of what a reader sees of
@@ -306,7 +309,7 @@ function DirectionStrip({
             key={view.slot}
             type="button"
             className="thumb"
-            data-quality={quality}
+            data-quality={cls}
             data-phase={didNotLoad ? "failed" : undefined}
             data-selected={isSelected ? "true" : undefined}
             aria-pressed={isSelected}
@@ -321,21 +324,25 @@ function DirectionStrip({
               <CesiumView
                 view={view}
                 disabled={captures.phase === "idle"}
-                uncaptured={uncaptured ? (quality as "no-window" | "no-room") : undefined}
+                uncaptured={uncaptured ? (cls as "no-window" | "no-room") : undefined}
+                directionClass={cls}
                 size="thumb"
               />
             </span>
             <span className="thumb__label">
               <span className="thumb__compass">{view.compass}</span>
-              {quality === "no-window" && (
+              {cls === "no-window" && (
                 <span className="thumb__state">no window</span>
               )}
-              {quality === "no-room" && (
+              {cls === "no-room" && (
                 <span className="thumb__state">too narrow</span>
               )}
               {didNotLoad && <span className="thumb__state">didn&rsquo;t load</span>}
-              {!didNotLoad && quality === "close" && (
+              {!didNotLoad && cls === "close" && (
                 <span className="thumb__state">close range</span>
+              )}
+              {!didNotLoad && cls === "unmeasured" && (
+                <span className="thumb__state">not checked</span>
               )}
             </span>
           </button>
@@ -370,7 +377,7 @@ function ImageryAttribution({ onRenderAgain }: { onRenderAgain?: () => void }) {
     !captures.sessionOpen &&
     captures.phase !== "running" &&
     captures.phase !== "idle" &&
-    loaded < Object.keys(captures.bySlot).length;
+    loaded < requestedCount(captures.bySlot);
 
   if (loaded === 0 && !missing) return null;
 

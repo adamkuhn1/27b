@@ -14,10 +14,10 @@ import {
   COURT_MIN_STANDOFF_M,
   courtOffsets,
   courtStandoffM,
-  isRenderableDirection,
   mergeCourtFindings,
   SEARCH_RADIUS_M,
 } from "./confidence";
+import { isDirectionRequested } from "./directionClass";
 import { RENDER_TUNING } from "../viewer/renderTuning";
 import { loadCase, type RawFixture } from "./__fixtures__/loader";
 import { FACADE_OFFSET_M } from "./geometry";
@@ -384,7 +384,7 @@ describe("a facade shared with the building next door", () => {
       { bin: "ABUT", ring: around(15, 15), roofHeightM: 60, groundElevationNavd88M: 0 },
     ]);
     expect(c.insideNeighborByM).toBeCloseTo(40, 6);
-    expect(isRenderableDirection("V1", { bySlot: { V1: c }, neighborDataIncomplete: false, neighborsConsidered: 1, searchRadiusM: SEARCH_RADIUS_M })).toBe(false);
+    expect(isDirectionRequested("V1", { bySlot: { V1: c }, neighborDataIncomplete: false, neighborsConsidered: 1, searchRadiusM: SEARCH_RADIUS_M })).toBe(false);
   });
 
   it("does NOT fire when the camera is over a lower neighbour's roof", () => {
@@ -476,11 +476,11 @@ describe("party walls in the real fixtures", () => {
 
     expect(v4.insideNeighborByM).toBeGreaterThan(5);
     expect(v4.courtWidthM).toBeNull();
-    expect(isRenderableDirection("V4", report)).toBe(false);
+    expect(isDirectionRequested("V4", report)).toBe(false);
 
     expect(v2.insideNeighborByM).toBeNull();
     expect(v2.courtWidthM).toBeCloseTo(4.4, 1);
-    expect(isRenderableDirection("V2", report)).toBe(true);
+    expect(isDirectionRequested("V2", report)).toBe(true);
     expect(views).toHaveLength(4);
   });
 
@@ -579,7 +579,7 @@ describe("placing a camera in a light court", () => {
       searchRadiusM: SEARCH_RADIUS_M,
     } as const as ConfidenceReport;
 
-    expect(isRenderableDirection("V1", report)).toBe(false);
+    expect(isDirectionRequested("V1", report)).toBe(false);
     expect(courtOffsets(report)).toEqual({});
   });
 
@@ -630,7 +630,7 @@ describe("counting directions that were actually requested", () => {
     // so all four are asked for; floor 3 is where this building genuinely has
     // a wall with no window in it.
     const { views, report } = assess(E79, 3);
-    const requested = views.filter((v) => isRenderableDirection(v.slot, report));
+    const requested = views.filter((v) => isDirectionRequested(v.slot, report));
     expect(views).toHaveLength(4);
     expect(requested).toHaveLength(3);
     expect(requested.map((v) => v.slot)).toEqual(["V1", "V2", "V3"]);
