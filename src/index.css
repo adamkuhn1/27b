@@ -1,39 +1,22 @@
 /* 27B design system.
-   Serious, understated, architectural: paper-and-ink logic on the one shared
-   dark ground the suite presents the business card against, hairline rules
-   instead of boxes, and the project's one declared accent (site.ts) used once,
-   as a mark — never as a fill, never as a glow, never on every control. No
-   radius anywhere: nothing here represents a physical object, so nothing gets
-   rounded. */
+   Serious, understated, architectural: paper-and-ink logic on the suite's one
+   shared dark ground, hairline rules instead of boxes, the project accent used
+   sparingly. No radius anywhere: nothing here represents a physical object. */
 
 :root {
   color-scheme: dark;
-  --bg: #0b0b0c; /* the suite's one shared dark — the stage the card sits against */
+  --bg: #0b0b0c;
   --bg-raised: #121317;
   --bg-input: #16181d;
   --line: #24262d;
   --line-strong: #33363f;
   --text: #eef0f3;
-  --text-dim: #a3a7b0; /* 8.16:1 on --bg */
-  /* The quiet tier. Every string it colours is set below 14 px, so it is held
-     at the WCAG AA ratio for normal text (4.5:1) rather than at whatever looked
-     restrained: 4.83:1 on --bg. */
+  --text-dim: #a3a7b0;
   --text-faint: #7a7e86;
-  --accent: #5d7a91; /* declared per-project accent (site.ts) */
-  /* The same accent, lifted 5% toward white — the smallest step that clears
-     4.5:1 on --bg (it measures 4.82:1). The declared accent is 4.36:1, which is
-     fine for a rule or a fill and not enough for the 10.7 px mark that is the
-     only text this colour carries. Derived rather than typed, so the accent
-     stays the single source and the two can never drift apart. */
+  --accent: #5d7a91;
   --accent-text: color-mix(in srgb, var(--accent) 95%, #fff);
   --danger: #e08a6a;
-  /* Byte-identical to the shell's --serif (apps/portfolio/src/index.css), and
-     the face is shipped from src/main.tsx. This used to be a system sans
-     stack, which made 27B the one surface in the suite with no typographic
-     relationship to the other two. */
   --serif: "EB Garamond", "Cormorant Garamond", Garamond, "Times New Roman", serif;
-  /* Mono survives on exactly two roles: a section label, and something you
-     click. Not on data readouts, figure labels, or status text. */
   --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
 }
 
@@ -48,782 +31,287 @@ body,
 }
 body {
   font-family: var(--serif);
-  font-size: 18px;
-  line-height: 1.6;
   background: var(--bg);
   color: var(--text);
-  /* No OS blue on the number spinner or any future native control. */
-  accent-color: var(--text-dim);
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
+  font-size: 17px;
+  line-height: 1.55;
 }
 
-/* ---- Layout shell ---- */
 .app {
-  min-height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-.app__inner {
-  width: 100%;
-  max-width: 1040px;
+  max-width: 1060px;
   margin: 0 auto;
-  padding: clamp(1.5rem, 4vw, 3rem) clamp(1rem, 4vw, 2rem) 4rem;
-  flex: 1;
+  padding: 48px 24px 96px;
 }
 
-/* ---- Masthead ---- */
+/* --- masthead ------------------------------------------------------------ */
+
 .masthead {
   border-bottom: 1px solid var(--line);
-  padding-bottom: 2rem;
-  margin-bottom: 2.5rem;
+  padding-bottom: 24px;
+  margin-bottom: 32px;
 }
-
-.masthead__tag {
-  margin: 0 0 1rem;
-  font-family: var(--mono);
-  font-size: 0.67rem;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--text-faint);
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
+.masthead h1 {
+  font-size: 28px;
+  font-weight: 500;
+  margin: 0 0 8px;
+  letter-spacing: 0.01em;
 }
-
-/* short tick mark before the eyebrow label — a hairline rule, not the accent */
-.masthead__tag::before {
-  content: "";
-  display: inline-block;
-  width: 1.25em;
-  height: 1px;
-  background: var(--line-strong);
-  flex-shrink: 0;
-}
-
-.masthead__title {
-  margin: 0;
-  font-size: clamp(1.75rem, 4.5vw, 2.35rem);
-  font-weight: 680;
-  letter-spacing: -0.025em;
-  line-height: 1.2;
-}
-
-/* The project's one accent mark. It used to sit on "floor 27B" inside the
-   headline, which is exactly the conflation that made the headline read as an
-   instruction to type 27B into the floor box. The name belongs on the name. */
-.masthead__mark {
+.masthead .mark {
   color: var(--accent-text);
-  letter-spacing: 0.18em;
-}
-
-.masthead__sub {
-  margin: 0.8rem 0 0;
-  color: var(--text-dim);
-  font-size: 0.91rem;
-  max-width: 56ch;
-  line-height: 1.65;
-}
-
-/* ---- Form ---- */
-.form {
-  display: grid;
-  grid-template-columns: 1fr 130px auto;
-  gap: 0.75rem;
-  align-items: end;
-}
-@media (max-width: 620px) {
-  .form {
-    grid-template-columns: 1fr;
-  }
-}
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-/* A form label, which is neither a section heading nor something you click,
-   so it is prose at prose size. */
-.field__label {
-  font-size: 0.92rem;
-  color: var(--text-dim);
-}
-.field__input {
-  background: var(--bg-input);
-  border: 1px solid var(--line-strong);
-  color: var(--text);
-  font-size: 1rem;
-  font-family: inherit;
-  padding: 0.7rem 0.85rem;
-  transition: border-color 0.15s ease;
-}
-.field__input:focus-visible {
-  outline: 2px solid var(--text-dim);
-  outline-offset: 2px;
-  border-color: var(--text-dim);
-}
-.field__input[aria-invalid="true"] {
-  border-color: var(--danger);
-}
-.field__error {
-  font-size: 0.78rem;
-  color: var(--danger);
-  min-height: 1.1em;
-}
-/* Primary action: a bordered rectangle, ink on ground — never the accent, and
-   never filled. Hover changes the rule, not the colour. */
-.btn {
-  background: transparent;
-  color: var(--text);
-  border: 1px solid var(--text-dim);
-  font-size: 0.95rem;
-  font-weight: 620;
-  font-family: var(--mono);
-  letter-spacing: 0.03em;
-  padding: 0.72rem 1.35rem;
-  cursor: pointer;
-  transition: border-color 0.15s ease, opacity 0.15s ease;
-  height: fit-content;
-}
-.btn:hover:not(:disabled) {
-  border-color: var(--text);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-.btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* ---- Presets — famous building shortcuts ---- */
-.presets {
-  margin-top: 1.25rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.55rem;
-}
-.presets__label {
-  font-family: var(--mono);
-  font-size: 0.67rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--text-faint);
-}
-.presets__row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem;
-}
-/* border-only, monospace, never filled */
-.preset {
-  background: transparent;
-  border: 1px solid var(--line-strong);
-  color: var(--text-dim);
-  font-family: var(--mono);
-  cursor: pointer;
-  padding: 0.4rem 0.65rem;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.05rem;
-  transition: border-color 0.15s, color 0.15s;
-  text-align: left;
-}
-.preset:hover:not(:disabled) {
-  border-color: var(--text-dim);
-  color: var(--text);
-}
-.preset:hover:not(:disabled) .preset__name {
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-.preset:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-.preset__name {
-  font-size: 0.73rem;
-  letter-spacing: 0.04em;
-  font-weight: 500;
-}
-.preset__detail {
-  font-size: 0.62rem;
-  color: var(--text-faint);
-  letter-spacing: 0.03em;
-}
-
-/* ---- Framing note (the honesty copy) ---- */
-.framing {
-  margin: 1.5rem 0 0;
-  font-size: 0.82rem;
-  color: var(--text-faint);
-  line-height: 1.6;
-  padding-left: 0.85rem;
-  border-left: 2px solid var(--line-strong);
-}
-.framing strong {
-  color: var(--text-dim);
-  font-weight: 500;
-}
-
-/* ---- Result region ----
-   A sheet of drawings: a plan, four elevations, and the notes that qualify
-   them. The head states what the drawing is before anything is drawn. */
-.result {
-  margin-top: 2.5rem;
-}
-.result__head {
-  margin-bottom: 1rem;
-}
-.result__addr {
-  margin: 0;
-  font-size: 1.15rem;
   font-weight: 600;
 }
-/* The approximate/exact distinction, stated where it cannot be missed — as a
-   sentence, not as another tiny uppercase monospace label. */
-.result__frame {
-  margin: 0.3rem 0 0;
-  font-size: 0.88rem;
+.tagline {
+  margin: 0;
   color: var(--text-dim);
+  max-width: 62ch;
 }
 
-/* Notes qualifying the whole result. Hairline rule, no box: they are marginalia
-   on a drawing, not an alert. */
-.notes {
-  margin: 0 0 1.25rem;
-  padding: 0 0 0 0.9rem;
-  border-left: 1px solid var(--line-strong);
+/* --- section labels ------------------------------------------------------ */
+
+.section-label {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--text-faint);
+  margin: 0 0 12px;
+}
+
+/* --- curated picker ------------------------------------------------------ */
+
+.picker {
+  margin-bottom: 32px;
+}
+.picker-note {
+  margin: 0 0 16px;
+  color: var(--text-dim);
+  max-width: 70ch;
+}
+.picker-list {
   list-style: none;
-  font-size: 0.84rem;
-  line-height: 1.6;
-  color: var(--text-dim);
-  max-width: 68ch;
-}
-.notes li + li {
-  margin-top: 0.2rem;
-}
-
-/* The stage: one large view, with the plan drawing beside it.
-
-   Sizes matter here and are load-bearing. In a 1040 px column with 2 rem of
-   padding the content is 976 px; a 200 px plan column and a 1.5 rem gap leave
-   the lead frame ~752 CSS px. The old four-up grid gave each pane 338. */
-.result__stage {
-  display: grid;
-  grid-template-columns: 1fr 200px;
-  gap: 1.5rem;
-  align-items: start;
-}
-@media (max-width: 860px) {
-  .result__stage {
-    grid-template-columns: 1fr;
-  }
-}
-.result__aside {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-/* ---- Plan diagram ---- */
-.plan {
   margin: 0;
-  position: sticky;
-  top: 1rem;
-}
-@media (max-width: 860px) {
-  .plan {
-    position: static;
-    max-width: 260px;
-  }
-}
-.plan__svg {
-  display: block;
-  width: 100%;
-  height: auto;
-  overflow: visible;
-}
-.plan__ring {
-  fill: none;
-  stroke: var(--text-dim);
-  stroke-width: 1;
-}
-/* An axis is hairline while its direction is queued and solid once its frame
-   has landed, so every mark on the drawing is a completed unit of work. */
-.plan__stem,
-.plan__look {
-  stroke: var(--line-strong);
-  stroke-width: 1;
-}
-.plan__stem {
-  stroke-dasharray: 2 3;
-}
-.plan__eye {
-  fill: none;
-  stroke: var(--line-strong);
-  stroke-width: 1;
-}
-/* SVG type is in user units, so it shrinks with the drawing: the plan is a
-   260-unit square rendered into a 200 px column, which put an 8 px label on
-   screen at 6.2 px. The size is set here in units that will render at 11 px in
-   that column and no smaller anywhere else — `SIZE / 200 * 11`, rounded. */
-.plan__label {
-  fill: var(--text-faint);
-  font-family: var(--mono);
-  font-size: 14.3px;
-  letter-spacing: 0.06em;
-}
-.plan__axis--capturing .plan__stem,
-.plan__axis--capturing .plan__look,
-.plan__axis--capturing .plan__eye {
-  stroke: var(--text-faint);
-}
-.plan__axis--ready .plan__stem {
-  stroke-dasharray: none;
-}
-.plan__axis--ready .plan__stem,
-.plan__axis--ready .plan__look {
-  stroke: var(--text);
-}
-.plan__axis--ready .plan__eye {
-  stroke: var(--text);
-  fill: var(--text);
-}
-.plan__axis--ready .plan__label {
-  fill: var(--text-dim);
-}
-/*
-  A side nothing was asked for: a facade shared with the building next door, or
-  a light court too narrow to stand a camera in. Drawn faintly and, unlike every
-  other state here, never resolves into anything else — so it must not look like
-  a direction that is still working. WHICH of the two it is, is a label rather
-  than a line weight at this size, and the label is on the frame and in the
-  strip. See RenderState.
-*/
-.plan__axis--not-requested .plan__stem,
-.plan__axis--not-requested .plan__look,
-.plan__axis--not-requested .plan__eye {
-  opacity: 0.28;
-  stroke-dasharray: 2 3;
-}
-
-.plan__axis--failed .plan__stem,
-.plan__axis--failed .plan__look,
-.plan__axis--failed .plan__eye {
-  stroke: var(--line);
-}
-.plan__caption {
-  margin: 0.5rem 0 0;
-  font-size: 0.72rem;
-  color: var(--text-faint);
-  line-height: 1.5;
-}
-
-.result__meta {
-  margin: 0.25rem 0 0;
-  color: var(--text-dim);
-  font-size: 0.92rem;
-  line-height: 1.5;
-}
-.result__meta code {
-  font-family: var(--mono);
-  color: var(--text-faint);
-  font-size: 0.82em;
-}
-.result__meta--dim {
-  color: var(--text-faint);
-  font-size: 0.78rem;
-  max-width: 72ch;
-}
-
-/* Restrained disclosure for the placement math (NAVD88/WGS84/geoid, BIN, roof
-   height) — real and available, but not primary. Closed by default. */
-.disclosure {
-  margin-top: 1.5rem;
-}
-.disclosure summary {
-  cursor: pointer;
-  font-family: var(--mono);
-  font-size: 0.68rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--text-faint);
-}
-.disclosure summary:hover {
-  color: var(--text-dim);
-}
-.disclosure[open] summary {
-  margin-bottom: 0.5rem;
-}
-
-/* ---- The lead view ---- */
-.lead {
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
-  min-width: 0;
-}
-.lead__caption {
-  display: flex;
-  align-items: baseline;
-  gap: 0.65rem;
-  flex-wrap: wrap;
-  font-size: 0.9rem;
-  color: var(--text-dim);
-}
-.lead__compass {
-  color: var(--text);
-  font-weight: 600;
-}
-.lead__bearing {
-  color: var(--text-faint);
-  font-size: 0.8rem;
-}
-/* The qualification, said before the picture. A hairline rule to its left, in
-   the running typeface — not a pill, not a badge, not a colour. */
-.lead__quality {
-  margin-left: auto;
-  padding-left: 0.6rem;
-  border-left: 1px solid var(--line-strong);
-  font-size: 0.82rem;
-  color: var(--text-faint);
-}
-.lead[data-quality="close"] .lead__quality,
-.lead[data-quality="no-window"] .lead__quality {
-  color: var(--text-dim);
-}
-.lead__note {
-  margin: 0;
-  font-size: 0.86rem;
-  line-height: 1.55;
-  color: var(--text-faint);
-  max-width: 64ch;
-}
-.lead__retry {
-  align-self: flex-start;
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid var(--line-strong);
-  color: var(--text-dim);
-  font-family: var(--mono);
-  font-size: 0.68rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  padding: 0 0 0.15rem;
-  cursor: pointer;
-}
-.lead__retry:hover {
-  color: var(--text);
-  border-bottom-color: var(--text);
-}
-
-.lead .view__canvas,
-.lead canvas {
-  width: 100%;
-  display: block;
-  border: 1px solid var(--line);
-}
-/* An empty frame holds the 4:3 box so the page does not jump as frames land. */
-.lead .view__canvas--empty,
-.lead canvas {
-  aspect-ratio: 4 / 3;
-}
-/*
-  A LOADED FRAME IS NEVER CROPPED. This used to be `aspect-ratio: 4/3` plus
-  `object-fit: cover` for every pane, including the <img>. The captured PNG is
-  the render with Google's attribution bar appended BELOW it, so it is taller
-  than 4:3 — `cover` therefore scaled to fill and cropped source pixels off the
-  top and the bottom, taking out half of a one-line credit bar and an entire
-  line of a two-line one. The bar is baked into the pixels precisely so the
-  attribution can never be separated from the imagery.
-
-  The cost is that frames are ~3% taller than 4:3 and can differ by a line
-  between directions. That is the correct trade: a required credit is not a
-  layout detail.
-*/
-.lead img.view__canvas {
-  height: auto;
-  object-fit: fill;
-}
-/* A frame with no imagery is EMPTY. Not a gradient, not a silhouette, not a
-   "representative" image — the ground the whole page sits on, behind a rule.
-   This declaration is load-bearing for the project's central promise. */
-.lead .view__canvas--empty {
-  background: transparent;
-}
-.lead[data-phase="capturing"] .view__canvas--empty {
-  border-color: var(--line-strong);
-}
-/*
-  An empty frame SAYS WHICH EMPTY IT IS. The transparent box with a hairline
-  border is the correct rendering of "no imagery here" and a poor one of "no
-  imagery here yet": the first frame of a session can take the better part of a
-  minute, and for that whole time a reader was looking at a large blank
-  rectangle that is indistinguishable from an image which failed to decode.
-
-  Words, not a spinner and not a bar. The capture ends on either a quiet period
-  or a hard deadline, and neither is a fraction of a known total, so there is no
-  honest proportion to animate.
-*/
-.lead .view__canvas--empty {
-  display: grid;
-  place-items: center;
-}
-.view__state {
-  font-family: var(--mono);
-  font-size: 0.68rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--text-faint);
-}
-/* The one state that is still moving gets the one moving thing on the page: a
-   slow pulse, so a long capture reads as underway rather than as stuck. */
-.lead[data-phase="capturing"] .view__state {
-  color: var(--text-dim);
-  animation: view-state-pulse 2.4s ease-in-out infinite;
-}
-@media (prefers-reduced-motion: reduce) {
-  .lead[data-phase="capturing"] .view__state {
-    animation: none;
-  }
-}
-@keyframes view-state-pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.45;
-  }
-}
-/* On a thumbnail the row's own label already carries the state, and the cell is
-   too small for a second copy of it. */
-.thumb__frame-state {
-  display: none;
-}
-/* Close range and no-window frames are marked on the frame itself, so the
-   distinction survives someone scrolling past the caption. A doubled inset
-   rule — the drawing convention for "this edge is qualified" — not a tint. */
-.lead[data-quality="close"] .view__canvas,
-.lead[data-quality="close"] img.view__canvas {
-  outline: 1px solid var(--line);
-  outline-offset: 3px;
-}
-
-/* ---- The four directions, as a row you can promote from ---- */
-.thumbs {
-  margin-top: 1rem;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 0.75rem;
-}
-@media (max-width: 560px) {
-  .thumbs {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-.thumb {
-  background: transparent;
-  border: none;
   padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  cursor: pointer;
-  text-align: left;
-  color: inherit;
-  font: inherit;
-  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
 }
-.thumb:disabled {
+.picker-chip {
+  width: 100%;
+  height: 100%;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  padding: 14px 16px;
+  cursor: pointer;
+  display: grid;
+  gap: 4px;
+  transition: border-color 120ms ease;
+}
+.picker-chip:hover:not(:disabled),
+.picker-chip:focus-visible {
+  border-color: var(--accent);
+}
+.picker-chip:disabled {
+  opacity: 0.55;
   cursor: default;
 }
-.thumb__frame {
+.chip-name {
+  font-weight: 600;
+}
+.chip-floors {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--accent-text);
+  letter-spacing: 0.04em;
+}
+.chip-note {
+  color: var(--text-dim);
+  font-size: 15px;
+}
+
+/* --- entry form ----------------------------------------------------------- */
+
+.entry {
+  border-top: 1px solid var(--line);
+  padding-top: 24px;
+  margin-bottom: 40px;
+}
+.entry-row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+.field {
+  display: grid;
+  gap: 6px;
+  flex: 1 1 280px;
+}
+.field-floor {
+  flex: 0 1 120px;
+}
+.field span {
+  font-size: 14px;
+  color: var(--text-dim);
+}
+.field input {
+  font: inherit;
+  color: var(--text);
+  background: var(--bg-input);
+  border: 1px solid var(--line-strong);
+  padding: 10px 12px;
+  width: 100%;
+}
+.field input:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+}
+.field-error {
+  font-style: normal;
+  font-size: 14px;
+  color: var(--danger);
+}
+.lookup {
+  font: inherit;
+  font-family: var(--mono);
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text);
+  background: none;
+  border: 1px solid var(--line-strong);
+  padding: 11px 22px;
+  margin-top: 27px;
+  cursor: pointer;
+  transition: border-color 120ms ease;
+}
+.lookup:hover:not(:disabled),
+.lookup:focus-visible {
+  border-color: var(--accent);
+}
+.lookup:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* --- states ---------------------------------------------------------------- */
+
+.state {
+  border: 1px solid var(--line);
+  background: var(--bg-raised);
+  padding: 28px 32px;
+  max-width: 72ch;
+}
+.state h2 {
+  margin: 0 0 12px;
+  font-size: 21px;
+  font-weight: 600;
+}
+.state p {
+  margin: 0 0 12px;
+  color: var(--text-dim);
+}
+.state p:last-child {
+  margin-bottom: 0;
+}
+.state code {
+  font-family: var(--mono);
+  font-size: 0.85em;
+  color: var(--accent-text);
+}
+.state-list-label {
+  margin-bottom: 4px;
+}
+.state-list {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--text-dim);
+}
+.state-loading p {
+  margin: 0;
+  color: var(--text-dim);
+}
+
+/* --- result ---------------------------------------------------------------- */
+
+.result-head h2 {
+  margin: 0 0 4px;
+  font-size: 23px;
+  font-weight: 600;
+}
+.result-sub {
+  margin: 0 0 20px;
+  color: var(--text-faint);
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 0.03em;
+}
+.frames {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 20px;
+  margin-bottom: 24px;
+}
+.frame {
+  margin: 0;
+}
+.frame img {
   display: block;
+  width: 100%;
+  /* No forced aspect ratio: the attribution bar can make the PNG taller than
+     4:3, and cropping it off would be a compliance problem, not a taste one. */
+  height: auto;
+  border: 1px solid var(--line);
+}
+.frame-empty {
   aspect-ratio: 4 / 3;
   border: 1px solid var(--line);
-  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: var(--bg-raised);
 }
-.thumb__frame .thumb__img {
-  width: 100%;
-  height: 100%;
-  display: block;
-  /* `contain`, not `cover`. The captured PNG carries Google's attribution baked
-     along its bottom edge, and the frame is ~3% taller than the 4:3 box that
-     holds the row steady — so `cover` scaled to fill and took the credit off
-     the bottom of all four thumbnails. Letterboxing by a few pixels is the
-     cheaper side of that trade: the credit is required, the extra pixels of
-     picture are not. */
-  object-fit: contain;
-}
-.thumb__empty {
-  display: block;
-  width: 100%;
-  height: 100%;
-  /* Empty means empty — the page's own ground, never a stand-in. */
-  background: transparent;
-}
-/* The current direction. A solid rule against the hairlines of the others —
-   the same language the plan diagram uses for a completed axis. */
-.thumb[data-selected="true"] .thumb__frame {
-  border-color: var(--text);
-}
-.thumb:hover:not(:disabled) .thumb__frame {
-  border-color: var(--text-dim);
-}
-.thumb:focus-visible {
-  outline: 2px solid var(--text-dim);
-  outline-offset: 3px;
-}
-.thumb[data-quality="no-window"] .thumb__frame {
-  opacity: 0.35;
-  border-style: dashed;
-}
-/* A direction whose frame never arrived. Dashed like the no-window cell,
-   because both are empty on purpose, but at full strength: this one is a gap in
-   the result rather than a fact about the building, and the row says so. */
-.thumb[data-phase="failed"] .thumb__frame {
-  border-style: dashed;
-  border-color: var(--line-strong);
-}
-.thumb__label {
-  display: flex;
-  align-items: baseline;
-  gap: 0.4rem;
-  flex-wrap: wrap;
-  font-size: 0.78rem;
+.frame-empty p {
+  margin: 0;
+  padding: 0 24px;
   color: var(--text-faint);
+  font-size: 15px;
+  text-align: center;
 }
-.thumb__compass {
-  font-family: var(--mono);
-  font-size: 0.7rem;
-  letter-spacing: 0.12em;
-  color: var(--text-dim);
+.frame-failed p {
+  color: var(--danger);
 }
-.thumb[data-selected="true"] .thumb__compass {
-  color: var(--text);
-}
-.thumb__state {
-  font-size: 0.72rem;
-}
-
-/* ---- Imagery attribution (required by Map Tiles API policies) ---- */
-.attribution {
-  margin: 1.25rem 0 0;
-  display: flex;
-  align-items: baseline;
-  gap: 1rem;
-  flex-wrap: wrap;
-  font-size: 0.85rem;
-  color: var(--text-dim);
-  line-height: 1.5;
-}
-.attribution__line {
-  margin: 0;
-}
-.attribution strong {
-  color: var(--text);
-  font-weight: 600;
-}
-.btn--quiet {
-  font-size: 0.68rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  padding: 0.4rem 0.8rem;
-  border-color: var(--line-strong);
+.frame figcaption {
+  padding-top: 8px;
+  font-size: 14px;
   color: var(--text-dim);
 }
 
-/* ---- No-imagery-source / no-data states ---- */
-.state {
-  margin-top: 2.5rem;
-  border: 1px solid var(--line);
-  padding: clamp(1.5rem, 4vw, 2.5rem);
-  max-width: 60ch;
-}
-.state__title {
-  margin: 0 0 0.6rem;
-  font-size: 1.1rem;
-  font-weight: 600;
-}
-.state__body {
-  margin: 0;
-  color: var(--text-dim);
-  line-height: 1.6;
-  font-size: 0.94rem;
-}
-.state__body + .state__body {
-  margin-top: 0.75rem;
-}
-/* The second paragraph explains whose fault it is and what still works. It is
-   context, not the headline, so it is set quieter and smaller than the message
-   above it. */
-.state__body--aside {
-  font-size: 0.86rem;
-  opacity: 0.82;
+.result-notes {
   border-top: 1px solid var(--line);
-  padding-top: 0.75rem;
+  padding-top: 16px;
+  max-width: 78ch;
+}
+.result-notes p {
+  margin: 0 0 10px;
+  color: var(--text-faint);
+  font-size: 15px;
+}
+.result-notes strong {
+  color: var(--text-dim);
+  font-weight: 600;
 }
 
-/* ---- Loading ---- */
-.loading {
-  margin-top: 2.5rem;
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-  color: var(--text-dim);
-  font-size: 0.95rem;
-}
-.spinner {
-  width: 14px;
-  height: 14px;
-  border: 2px solid var(--line-strong);
-  border-top-color: var(--text-dim);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-  flex-shrink: 0;
-}
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
+@media (max-width: 560px) {
+  .app {
+    padding: 28px 16px 64px;
   }
-}
-
-/* ---- Footer ---- */
-.foot {
-  border-top: 1px solid var(--line);
-  padding: 1.5rem clamp(1rem, 4vw, 2rem);
-}
-.foot__inner {
-  max-width: 1040px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-.foot__sources {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.2rem 0;
-  color: var(--text-faint);
-  font-size: 0.74rem;
-  line-height: 1.6;
-}
-.foot__sources span {
-  display: inline;
-}
-.foot__sources span + span::before {
-  content: " · ";
-  color: var(--line-strong);
-}
-.foot__note {
-  font-size: 0.74rem;
-  color: var(--text-faint);
-  line-height: 1.6;
-  font-style: italic;
-}
-.foot a {
-  color: var(--text-dim);
+  .masthead h1 {
+    font-size: 23px;
+  }
+  .frames {
+    grid-template-columns: 1fr;
+  }
 }

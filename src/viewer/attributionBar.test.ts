@@ -4,7 +4,11 @@ import {
   barMetrics,
   layoutAttributionBar,
 } from "./attributionBar";
-import { RENDER_TUNING } from "./renderTuning";
+// The renderer's capture width, restated here rather than imported: the
+// tuning constants live in tileRenderer.ts, which imports Cesium, and these
+// tests run in Node. If the capture width ever changes, this test states the
+// baseline the bar's appearance was derived against.
+const CAPTURE_WIDTH_PX = 800;
 
 /**
  * Stand-in for a 2D context's text measurement: a fixed advance per character.
@@ -18,7 +22,7 @@ function measurer(fontPx: number): (s: string) => number {
 describe("attribution bar sizing", () => {
   it("renders at the historical 12 px on the baseline capture", () => {
     // The derivation changed; the baseline appearance must not have.
-    expect(barMetrics(RENDER_TUNING.width).fontPx).toBe(12);
+    expect(barMetrics(CAPTURE_WIDTH_PX).fontPx).toBe(12);
   });
 
   it("scales with the frame, so superSample no longer shrinks the credit", () => {

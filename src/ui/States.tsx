@@ -1,74 +1,83 @@
+// The honest non-result states.
+//
+// Every one of these is a *message*, never a picture: when real data is
+// missing the app says so, and no code path substitutes a placeholder,
+// block-model, or simulated scene. The not-supported state is first-class —
+// it is the answer most free-text addresses will get, by design.
+
+import { CURATED_BUILDINGS } from "../lib/curated";
 import type { UnavailableReason } from "../lib/types";
 
-/** Loading indicator shown while the geometry pipeline runs. */
-export function LoadingState() {
+export function LoadingState({ label }: { label: string }) {
   return (
-    <div className="loading" role="status" aria-live="polite">
-      <span className="spinner" aria-hidden="true" />
-      Geocoding address · resolving building footprint · computing camera geometry…
+    <div className="state state-loading" role="status">
+      <p>{label}</p>
     </div>
   );
 }
 
-// "Something went wrong" was the title for every network failure, and on
-// 2026-08-08 that is what all five presets showed for hours while NYC
-// Planning's GeoSearch returned 503 across every endpoint. It reads as "this
-// app is broken", which is both worse than the truth and less useful than it:
-// nothing here went wrong, an upstream service was down. Name it.
-const REASON_TITLE: Record<UnavailableReason, string> = {
-  "not-nyc": "Address isn't in New York City",
-  "geocode-failed": "Address not found",
-  "no-footprint": "Building footprint not available",
-  "network-error": "The NYC address service isn't responding",
-};
-
-/**
- * The honest "not available" state. This is the ONLY thing shown when real data
- * is missing — there is no fabricated fallback scene, by design. Every failure
- * reason from the pipeline routes here.
- */
-export function UnavailableState({
-  reason,
-  message,
-}: {
-  reason: UnavailableReason;
-  message: string;
-}) {
+/** No imagery key configured: everything up to the render works; the render
+ *  honestly does not. */
+export function NoImagerySourceState() {
   return (
-    <section className="state" role="status" aria-live="polite">
-      <h2 className="state__title">{REASON_TITLE[reason]}</h2>
-      <p className="state__body">{message}</p>
-      {/* Only for the outage case, and only because it is actionable: the
-          preset buildings carry a committed record of their coordinates and
-          keep working while the lookup service is down (lib/knownAddresses.ts).
-          Saying so turns a dead end into the one thing the reader can do. */}
-      {reason === "network-error" && (
-        <p className="state__body state__body--aside">
-          This is geosearch.planninglabs.nyc, the free NYC Planning service every
-          address lookup starts at — not this app, and not your connection. The
-          buildings offered on the previous screen still work: their coordinates
-          are held on file here.
-        </p>
-      )}
-    </section>
+    <div className="state" role="status">
+      <h2>Imagery source not configured</h2>
+      <p>
+        The address and camera geometry resolved, but no Google Map Tiles API
+        key is configured, so there is no real imagery to show. 27B never
+        substitutes a synthetic scene — set{" "}
+        <code>VITE_GOOGLE_MAPS_KEY</code> to enable the renderer.
+      </p>
+    </div>
   );
 }
 
-/**
- * Shown when the geometry resolved but no imagery source is configured
- * (VITE_GOOGLE_MAPS_KEY unset — see the README for how to set one). Truthful
- * about *why* there's no render, and deliberately NOT a placeholder scene. The
- * setup instructions for an operator live in the README, not here.
- */
-export function NoImagerySourceState() {
+export function UnavailableState({
+  reason,
+  message,
+  supportedFloors,
+}: {
+  reason: UnavailableReason;
+  message: string;
+  supportedFloors?: { min: number; max: number };
+}) {
+  if (reason === "not-supported") {
+    return (
+      <div className="state" role="status">
+        <h2>We don't have a good view for this one yet</h2>
+        <p>{message}</p>
+        {!supportedFloors && (
+          <>
+            <p>
+              The 3D imagery this app renders is only photographic where the
+              sightlines are long — tall buildings, or buildings facing a park
+              or river. At a typical mid-block address the source mesh isn't
+              good enough, and we'd rather say so than show you a bad frame.
+            </p>
+            <p className="state-list-label">Buildings with verified views:</p>
+            <ul className="state-list">
+              {CURATED_BUILDINGS.map((b) => (
+                <li key={b.bin}>
+                  {b.name} — floors {b.floors.min}–{b.floors.max}
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+      </div>
+    );
+  }
+
+  const heading =
+    reason === "not-nyc"
+      ? "Outside New York City"
+      : reason === "network-error"
+        ? "A data service is unreachable"
+        : "Not available for this address yet";
   return (
-    <section className="state">
-      <h2 className="state__title">Imagery source not configured</h2>
-      <p className="state__body">
-        The building geometry above is real. This copy of the app doesn't have
-        an imagery source connected, so the four views are shown as empty
-        frames rather than a placeholder scene.
-      </p>
-    </section>
+    <div className="state" role="status">
+      <h2>{heading}</h2>
+      <p>{message}</p>
+    </div>
   );
 }

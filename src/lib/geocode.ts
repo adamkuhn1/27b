@@ -1,20 +1,35 @@
 // Address -> lat/lng + BIN via the NYC Planning GeoSearch API.
 //
 // GeoSearch (https://geosearch.planninglabs.nyc) is a free, key-less Pelias
-// instance that ONLY indexes NYC addresses. That property is load-bearing: it is
-// our authoritative "is this NYC" gate. An address it can't resolve is, for our
-// purposes, not a usable NYC address — and maps to the honest "not available"
-// state, never a fabricated location.
+// instance that ONLY indexes NYC addresses. That property is load-bearing: it
+// is our authoritative "is this NYC" gate. An address it can't resolve is, for
+// our purposes, not a usable NYC address — and maps to the honest "not
+// available" state, never a fabricated location.
 //
 // Docs: https://geosearch.planninglabs.nyc/docs/
 
 import type { GeocodeResult } from "./types";
-import { isWithinNyc } from "./validation";
 import { verifyAddressMatch, type ParsedQuery } from "./addressMatch";
-import { recordedGeocode } from "./knownAddresses";
 
-const GEOSEARCH_URL =
-  "https://geosearch.planninglabs.nyc/v2/search";
+const GEOSEARCH_URL = "https://geosearch.planninglabs.nyc/v2/search";
+
+/** WGS84 bounding box for the five boroughs (generous, incl. Staten Island). */
+export const NYC_BBOX = {
+  minLat: 40.4774,
+  maxLat: 40.9176,
+  minLng: -74.2591,
+  maxLng: -73.7004,
+} as const;
+
+/** True if a lat/lng falls inside the NYC bounding box. */
+export function isWithinNyc(lat: number, lng: number): boolean {
+  return (
+    lat >= NYC_BBOX.minLat &&
+    lat <= NYC_BBOX.maxLat &&
+    lng >= NYC_BBOX.minLng &&
+    lng <= NYC_BBOX.maxLng
+  );
+}
 
 /** Minimal shape of the GeoSearch (Pelias) response we consume. */
 interface PeliasFeature {
@@ -49,42 +64,24 @@ export class GeocodeError extends Error {
 }
 
 /**
- * Geocode a NYC address. Throws GeocodeError with a discriminating `kind` on any
- * failure so the pipeline can route every branch to the honest unavailable state.
- */
-export async function geocodeAddress(
-  address: string,
-  signal?: AbortSignal,
-): Promise<GeocodeResult> {
-  try {
-    return await geocodeLive(address, signal);
-  } catch (err) {
-    // A record substitutes for an outage, never for an answer. `not-nyc` and
-    // `geocode-failed` mean the service replied and the reply was no; those are
-    // correct results and they stand. Only `network-error` — unreachable, 5xx,
-    // malformed — is the case a record is allowed to cover.
-    if (!(err instanceof GeocodeError) || err.kind !== "network-error") throw err;
-    const recorded = recordedGeocode(address);
-    if (!recorded) throw err;
-    return recorded;
-  }
-}
-
-/**
  * How many times to ask before concluding the service is down.
  *
  * Three attempts over ~1 s. GeoSearch sits behind a load balancer that returns
- * 503 with no body when it has no healthy backend, and a single unlucky request
- * hitting a rolling restart used to be indistinguishable from an outage. This
- * is not a retry loop for a service that is genuinely down — with the whole
- * host at 503 all three attempts fail in about a second and the caller gets its
- * answer promptly, which is the behaviour a person waiting on a spinner wants.
+ * 503 with no body when it has no healthy backend, and a single unlucky
+ * request hitting a rolling restart used to be indistinguishable from an
+ * outage. With the whole host at 503 all three attempts fail in about a second
+ * and the caller gets its answer promptly.
  */
 const ATTEMPTS = 3;
 const BACKOFF_MS = [200, 700];
 
-/** Ask the live service, retrying only what is worth retrying. */
-async function geocodeLive(
+/**
+ * Geocode a NYC address. Throws GeocodeError with a discriminating `kind` on
+ * any failure so the pipeline can route every branch to the honest unavailable
+ * state. Only transport-level trouble is retried: asking a healthy service the
+ * same unanswerable question three times is just three times the wait.
+ */
+export async function geocodeAddress(
   address: string,
   signal?: AbortSignal,
 ): Promise<GeocodeResult> {
@@ -93,16 +90,19 @@ async function geocodeLive(
     try {
       return await geocodeOnce(address, signal);
     } catch (err) {
-      // Only transport-level trouble is retryable. Asking a healthy service the
-      // same unanswerable question three times is just three times the wait.
-      if (!(err instanceof GeocodeError) || err.kind !== "network-error") throw err;
+      if (!(err instanceof GeocodeError) || err.kind !== "network-error") {
+        throw err;
+      }
       last = err;
       const wait = BACKOFF_MS[attempt];
       if (wait === undefined) break;
       await sleep(wait, signal);
     }
   }
-  throw last ?? new GeocodeError("Could not reach the NYC address service.", "network-error");
+  throw (
+    last ??
+    new GeocodeError("Could not reach the NYC address service.", "network-error")
+  );
 }
 
 /** Sleep that still honours an abort, so cancelling a lookup cancels promptly. */
@@ -152,7 +152,10 @@ async function geocodeOnce(
   try {
     data = (await res.json()) as PeliasResponse;
   } catch {
-    throw new GeocodeError("Malformed response from address service.", "network-error");
+    throw new GeocodeError(
+      "Malformed response from address service.",
+      "network-error",
+    );
   }
 
   const feature = data.features?.[0];
@@ -175,8 +178,8 @@ async function geocodeOnce(
   }
 
   // Pelias always answers with *something*. Verify that the something it found
-  // is the address that was typed — see lib/addressMatch.ts for why this is not
-  // optional. A silent fuzzy substitution would render real imagery of the
+  // is the address that was typed — see lib/addressMatch.ts for why this is
+  // not optional. A silent fuzzy substitution would render real imagery of the
   // wrong building under the user's address, which is a worse lie than a
   // missing image.
   const verdict = verifyAddressMatch(data.geocoding?.query?.parsed_text ?? {}, {

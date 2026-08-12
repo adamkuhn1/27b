@@ -1,250 +1,148 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+// 27B — application shell and state machine.
+//
+// Flow: address + floor -> geometry pipeline (lib/planView.ts) -> if the plan
+// resolves and a key is configured, a single Cesium render session captures
+// the four facade views progressively. Every failure branch lands in an
+// explicit honest state; there is no fallback imagery of any kind.
+//
+// Cesium is imported dynamically here and nowhere else. The engine is ~1.7 MB
+// gzipped, and a visitor who never gets past the form (or who only ever sees
+// a not-supported state) should never pay for it.
+
+import { useEffect, useRef, useState } from "react";
 import { AddressForm, type AddressFormValue } from "./ui/AddressForm";
-import {
-  LoadingState,
-  UnavailableState,
-  NoImagerySourceState,
-} from "./ui/States";
+import { LoadingState, NoImagerySourceState, UnavailableState } from "./ui/States";
 import { ResultView } from "./ui/ResultView";
-import { planView } from "./pipeline/planView";
-import { hasImagerySource } from "./lib/config";
-import { purgeRetiredCaptureCache, purgeSupersededPlans } from "./lib/cache";
-import type { ViewPlanResult } from "./lib/types";
+import { planView } from "./lib/planView";
+import type { ViewPlanResult, ViewSlot, ViewState } from "./lib/types";
 
-// One-time cleanup: builds before 2026-08-04 persisted rendered Google tile
-// imagery to localStorage. That is not permitted under Google Maps Platform ToS
-// §3.2.3(b) (no caching of Google Maps Content absent a service-specific
-// allowance, and the Maps Service Specific Terms grant none for Map Tiles), so
-// any such data left in a returning visitor's browser is deleted at startup
-// rather than merely ignored.
-purgeRetiredCaptureCache();
+/** The Google Maps Platform key that unlocks Photorealistic 3D Tiles. */
+function googleMapsKey(): string | undefined {
+  const key = import.meta.env.VITE_GOOGLE_MAPS_KEY;
+  return typeof key === "string" && key.trim() !== "" ? key.trim() : undefined;
+}
 
-// Plans written by an earlier version of the geometry are keyed under that
-// version and can never be read by this build. Delete them rather than leave a
-// generation of dead entries in the visitor's storage.
-purgeSupersededPlans();
+type ViewStates = Record<ViewSlot, ViewState>;
+
+const ALL_PENDING: ViewStates = {
+  V1: { kind: "pending" },
+  V2: { kind: "pending" },
+  V3: { kind: "pending" },
+  V4: { kind: "pending" },
+};
 
 type UiState =
   | { kind: "idle" }
-  | { kind: "loading" }
-  | { kind: "result"; result: ViewPlanResult };
-
-interface Preset {
-  name: string;
-  address: string;
-  floor: number;
-  detail: string;
-}
-
-// Mostly buildings people actually live in, because that is what this is for.
-// The two landmarks are here because they are the cases a New Yorker will try
-// first, not because the app is a tour of them.
-//
-// ORDER IS DELIBERATE, and it was wrong until 2026-08-08. 425 E 79th was first
-// because it is the most interesting case in the app: a floor-10 walk-up with a
-// party wall on one side and a 4 m light court on another, which is the whole
-// point of the enclosure work. It is also, for exactly that reason, the worst
-// picture of the five — three of its four directions are a close-range facade
-// two metres away, which is what the provider's mesh renders worst
-// (proof/presets-verification/frames/425-e79-nne-close-range.png). Whoever clicked the first
-// button saw a smear and concluded the renderer was broken.
-//
-// So the order now runs from the clearest view to the most enclosed one. The
-// hard case is still here and still labelled; it is just no longer the opening
-// argument. Every one of these was rendered and looked at before this list was
-// reordered — see proof/verify-presets.mjs.
-const PRESETS: Preset[] = [
-  {
-    name: "432 Park Ave",
-    address: "432 Park Ave, Manhattan, New York, NY 10022",
-    floor: 80,
-    detail: "floor 80 · over Central Park",
-  },
-  {
-    name: "Empire State Bldg",
-    address: "350 5th Ave, Manhattan, New York, NY 10118",
-    floor: 80,
-    detail: "floor 80 · Midtown",
-  },
-  {
-    name: "The Dakota",
-    address: "1 W 72nd St, Manhattan, New York, NY 10023",
-    floor: 7,
-    detail: "floor 7 · Upper West Side",
-  },
-  {
-    name: "175 Fifth Ave",
-    address: "175 5th Ave, Manhattan, New York, NY 10010",
-    floor: 18,
-    detail: "floor 18 · the Flatiron",
-  },
-  {
-    name: "425 E 79th St",
-    address: "425 E 79th St, Manhattan, New York, NY 10075",
-    floor: 10,
-    detail: "floor 10 · hemmed in on three sides",
-  },
-];
-
-interface BuildingPresetsProps {
-  onSelect: (value: AddressFormValue) => void;
-  busy: boolean;
-}
-
-function BuildingPresets({ onSelect, busy }: BuildingPresetsProps) {
-  return (
-    <div className="presets">
-      <span className="presets__label">Or try one of these</span>
-      <div className="presets__row">
-        {PRESETS.map((p) => (
-          <button
-            key={p.address}
-            type="button"
-            className="preset"
-            disabled={busy}
-            onClick={() => onSelect({ address: p.address, floor: p.floor })}
-          >
-            <span className="preset__name">{p.name}</span>
-            <span className="preset__detail">{p.detail}</span>
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
+  | { kind: "planning" }
+  | { kind: "result"; result: ViewPlanResult; viewStates: ViewStates };
 
 export default function App() {
-  const [ui, setUi] = useState<UiState>({ kind: "idle" });
+  const [state, setState] = useState<UiState>({ kind: "idle" });
+  // One AbortController per lookup: a new search or an unmount supersedes the
+  // running pipeline AND its render session (which owns a WebGL context).
   const abortRef = useRef<AbortController | null>(null);
-  // Changing this remounts the result, which opens a new render session. It is
-  // the only way to re-render after a session has closed, and it costs one root
-  // tileset request — the same as re-rendering all four directions, which is
-  // why the UI never offers a cheaper-looking per-direction retry once the
-  // session is gone.
-  const [renderAttempt, setRenderAttempt] = useState(0);
-  const imagerySource = hasImagerySource();
 
-  // Portfolio embed contract (apps/portfolio/src/lib/embedProtocol.ts): once
-  // the first frame has painted — the address form is interactive immediately —
-  // tell the shell to crossfade its loading veil out. rAF defers past the
-  // commit so we announce a painted frame, not just a mounted tree. No-op when
-  // running standalone.
-  useEffect(() => {
-    if (window.parent === window) return;
-    const raf = requestAnimationFrame(() => {
-      window.parent.postMessage(
-        { source: "portfolio-embed", type: "ready", id: "27b" },
-        "*",
-      );
-    });
-    return () => cancelAnimationFrame(raf);
-  }, []);
+  useEffect(() => () => abortRef.current?.abort(), []);
 
-  const handleSubmit = useCallback(async (value: AddressFormValue) => {
-    // Cancel any in-flight request so a fast re-search doesn't race.
+  const lookup = async ({ address, floor }: AddressFormValue) => {
     abortRef.current?.abort();
-    const ac = new AbortController();
-    abortRef.current = ac;
-    setRenderAttempt(0);
+    const controller = new AbortController();
+    abortRef.current = controller;
 
-    setUi({ kind: "loading" });
+    setState({ kind: "planning" });
+
+    let result: ViewPlanResult;
     try {
-      const result = await planView(value.address, value.floor, ac.signal);
-      if (!ac.signal.aborted) setUi({ kind: "result", result });
+      result = await planView(address, floor, controller.signal);
     } catch (err) {
-      // AbortError from a superseded request — ignore; a newer one is running.
-      if (err instanceof DOMException && err.name === "AbortError") return;
-      setUi({
-        kind: "result",
-        result: {
-          ok: false,
-          reason: "network-error",
-          message: "Unexpected error. Please try again.",
-        },
-      });
+      if (controller.signal.aborted) return; // superseded
+      throw err;
     }
-  }, []);
+    if (controller.signal.aborted) return;
+
+    setState({ kind: "result", result, viewStates: { ...ALL_PENDING } });
+    if (!result.ok) return;
+
+    const key = googleMapsKey();
+    if (!key) return; // ResultView is not shown without a key — see render()
+
+    const setSlot = (slot: ViewSlot, s: ViewState) => {
+      setState((prev) =>
+        prev.kind === "result"
+          ? { ...prev, viewStates: { ...prev.viewStates, [slot]: s } }
+          : prev,
+      );
+    };
+
+    try {
+      // Lazy: this import is what pulls Cesium into the page.
+      const { renderViews } = await import("./viewer/tileRenderer");
+      if (controller.signal.aborted) return;
+      const outcomes = await renderViews(result.plan.views, {
+        apiKey: key,
+        signal: controller.signal,
+        onViewStart: (slot) => setSlot(slot, { kind: "capturing" }),
+      });
+      for (const o of outcomes) {
+        setSlot(
+          o.slot,
+          o.ok
+            ? { kind: "ready", result: o.result }
+            : { kind: "failed", detail: o.detail },
+        );
+      }
+    } catch (err) {
+      // A RenderAbortedError also lands here; the aborted check covers it.
+      if (controller.signal.aborted) return;
+      // Whole-session failure (bad key, no WebGL): every direction failed.
+      console.error("[27b] render session failed:", err);
+      setState((prev) =>
+        prev.kind === "result"
+          ? {
+              ...prev,
+              viewStates: {
+                V1: { kind: "failed", detail: "session failed" },
+                V2: { kind: "failed", detail: "session failed" },
+                V3: { kind: "failed", detail: "session failed" },
+                V4: { kind: "failed", detail: "session failed" },
+              },
+            }
+          : prev,
+      );
+    }
+  };
 
   return (
-    <div className="app">
-      <div className="app__inner">
-        <header className="masthead">
-          {/*
-            "What would you see from floor 27B?" read as an instruction to type
-            27B into the floor box. 27B is the name of the thing, not a value
-            you enter, and the two inputs are an address and a floor number.
-          */}
-          <p className="masthead__tag">
-            <span className="masthead__mark">27B</span> — New York City only
-          </p>
-          <h1 className="masthead__title">What would you see from that floor?</h1>
-          <p className="masthead__sub">
-            Before you go and look at an apartment, see roughly what its floor
-            looks out on. Give it a New York address and a floor number: it
-            finds the building, works out how high that floor sits, and looks
-            out along each of the building's walls using real captured imagery
-            of the city.
-          </p>
-        </header>
-
-        <AddressForm onSubmit={handleSubmit} busy={ui.kind === "loading"} />
-
-        <BuildingPresets
-          onSelect={handleSubmit}
-          busy={ui.kind === "loading"}
-        />
-
-        {/*
-          Two sentences, and every claim the three-sentence version made is
-          still in them: approximate rather than actual, an estimated floor
-          height, directions derived from the building's shape, and imagery
-          that is real or absent. What went is the explaining — the reader has
-          not typed anything yet, and the reasoning behind each of these is
-          available in "How this was placed" once there is a result to qualify.
-        */}
-        <p className="framing">
-          <strong>Approximately what you'd see</strong>, not the view from a
-          particular apartment: per-floor heights aren't published, so your
-          floor's height is estimated, and the four directions come from the
-          building's shape. The imagery is always real, or absent — never a
-          stand-in.
+    <main className="app">
+      <header className="masthead">
+        <h1>
+          <span className="mark">27B</span> — which way do your windows face?
+        </h1>
+        <p className="tagline">
+          A New York address and a floor. Four real renders of approximately
+          what you'd see — from Google's photorealistic 3D reconstruction,
+          shipped as captured.
         </p>
+      </header>
 
-        {ui.kind === "loading" && <LoadingState />}
+      <AddressForm disabled={state.kind === "planning"} onSubmit={lookup} />
 
-        {ui.kind === "result" && !ui.result.ok && (
+      {state.kind === "planning" && (
+        <LoadingState label="Resolving the address and building geometry…" />
+      )}
+
+      {state.kind === "result" &&
+        (!state.result.ok ? (
           <UnavailableState
-            reason={ui.result.reason}
-            message={ui.result.message}
+            reason={state.result.reason}
+            message={state.result.message}
+            supportedFloors={state.result.supportedFloors}
           />
-        )}
-
-        {ui.kind === "result" &&
-          ui.result.ok &&
-          (imagerySource ? (
-            <ResultView
-              key={renderAttempt}
-              result={ui.result}
-              onRenderAgain={() => setRenderAttempt((n) => n + 1)}
-            />
-          ) : (
-            <>
-              <ResultView result={ui.result} renderDisabled />
-              <NoImagerySourceState />
-            </>
-          ))}
-      </div>
-
-      <footer className="foot">
-        <div className="foot__inner">
-          <div className="foot__sources">
-            <span>Imagery: Google Maps (Photorealistic 3D Tiles, via CesiumJS)</span>
-            <span>Buildings: NYC OpenData Building Footprints</span>
-            <span>Geocoding: NYC Planning GeoSearch</span>
-            <span>Vertical datum: NOAA NGS GEOID18</span>
-          </div>
-        </div>
-      </footer>
-    </div>
+        ) : !googleMapsKey() ? (
+          <NoImagerySourceState />
+        ) : (
+          <ResultView plan={state.result.plan} states={state.viewStates} />
+        ))}
+    </main>
   );
 }
