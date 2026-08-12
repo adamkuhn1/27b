@@ -33,12 +33,19 @@ export interface CuratedBuilding {
   /** NYC Building Identification Number — the match key. */
   bin: string;
   /**
-   * Inclusive floor range verified to render well. Below `min` the camera
-   * drops into street-level mesh (the provider's worst case); above `max` is
-   * above the building (the pipeline would clamp to the roof anyway).
+   * Inclusive floor range offered. `min` is a floor that was live-rendered
+   * and visually accepted in all four directions — in the 2026-08-11 bake-off
+   * a LOWER probe floor was also rendered for every building, and where it
+   * failed (432 Park at 45, San Remo at 15, 1 CPW at 25, Brooklyn Tower at
+   * 45) `min` stays at the verified floor. Floors above `min` up to `max` are
+   * allowed on a geometric argument, not a render: raising the camera over
+   * the same neighbours only lengthens every sightline. `max` is the
+   * building's real top floor, and always keeps the estimated eye below the
+   * dataset roof height, so the roof clamp in lib/geometry.ts never engages
+   * silently for a curated request.
    */
   floors: { min: number; max: number };
-  /** Floor the picker chip pre-fills — the one we verified most carefully. */
+  /** Floor the picker chip pre-fills — the one verified most carefully. */
   suggestedFloor: number;
   /** Why this building renders well (shown in the picker). */
   note: string;
@@ -51,7 +58,7 @@ export const CURATED_BUILDINGS: readonly CuratedBuilding[] = [
     name: "Empire State Building",
     address: "350 5th Ave, Manhattan, New York, NY 10118",
     bin: "1015862",
-    floors: { min: 30, max: 102 },
+    floors: { min: 50, max: 102 },
     suggestedFloor: 80,
     note: "Tall enough that every direction clears the Midtown roofline.",
     verifiedAt: "2026-08-11",
@@ -60,54 +67,36 @@ export const CURATED_BUILDINGS: readonly CuratedBuilding[] = [
     name: "432 Park Avenue",
     address: "432 Park Ave, Manhattan, New York, NY 10022",
     bin: "1088817",
-    floors: { min: 40, max: 85 },
+    floors: { min: 70, max: 85 },
     suggestedFloor: 70,
-    note: "Supertall over Midtown; Central Park fills the north frame.",
-    verifiedAt: "2026-08-11",
-  },
-  {
-    name: "The Dakota",
-    address: "1 W 72nd St, Manhattan, New York, NY 10023",
-    bin: "1028637",
-    floors: { min: 5, max: 9 },
-    suggestedFloor: 8,
-    note: "A mid-rise that works because Central Park faces its east wall.",
-    verifiedAt: "2026-08-11",
-  },
-  {
-    name: "Flatiron Building",
-    address: "175 5th Ave, Manhattan, New York, NY 10010",
-    bin: "1016278",
-    floors: { min: 10, max: 20 },
-    suggestedFloor: 18,
-    note: "Madison Square Park opens the north view; wide avenues on both flanks.",
-    verifiedAt: "2026-08-11",
-  },
-  {
-    name: "8 Spruce Street",
-    address: "8 Spruce St, Manhattan, New York, NY 10038",
-    bin: "1079057",
-    floors: { min: 30, max: 75 },
-    suggestedFloor: 60,
-    note: "Gehry tower over the East River, the bridges, and low civic blocks.",
-    verifiedAt: "2026-08-11",
-  },
-  {
-    name: "56 Leonard Street",
-    address: "56 Leonard St, Manhattan, New York, NY 10013",
-    bin: "1087629",
-    floors: { min: 25, max: 57 },
-    suggestedFloor: 45,
-    note: "Tribeca supertall; low loft blocks leave every sightline open.",
+    note: "Supertall over Midtown; Central Park fills the northwest frame.",
     verifiedAt: "2026-08-11",
   },
   {
     name: "The San Remo",
     address: "145 Central Park West, Manhattan, New York, NY 10023",
-    bin: "1030710",
-    floors: { min: 12, max: 27 },
+    bin: "1028714",
+    floors: { min: 20, max: 27 },
     suggestedFloor: 20,
-    note: "Twin-towered Central Park West classic; the park fills the east frame.",
+    note: "Central Park West classic; the park and its lake fill the east frame.",
+    verifiedAt: "2026-08-11",
+  },
+  {
+    name: "1 Central Park West",
+    address: "1 Central Park West, Manhattan, New York, NY 10023",
+    bin: "1027191",
+    floors: { min: 35, max: 44 },
+    suggestedFloor: 35,
+    note: "Columbus Circle tower; park east, open circle south.",
+    verifiedAt: "2026-08-11",
+  },
+  {
+    name: "The Brooklyn Tower",
+    address: "9 DeKalb Ave, Brooklyn, NY 11201",
+    bin: "3000370",
+    floors: { min: 70, max: 73 },
+    suggestedFloor: 70,
+    note: "Brooklyn's tallest; the harbor, the bridges, and brownstone Brooklyn below.",
     verifiedAt: "2026-08-11",
   },
 ] as const;
