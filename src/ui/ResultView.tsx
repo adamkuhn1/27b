@@ -1,399 +1,88 @@
-import { useEffect, useState } from "react";
-import type { CameraView, RenderState, ViewPlan, ViewSlot } from "../lib/types";
-import { classifyDirection, isCaptureRequested } from "../lib/directionClass";
-import { CesiumView } from "../viewer/CesiumView";
-import {
-  TileCapturesProvider,
-  readyCount,
-  requestedCount,
-  useTileCaptures,
-} from "../viewer/useTileCaptures";
-import { PlanDiagram } from "./PlanDiagram";
-import { chooseLeadDirection } from "./leadDirection";
-import {
-  RENDER_ALL_AGAIN,
-  RETRY_THIS_DIRECTION,
-  confidenceFor,
-  directionNote,
-  planNotes,
-  qualityLead,
-} from "./notes";
+// The result: up to four real frames, each labelled with the true compass
+// bearing its window faces, plus the disclosures that keep the result honest.
+//
+// Copy rule (non-negotiable): everything here is "approximately what you'd
+// see", never "your actual view" — the floor height is an estimate, the
+// camera stands just outside the facade rather than at a window pane, and the
+// mesh is Google's photogrammetry, not a photograph taken today.
 
-interface ResultViewProps {
-  result: { ok: true; plan: ViewPlan; fromCache: boolean };
-  /** When true, render is suppressed (no imagery key) — labels/frames only. */
-  renderDisabled?: boolean;
-  /** Re-run the whole lookup. Costs one root tileset request. */
-  onRenderAgain?: () => void;
-}
+import type { ViewPlan, ViewSlot, ViewState } from "../lib/types";
 
-/**
- * Presents a produced ViewPlan as one large view, the other directions beside
- * it, and a plan drawing showing which way each looks.
- *
- * ONE LARGE VIEW, NOT FOUR SMALL ONES. Four panes in a grid gave every
- * direction 338 CSS px of an 800 px capture — small enough that the picture
- * could not be read and the baked attribution line came out at 3.7-7.7 device
- * pixels. It also made the page a specimen sheet: four thumbnails of a building
- * you were considering living in, all equally unreadable. The four directions
- * are still all here and still all captured; one of them is simply the size a
- * photograph should be.
- *
- * The structure is on screen — correctly labelled, with real bearings — from
- * the moment the geometry resolves, roughly a second in. Imagery lands into it
- * as each direction is captured. A direction that never loads keeps its label,
- * its bearing and its arrow on the plan, and shows an empty frame; it is never
- * filled with a substitute.
- */
-export function ResultView({
-  result,
-  renderDisabled,
-  onRenderAgain,
-}: ResultViewProps) {
-  const { plan } = result;
-
-  return (
-    <section className="result" aria-label="Building views">
-      <TileCapturesProvider plan={plan} disabled={renderDisabled}>
-        <ResultBody plan={plan} onRenderAgain={onRenderAgain} />
-      </TileCapturesProvider>
-    </section>
-  );
-}
-
-function ResultBody({
-  plan,
-  onRenderAgain,
-}: {
+interface Props {
   plan: ViewPlan;
-  onRenderAgain?: () => void;
-}) {
-  const captures = useTileCaptures();
-  const loaded = readyCount(captures.bySlot);
-  const aboveGroundM =
-    plan.eyeElevationNavd88M - plan.footprint.groundElevationNavd88M;
-
-  // Which direction opens the result, chosen from geometry before any imagery
-  // exists (see leadDirection.ts). Held in state so the reader can change it,
-  // and re-seeded only when the plan itself changes — never when a frame lands.
-  const [selected, setSelected] = useState<ViewSlot | null>(() =>
-    chooseLeadDirection(plan),
-  );
-  useEffect(() => setSelected(chooseLeadDirection(plan)), [plan]);
-
-  // The denominator is the number of directions we ASKED the provider for, not
-  // the number of facades. A wall shared with the building next door was never
-  // requested, and counting it here would report "3 of 4 directions loaded" —
-  // which reads as one having failed when nothing did.
-  const requested = requestedCount(captures.bySlot);
-
-  // Three-way on purpose: true while frames are still arriving, false once the
-  // render is over, and undefined when there is no render to speak of (no
-  // imagery key). The notes read differently in each case, and "no key" must
-  // not be reported as "nothing loaded".
-  const stillCapturing =
-    captures.phase === "running"
-      ? true
-      : captures.phase === "idle"
-        ? undefined
-        : false;
-
-  const notes = planNotes(plan, {
-    loadedCount: loaded,
-    totalCount: requested,
-    imageryUnavailable: captures.phase === "failed",
-    stillCapturing,
-  });
-
-  // The plan drawing has one mark for "nothing was asked for here, and this
-  // axis will never resolve" and does not distinguish a party wall from a court
-  // too narrow to stand in — on a 260-unit drawing that distinction is a label,
-  // not a line weight, and the label is on the frame and in the strip.
-  //
-  // Read straight off the render state now. It used to be recomputed here from
-  // the geometry, which is how the drawing came to mark a too-narrow court with
-  // the party-wall stroke: two places deciding the same thing, and only one of
-  // them knowing the difference.
-  const stateBySlot: Partial<Record<ViewSlot, RenderState>> = {};
-  for (const view of plan.views) {
-    stateBySlot[view.slot] = captures.bySlot[view.slot]?.phase ?? "queued";
-  }
-
-  const leadView =
-    plan.views.find((v) => v.slot === selected) ?? plan.views[0] ?? null;
-
-  return (
-    <>
-      <header className="result__head">
-        <h2 className="result__addr">{plan.geocode.label}</h2>
-        <p className="result__frame">
-          Floor {plan.floor} · approximate view, not a specific apartment
-        </p>
-      </header>
-
-      {notes.length > 0 && (
-        <ul className="notes" aria-label="About this result">
-          {notes.map((n) => (
-            <li key={n.id}>{n.text}</li>
-          ))}
-        </ul>
-      )}
-
-      <div className="result__stage">
-        {leadView && <LeadView plan={plan} view={leadView} />}
-
-        <aside className="result__aside">
-          <PlanDiagram plan={plan} stateBySlot={stateBySlot} />
-        </aside>
-      </div>
-
-      <DirectionStrip
-        plan={plan}
-        selected={leadView?.slot ?? null}
-        onSelect={setSelected}
-      />
-
-      <details className="disclosure">
-        <summary>How this was placed</summary>
-        <p className="result__meta result__meta--dim">
-          Eye {aboveGroundM.toFixed(1)} m above ground · roof{" "}
-          {plan.footprint.roofHeightM.toFixed(1)} m ·{" "}
-          <code>BIN {plan.footprint.bin}</code> · footprint rectangularity{" "}
-          {plan.facadeConcentration.toFixed(2)}
-        </p>
-        <p className="result__meta result__meta--dim">
-          {plan.basis === "facade"
-            ? "Views look out along this building's own facades (from its footprint), so the bearings are not N/E/S/W."
-            : "This footprint has no dominant facade orientation, so these are true compass views."}{" "}
-          Camera height {plan.eyeElevationNavd88M.toFixed(1)} m NAVD88 ={" "}
-          {plan.eyeElevationEllipsoidalM.toFixed(1)} m WGS84 ellipsoidal (geoid{" "}
-          {plan.geoidHeightM.toFixed(1)} m).
-        </p>
-        {plan.confidence && (
-          <p className="result__meta result__meta--dim">
-            Enclosure notes computed from {plan.confidence.neighborsConsidered}{" "}
-            neighbouring footprints within {plan.confidence.searchRadiusM} m
-            (NYC Open Data). No imagery is analysed.
-          </p>
-        )}
-        {/* Said plainly, because the alternative is a result that looks
-            identical to a live one and is not. Everything downstream of this
-            point — footprint, geometry, imagery — is being fetched right now;
-            only the address lookup came from the record. */}
-        {plan.geocode.fromRecord && (
-          <p className="result__meta result__meta--dim">
-            The NYC address service was unreachable, so this building's
-            coordinates came from a record captured on {plan.geocode.recordedAt}{" "}
-            rather than from a lookup just now. The footprint, the geometry and
-            the imagery are all live.
-          </p>
-        )}
-      </details>
-
-      {captures.phase !== "idle" && (
-        <ImageryAttribution onRenderAgain={onRenderAgain} />
-      )}
-    </>
-  );
+  /** Renderer state per slot, in plan order. */
+  states: Record<ViewSlot, ViewState>;
 }
 
-/**
- * The direction shown large.
- *
- * `data-quality` carries what the geometry established about this direction, so
- * a frame taken from two metres off the wall opposite is announced as one
- * BEFORE it is looked at. A close-range frame that arrives unlabelled reads as
- * a broken render; the same frame under "a light court about 4 m wide" reads as
- * the answer to the question. The app knows which it is, so it says so.
- */
-function LeadView({ plan, view }: { plan: ViewPlan; view: CameraView }) {
-  const captures = useTileCaptures();
-  const slot = captures.bySlot[view.slot];
-  // Two independent facts, read from two independent sources, and never mixed
-  // into one value: what the geometry says this side of the building is, and
-  // where the renderer has got to with it.
-  const cls = classifyDirection(view.slot, plan.confidence);
-  const uncaptured = !isCaptureRequested(cls);
-  const sessionFailed = captures.phase === "failed";
-  const failed = !uncaptured && (slot?.phase === "failed" || sessionFailed);
-  const state: RenderState = uncaptured
-    ? "not-requested"
-    : failed
-      ? "failed"
-      : slot?.phase ?? "queued";
-  const lead = qualityLead(cls);
+function frameCaption(plan: ViewPlan, slot: ViewSlot): string {
+  const view = plan.views.find((v) => v.slot === slot);
+  if (!view) return "";
+  return plan.basis === "facade"
+    ? `Facing ${view.compass} (${Math.round(view.headingDeg)}° — this facade's outward normal)`
+    : `Facing ${view.compass} (${Math.round(view.headingDeg)}° true)`;
+}
 
-  const note = directionNote(confidenceFor(plan.confidence, view.slot), {
-    settled: slot?.phase === "ready" ? slot.settled : undefined,
-    capturable: !uncaptured,
-    // When the whole session never opened, the result head already says so
-    // once; repeating it under every frame would say it four times.
-    didNotLoad: failed && !sessionFailed,
-  });
-
+function Frame({ plan, slot, state }: { plan: ViewPlan; slot: ViewSlot; state: ViewState }) {
   return (
-    <figure className="lead" data-quality={cls} data-phase={state}>
-      <figcaption className="lead__caption">
-        <span className="lead__compass">Looking {view.compass}</span>
-        <span className="lead__bearing">
-          {view.headingDeg.toFixed(0)}° true
-        </span>
-        {lead && <span className="lead__quality">{lead}</span>}
-      </figcaption>
-
-      <CesiumView
-        view={view}
-        disabled={captures.phase === "idle"}
-        uncaptured={uncaptured ? (cls as "no-window" | "no-room") : undefined}
-        directionClass={cls}
-      />
-
-      {note && <p className="lead__note">{note}</p>}
-
-      {/*
-        Offered only while the session is open, because that is the only time it
-        is free. Once the session closes, re-capturing one direction costs
-        exactly as much as re-capturing four, and the honest offer is the
-        whole-result button under the attribution line instead.
-      */}
-      {failed && captures.sessionOpen && (
-        <button
-          type="button"
-          className="lead__retry"
-          onClick={() => captures.retrySlot(view.slot)}
+    <figure className="frame">
+      {state.kind === "ready" ? (
+        <img
+          src={state.result.dataUrl}
+          alt={`Rendered 3D view ${frameCaption(plan, slot)} from floor ${plan.floor} of ${plan.curatedName}`}
+        />
+      ) : (
+        <div
+          className={`frame-empty frame-${state.kind}`}
+          role={state.kind === "failed" ? "alert" : "status"}
         >
-          {RETRY_THIS_DIRECTION}
-        </button>
+          {state.kind === "capturing" && <p>Rendering…</p>}
+          {state.kind === "pending" && <p>Waiting…</p>}
+          {state.kind === "failed" && (
+            <p>
+              This direction didn't load. Nothing is shown rather than a
+              substitute image.
+            </p>
+          )}
+        </div>
       )}
+      <figcaption>{frameCaption(plan, slot)}</figcaption>
     </figure>
   );
 }
 
-/**
- * The other directions, as a row of small frames you can promote.
- *
- * All four are always listed, in plan order, including the one currently shown
- * large. Showing only the other three would have saved a slot and cost the
- * reader a stable row: with three of four rotating through four positions,
- * every click moves every remaining thumbnail. A fixed row with the current one
- * marked is the switcher people already know how to use.
- */
-function DirectionStrip({
-  plan,
-  selected,
-  onSelect,
-}: {
-  plan: ViewPlan;
-  selected: ViewSlot | null;
-  onSelect: (slot: ViewSlot) => void;
-}) {
-  const captures = useTileCaptures();
-
+export function ResultView({ plan, states }: Props) {
   return (
-    <div className="thumbs" role="group" aria-label="The four directions">
-      {plan.views.map((view) => {
-        const cls = classifyDirection(view.slot, plan.confidence);
-        const uncaptured = !isCaptureRequested(cls);
-        const isSelected = view.slot === selected;
-        // Said on the thumbnail itself, not only under the large view. Two
-        // empty cells in a row of four are the whole of what a reader sees of
-        // a partial result until they click one, and an empty cell that says
-        // nothing reads as a picture that failed to decode.
-        const didNotLoad =
-          !uncaptured &&
-          (captures.bySlot[view.slot]?.phase === "failed" ||
-            captures.phase === "failed");
+    <section className="result" aria-label="Rendered views">
+      <header className="result-head">
+        <h2>
+          {plan.curatedName} — floor {plan.floor}
+        </h2>
+        <p className="result-sub">{plan.geocode.label}</p>
+      </header>
 
-        return (
-          <button
-            key={view.slot}
-            type="button"
-            className="thumb"
-            data-quality={cls}
-            data-phase={didNotLoad ? "failed" : undefined}
-            data-selected={isSelected ? "true" : undefined}
-            aria-pressed={isSelected}
-            // A direction nothing was requested for has nothing to promote:
-            // there is no frame and there never will be one. It stays in the
-            // row, labelled, because it is still one of the building's four
-            // sides.
-            disabled={uncaptured}
-            onClick={() => onSelect(view.slot)}
-          >
-            <span className="thumb__frame">
-              <CesiumView
-                view={view}
-                disabled={captures.phase === "idle"}
-                uncaptured={uncaptured ? (cls as "no-window" | "no-room") : undefined}
-                directionClass={cls}
-                size="thumb"
-              />
-            </span>
-            <span className="thumb__label">
-              <span className="thumb__compass">{view.compass}</span>
-              {cls === "no-window" && (
-                <span className="thumb__state">no window</span>
-              )}
-              {cls === "no-room" && (
-                <span className="thumb__state">too narrow</span>
-              )}
-              {didNotLoad && <span className="thumb__state">didn&rsquo;t load</span>}
-              {!didNotLoad && cls === "close" && (
-                <span className="thumb__state">close range</span>
-              )}
-              {!didNotLoad && cls === "unmeasured" && (
-                <span className="thumb__state">not checked</span>
-              )}
-            </span>
-          </button>
-        );
-      })}
-    </div>
-  );
-}
+      <div className="frames">
+        {plan.views.map((v) => (
+          <Frame key={v.slot} plan={plan} slot={v.slot} state={states[v.slot]} />
+        ))}
+      </div>
 
-/**
- * Google Maps attribution for the imagery on screen.
- *
- * Required by the Map Tiles API policies: the Google Maps logo (or, where space
- * is limited, the words "Google Maps") plus the aggregated per-tile data
- * attributions, displayed with the imagery. Each captured frame also carries the
- * same line composited into its own pixels, so the credit survives even if a
- * frame is viewed on its own.
- *
- * Rendered from whatever has actually landed, recomputed on each arrival — so
- * it is correct for what is on screen at any moment, not only at the end.
- * https://developers.google.com/maps/documentation/tile/policies
- */
-function ImageryAttribution({ onRenderAgain }: { onRenderAgain?: () => void }) {
-  const captures = useTileCaptures();
-  const loaded = readyCount(captures.bySlot);
-
-  // A session that closed with a direction still missing is the only case where
-  // re-rendering is the honest offer: once the session is gone, re-capturing one
-  // direction costs exactly as much as re-capturing all four, so the UI never
-  // pretends otherwise.
-  const missing =
-    !captures.sessionOpen &&
-    captures.phase !== "running" &&
-    captures.phase !== "idle" &&
-    loaded < requestedCount(captures.bySlot);
-
-  if (loaded === 0 && !missing) return null;
-
-  return (
-    <div className="attribution">
-      {loaded > 0 && (
-        <p className="attribution__line">
-          Imagery: <strong>Google Maps</strong>
-          {captures.attribution ? ` · ${captures.attribution}` : ""}
+      <footer className="result-notes">
+        <p>
+          This is <strong>approximately what you'd see</strong> from this floor
+          — not your actual view. Floor height is an estimate (3.2 m per floor,
+          eye 1.5 m above the slab{plan.floorClampedToRoof ? ", clamped to the real roof height" : ""}),
+          and the camera stands just outside the building's{" "}
+          {plan.basis === "facade"
+            ? "own facades"
+            : "footprint on true compass bearings (this footprint has no dominant facade direction)"}
+          .
         </p>
-      )}
-      {missing && onRenderAgain && (
-        <button type="button" className="btn btn--quiet" onClick={onRenderAgain}>
-          {RENDER_ALL_AGAIN}
-        </button>
-      )}
-    </div>
+        <p>
+          Imagery is Google's photorealistic 3D reconstruction of New York,
+          rendered live and shipped as captured — no generative or synthetic
+          step. Attribution is baked into each frame.
+        </p>
+      </footer>
+    </section>
   );
 }

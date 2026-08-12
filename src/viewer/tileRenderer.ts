@@ -1,103 +1,80 @@
 // Frugal 3D-tile renderer: capture four static frames from ONE Cesium session,
 // and hand each one over the moment it exists.
 //
-// Cost discipline (see README "Cost-cap notes"): Google Photorealistic 3D Tiles
-// is the only metered resource (~1,000 tile-events/mo free). A live, always-on
-// globe would stream tiles continuously. Instead we spin up a single offscreen
-// Cesium viewer, load the Google tileset ONCE, move the camera to each of the
-// four facade vantages, wait for tiles to settle, capture a static PNG per
-// view, then tear the viewer down. Four still captures per address, then the
-// viewer is gone — no ongoing tile traffic.
-//
+// Cost discipline: Google Photorealistic 3D Tiles is the only metered resource.
 // The billable unit is the **session** (one root tileset request), not the
 // frame: "Timed session tokens allow for up to three hours of renderer tile
 // requests from a single root tileset request", and "Tile requests for
 // Photorealistic 3D Tiles don't impact your daily quota" (Map Tiles usage &
-// billing, re-read 2026-08-05). So a re-capture of one direction inside a
-// still-open session is free, and a re-capture after teardown costs exactly as
-// much as re-rendering all four. That asymmetry is why the UI offers a
-// per-direction retry only while the session is open, and a whole-result
-// re-render afterwards.
-//
-// This module owns Cesium. It does NOT own what happens when a capture fails —
-// that policy lives in renderSession.ts, where it can be tested without a
-// WebGL context, a key, or a provider request.
+// billing, re-read 2026-08-05). So we spin up a single offscreen Cesium
+// viewer, load the Google tileset ONCE, move the camera to each of the four
+// facade vantages, wait for tiles to settle, capture a static PNG per view,
+// then tear the viewer down. One billable event per render, no ongoing tile
+// traffic, and an in-session retry of a failed direction is free.
 //
 // The captures are NOT cached anywhere. Google Maps Platform ToS §3.2.3(b)
-// forbids caching Google Maps Content except where the Maps Service Specific
-// Terms allow it, and those terms enumerate 21 services with no Map Tiles entry
-// at all (re-verified 2026-08-04 against the document last modified
-// 2026-06-10). So a repeat lookup of the same address is a new render and a new
-// billable root-tileset request; that is the licence-correct trade, not an
-// oversight. See docs/BILLING_AND_QUOTA.md.
+// forbids caching Google Maps Content, and the Maps Service Specific Terms
+// grant no Map Tiles allowance (re-verified 2026-08-04). A repeat lookup of
+// the same address is a new render and a new billable root-tileset request —
+// the licence-correct trade, not an oversight.
 //
-// This module is only ever imported behind the key gate; it is never on the
-// no-key code path, so a missing key can't reach real tile calls.
+// No pixel of any frame is ever analysed, by a model or otherwise (the Map
+// Tiles ToS prohibits it, and the product does not need it). The one guard
+// that decides whether a frame is real counts TRIANGLES DRAWN — our own
+// renderer's scene statistics — never image content.
+//
+// This module is only ever imported dynamically after a plan exists and a key
+// is configured; it is never on the no-key code path.
 
 import {
-  Viewer,
+  Cartesian3,
   Cesium3DTileset,
   createGooglePhotorealistic3DTileset,
-  Ion,
   ImageryLayer,
+  Ion,
   Math as CesiumMath,
+  Viewer,
 } from "cesium";
 // Imported here, not in index.html, so it travels in this lazily-imported
-// chunk. Cesium's widget stylesheet is only meaningful once a `Viewer` exists;
-// vite-plugin-cesium's default is to inject it as a render-blocking <head>
-// link on every page load, which a visitor who never runs a lookup should not
-// pay for. See the `lazyCesium` comment in vite.config.ts.
+// chunk. The widget stylesheet is only meaningful once a `Viewer` exists.
 import "cesium/Build/Cesium/Widgets/widgets.css";
-import type { CameraView, RenderSession } from "../lib/types";
-import { RENDER_TUNING } from "./renderTuning";
+import type { CameraView, CaptureResult, ViewSlot } from "../lib/types";
 import { barMetrics, layoutAttributionBar } from "./attributionBar";
-import { applyCameraView } from "./cesiumCamera";
-import { describeError } from "../lib/redact";
-import {
-  CaptureFailedError,
-  createRenderSession,
-  type FrameSource,
-  type RenderSessionOptions,
-} from "./renderSession";
 
-/** Text we are required to show alongside the imagery (policy: logo or the words). */
-const GOOGLE_ATTRIBUTION = "Google Maps";
+// ---------------------------------------------------------------------------
+// Tuning — every value chosen against real captures in the 2026-08 bake-off
+// ---------------------------------------------------------------------------
 
-export interface RenderOptions {
-  /** Google Map Tiles API key (Photorealistic 3D Tiles). Required. */
-  apiKey: string;
-  /** Capture size in CSS pixels. Small keeps memory + capture cost down. */
-  width?: number;
-  height?: number;
-  /** Supersampling factor for the canvas backing store. See `RENDER_TUNING`. */
-  superSample?: number;
-  /** Max ms to wait for tiles to settle per view before capturing anyway. */
-  settleTimeoutMs?: number;
-  /** Cesium `Cesium3DTileset.maximumScreenSpaceError`. See `RENDER_TUNING`. */
-  maximumScreenSpaceError?: number;
-  /** Horizontal field of view in degrees. See `RENDER_TUNING`. */
-  fovDeg?: number;
-  /** Near clip plane in metres. See `RENDER_TUNING`. */
-  nearPlaneM?: number;
-  /** Stationary-capture tile loading options. See `RENDER_TUNING`. */
-  stationaryLoading?: boolean;
+export const RENDER_TUNING = {
   /**
-   * Aborts the session early (superseded plan, unmount, StrictMode's double
-   * effect invocation). Without this, an orphaned run keeps its own Cesium
-   * viewer and WebGL context alive and streaming tiles even after its caller
-   * has stopped listening, which is how two concurrent viewers end up
-   * fighting over the GPU (framebufferTexture2D "does not belong to this
-   * context" errors) instead of the second one just winning cleanly.
+   * Capture size in real pixels. 800x600 was kept after a blinded experiment
+   * REJECTED 2x/1.5x supersampling: on three of four test buildings the
+   * baseline looked sharper than 1600x1200 (the extra screen-space demand
+   * outran what tiles arrived before settle), at 2.5-3.2x the wall clock. At
+   * these standoffs the provider's mesh is the limiting factor, not our
+   * raster. Do not re-run that experiment.
    */
-  signal?: AbortSignal;
-}
-
-class RenderAbortedError extends Error {
-  constructor() {
-    super("Tile render aborted (superseded).");
-    this.name = "RenderAbortedError";
-  }
-}
+  width: 800,
+  height: 600,
+  /** Max ms to wait for tiles to settle per view before capturing anyway. */
+  settleTimeoutMs: 16000,
+  /**
+   * Cesium's LOD threshold. Lower = finer tiles, more requests, more memory.
+   * 8 and 6 were captured: 6 costs 81% more renderer tile requests for a frame
+   * indistinguishable from 10.
+   */
+  maximumScreenSpaceError: 10,
+  /**
+   * Horizontal field of view, degrees. 75 — not Cesium's default 60 — was the
+   * only tuning delta in the bake-off that visibly improved more than one
+   * building. At 60, a camera six metres off a facade frames almost nothing
+   * but the wall opposite (the provider mesh's worst case); at 75 the same
+   * capture includes roofline, sky, and street, and reads as a view out of a
+   * window. It is also cheaper: a wider frame needs less angular resolution
+   * (~26% fewer renderer tile requests, measured). 90 stretches at the edges.
+   */
+  fovDeg: 75,
+} as const;
 
 /**
  * Quiet period after tile activity reaches zero before a capture is called
@@ -107,198 +84,98 @@ class RenderAbortedError extends Error {
 const SETTLE_GRACE_MS = 900;
 
 /**
- * How often to drive a frame while streaming tiles. ~33 fps: enough to keep the
- * tileset's traversal advancing and its request queue full, without spending
- * more GPU than the streaming can use. Shared by the warm-up and by
- * `waitForTiles`, because they are doing the same job.
+ * How often to drive a frame while streaming tiles (~33 fps). A 3D tileset
+ * only discovers and requests tiles during `Scene.render()`; under
+ * `requestRenderMode` no frames happen unless somebody asks, so "waiting for
+ * tiles" without pumping frames loads nothing.
  */
 const PUMP_INTERVAL_MS = 30;
 
-/** How long to stream tiles before the first capture. See the call site. */
+/** How long to stream tiles before the first capture. */
 const WARMUP_MS = 3000;
 
 /**
- * Multiplier on the settle budget for the FIRST capture of a session. See the
- * `firstCapture` comment in `openCesiumFrameSource` for the measurement.
+ * Multiplier on the settle budget for the FIRST capture of a session. Later
+ * views run against a tileset the earlier waits already populated; the first
+ * starts from a tileset that knows nothing but its root. Measured: without
+ * this, the first direction of a high-floor session was regularly captured as
+ * sky over a coarse global mesh while later directions looked right.
  */
 const FIRST_CAPTURE_SETTLE_FACTOR = 2.5;
 
+/** Text we are required to show alongside the imagery. */
+const GOOGLE_ATTRIBUTION = "Google Maps";
+
+// ---------------------------------------------------------------------------
+// Key redaction — provider error text can embed the key-bearing tile URL
+// ---------------------------------------------------------------------------
+
 /**
- * Render frames for `durationMs` so a tileset can stream.
- *
- * A 3D tileset only discovers and requests the tiles it needs during
- * `Scene.render()`. Under `requestRenderMode` no frames happen unless somebody
- * asks for them, so "wait a while for tiles to load" without rendering loads
- * nothing beyond whatever one frame already asked for. Anywhere this app waits
- * for tiles, it has to pump.
+ * Strip `key=` query parameters out of diagnostic text. The key is already
+ * public in the built bundle (the browser talks to tile.googleapis.com
+ * directly), so this is not a secrecy control — it exists so a key never lands
+ * in an error message someone screenshots or pastes into a bug report.
  */
-async function pumpFrames(
-  viewer: Viewer,
-  durationMs: number,
-  checkAborted: () => void,
-): Promise<void> {
-  const until = Date.now() + durationMs;
-  while (Date.now() < until) {
-    checkAborted();
-    try {
-      viewer.scene.requestRender();
-      viewer.render();
-    } catch {
-      // A render throwing here is the session's problem, not the warm-up's;
-      // the capture that follows will surface it with context.
-      return;
-    }
-    await new Promise<void>((r) => setTimeout(r, PUMP_INTERVAL_MS));
+export function redactKey(text: string): string {
+  return text.replace(/([?&]key=)[^&\s"']+/gi, "$1[redacted]");
+}
+
+/** Normalize any thrown value into redacted, human-readable text. */
+export function describeError(err: unknown): string {
+  if (err instanceof Error) return redactKey(err.message);
+  if (typeof err === "string") return redactKey(err);
+  // Cesium errors can be RequestErrorEvent objects rather than Errors.
+  const asRecord = err as { statusCode?: unknown };
+  if (asRecord && typeof asRecord.statusCode === "number") {
+    return `status ${asRecord.statusCode}`;
+  }
+  try {
+    const s = String(err);
+    return s === "[object Object]" ? "unknown error" : redactKey(s);
+  } catch {
+    return "unknown error";
   }
 }
 
-/** How `waitForTiles` ended. */
-export interface SettleOutcome {
-  /**
-   * True when tile activity went quiet and the settle grace elapsed; false
-   * when the hard timeout fired first, or the caller aborted.
-   *
-   * This distinction used to be discarded — both terminators resolved the same
-   * void promise — which meant the app could not tell "this capture finished
-   * refining" from "we gave up waiting after 16 s". It is the only honest basis
-   * for the "still sharpening" note, and it is a statement about **our own
-   * render loop**, not about the picture. See lib/confidence.ts on why the
-   * distinction between those two matters here.
-   */
-  settled: boolean;
-  waitedMs: number;
-}
+// ---------------------------------------------------------------------------
+// Camera placement
+// ---------------------------------------------------------------------------
 
 /**
- * Wait until the tileset is fully settled for the current view, or a timeout
- * elapses.
- *
- * Design choices:
- *
- * 1. Synchronous render() in the drive loop — requestRenderMode offscreen
- *    canvases may have their rAF callbacks throttled by the browser.  Calling
- *    viewer.render() directly drives tile-network round-trips synchronously,
- *    independent of the animation scheduler.
- *
- * 2. Debounce on loadProgress(0,0) — the event fires (0,0) both on startup
- *    (before any tiles are requested) and briefly between tile batches while
- *    the renderer refines the LOD. A `SETTLE_GRACE_MS` grace period after
- *    seeing (0,0) lets the second wave of detail tiles start before we declare
- *    done.
- *
- * 3. seenNonZero guard — never accept the initial (0,0) firing as "settled".
+ * Position + orient the Cesium camera for a CameraView. The destination is the
+ * real lat/lng and the WGS84 *ellipsoidal* height computed by lib/geometry.ts
+ * — Cartesian3.fromDegrees consumes ellipsoidal heights, which is exactly why
+ * the GEOID18 conversion upstream is load-bearing (~32 m otherwise).
  */
-function waitForTiles(
-  viewer: Viewer,
-  tileset: Cesium3DTileset,
-  timeoutMs: number,
-  signal?: AbortSignal,
-): Promise<SettleOutcome> {
-  return new Promise((resolve) => {
-    let done = false;
-    let seenNonZero = false;
-    let settleTimer: ReturnType<typeof setTimeout> | null = null;
-    const startedAt = Date.now();
-
-    const finish = (settled: boolean) => {
-      if (done) return;
-      done = true;
-      cleanup();
-      resolve({ settled, waitedMs: Date.now() - startedAt });
-    };
-    const finishUnsettled = () => finish(false);
-
-    if (signal) {
-      if (signal.aborted) {
-        finish(false);
-        return;
-      }
-      signal.addEventListener("abort", finishUnsettled, { once: true });
-    }
-
-    const scheduleSettle = () => {
-      if (settleTimer) clearTimeout(settleTimer);
-      // Grace period: if no new tile activity starts in this window, we
-      // consider the scene settled and capture. Dense areas (lower Manhattan)
-      // never fully quiesce at a useful screen-space-error — there's always
-      // one more refinement pass available — so this triggers the hard
-      // timeout below in practice. Measured captures at that timeout already
-      // look complete, so the grace period only needs to be long enough to
-      // not cut off a real burst of new tiles, not to prove total silence.
-      settleTimer = setTimeout(() => finish(true), SETTLE_GRACE_MS);
-    };
-
-    const cancelSettle = () => {
-      if (settleTimer) { clearTimeout(settleTimer); settleTimer = null; }
-    };
-
-    const removeLoadProgress = tileset.loadProgress.addEventListener(
-      (pendingRequests: number, tilesProcessing: number) => {
-        if (pendingRequests > 0 || tilesProcessing > 0) {
-          seenNonZero = true;
-          cancelSettle(); // tiles still loading — restart the grace window
-        } else if (seenNonZero) {
-          scheduleSettle(); // tiles quiesced — start the SETTLE_GRACE_MS window
-        }
-      },
-    );
-
-    // allTilesLoaded is a belt-and-suspenders complement: if the tileset emits
-    // this, tiles definitely loaded, so start the grace window immediately.
-    const removeAllLoaded = tileset.allTilesLoaded.addEventListener(() => {
-      seenNonZero = true;
-      scheduleSettle();
-    });
-
-    const hardTimer = setTimeout(finishUnsettled, timeoutMs);
-
-    // Drive tile streaming with synchronous viewer.render() so the tile
-    // network round-trips advance even when rAF is throttled for offscreen
-    // canvases. See PUMP_INTERVAL_MS — the warm-up pumps at the same rate for
-    // the same reason.
-    const renderInterval = setInterval(() => {
-      if (done) return;
-      try {
-        viewer.scene.requestRender();
-        viewer.render();
-      } catch {
-        // Ignore errors from a partially-torn-down viewer.
-      }
-    }, PUMP_INTERVAL_MS);
-
-    const cleanup = () => {
-      clearTimeout(hardTimer);
-      cancelSettle();
-      removeLoadProgress();
-      removeAllLoaded();
-      clearInterval(renderInterval);
-      signal?.removeEventListener("abort", finishUnsettled);
-    };
-
-    viewer.scene.requestRender();
-    viewer.render();
+export function applyCameraView(viewer: Viewer, view: CameraView): void {
+  viewer.camera.setView({
+    destination: Cartesian3.fromDegrees(view.lng, view.lat, view.heightM),
+    orientation: {
+      heading: CesiumMath.toRadians(view.headingDeg),
+      // Cesium pitch: 0 = horizon, negative = look down; same convention as
+      // CameraView.pitchDeg.
+      pitch: CesiumMath.toRadians(view.pitchDeg),
+      roll: 0,
+    },
   });
 }
+
+// ---------------------------------------------------------------------------
+// Attribution compositing
+// ---------------------------------------------------------------------------
 
 /**
  * Read the aggregated data attribution for the frame Cesium just drew.
  *
- * Cesium writes the credits for the current frame into `creditDisplay.container`
- * (that is what `showCreditsOnScreen: true` populates). Google's Photorealistic
- * 3D Tiles return their attribution per tile in the glTF `asset.copyright`
- * field, and the Map Tiles API policy is to "aggregate, sort, and display in a
- * line, all attributions for displayed tiles" — Cesium already aggregates and
- * de-duplicates them, so we read the aggregate rather than re-implement it.
+ * Google's Photorealistic 3D Tiles return attribution per tile in the glTF
+ * `asset.copyright` field; `showCreditsOnScreen: true` makes Cesium aggregate
+ * and de-duplicate the credits for the tiles in the current frame into
+ * `creditDisplay.container`. We read the aggregate rather than re-implement
+ * it.
  */
 export function readAttribution(viewer: Viewer): string[] {
   const container = viewer.creditDisplay?.container;
   if (!container) return [];
-  // Cesium puts one child element per on-screen credit inside
-  // `.cesium-credit-textContainer`, separated by `.cesium-credit-delimiter`
-  // spans, with the lightbox "Data attribution" link as a sibling of the
-  // container. Enumerating the children (rather than reading textContent off
-  // the whole widget) is what keeps the delimiter and the expand link out of
-  // the string and keeps individual credits separable for de-duplication.
   const textContainer = container.querySelector<HTMLElement>(
     ".cesium-credit-textContainer",
   );
@@ -314,11 +191,10 @@ export function readAttribution(viewer: Viewer): string[] {
 /**
  * Compose the WebGL frame plus a bottom attribution bar into a single PNG.
  *
- * The attribution is baked into the pixels on purpose: a `<img src=data:...>`
- * detached from the Cesium widget would otherwise carry no credit at all, and
- * the policy requires the attribution to be displayed with the imagery. The bar
- * sits below/over the bottom edge of the frame and is never overlapped by other
- * UI. Exported for the render-path unit test.
+ * The attribution is baked into the pixels on purpose: an `<img>` detached
+ * from the Cesium widget would otherwise carry no credit at all, and Map Tiles
+ * policy requires the attribution to be displayed with the imagery. The bar is
+ * the ONLY thing ever composited into an output frame.
  */
 export function composeAttributedPng(
   source: HTMLCanvasElement,
@@ -329,14 +205,13 @@ export function composeAttributedPng(
       ? `${GOOGLE_ATTRIBUTION} · ${attribution.join(", ")}`
       : GOOGLE_ATTRIBUTION;
 
-  // Size and wrap first, so the bar is tall enough to show the credits IN FULL
-  // before any pixels are allocated. See `attributionBar.ts` for why the size
-  // is a fraction of the frame rather than a constant.
   const { fontPx } = barMetrics(source.width);
   const font = `${fontPx}px system-ui, -apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif`;
 
   const measure = document.createElement("canvas").getContext("2d");
-  if (!measure) throw new Error("2D context unavailable for attribution compositing");
+  if (!measure) {
+    throw new Error("2D context unavailable for attribution compositing");
+  }
   measure.font = font;
 
   const bar = layoutAttributionBar(source.width, text, (s) =>
@@ -347,7 +222,9 @@ export function composeAttributedPng(
   out.width = source.width;
   out.height = source.height + bar.heightPx;
   const ctx = out.getContext("2d");
-  if (!ctx) throw new Error("2D context unavailable for attribution compositing");
+  if (!ctx) {
+    throw new Error("2D context unavailable for attribution compositing");
+  }
 
   ctx.drawImage(source, 0, 0);
   ctx.fillStyle = "#0b0d10";
@@ -366,79 +243,187 @@ export function composeAttributedPng(
   return out.toDataURL("image/png");
 }
 
+// ---------------------------------------------------------------------------
+// The render session
+// ---------------------------------------------------------------------------
+
+export interface RenderOptions {
+  /** Google Map Tiles API key (Photorealistic 3D Tiles). Required. */
+  apiKey: string;
+  /**
+   * Aborts the session (superseded plan, unmount, StrictMode double-invoke).
+   * Without it an orphaned run keeps its WebGL context alive and streaming,
+   * and two concurrent viewers end up fighting over the GPU.
+   */
+  signal?: AbortSignal;
+  /** Per-view progress callback: fires when a view starts capturing. */
+  onViewStart?: (slot: ViewSlot) => void;
+}
+
+/** The outcome of one direction. */
+export type ViewOutcome =
+  | { slot: ViewSlot; ok: true; result: CaptureResult }
+  | { slot: ViewSlot; ok: false; detail: string };
+
+class RenderAbortedError extends Error {
+  constructor() {
+    super("Tile render aborted (superseded).");
+    this.name = "RenderAbortedError";
+  }
+}
+
+export function isRenderAborted(err: unknown): boolean {
+  return err instanceof RenderAbortedError;
+}
+
+/** Render frames for `durationMs` so the tileset can stream. */
+async function pumpFrames(
+  viewer: Viewer,
+  durationMs: number,
+  checkAborted: () => void,
+): Promise<void> {
+  const until = Date.now() + durationMs;
+  while (Date.now() < until) {
+    checkAborted();
+    try {
+      viewer.scene.requestRender();
+      viewer.render();
+    } catch {
+      // A render throwing here is the capture's problem, not the warm-up's.
+      return;
+    }
+    await new Promise<void>((r) => setTimeout(r, PUMP_INTERVAL_MS));
+  }
+}
+
 /**
- * Boot one Cesium session and hand back a `FrameSource` that captures a single
- * view per call.
+ * Wait until the tileset is settled for the current view, or a timeout.
  *
- * Everything expensive happens here, once: the WebGL context, the root tileset
- * request (**the billable unit** — one per session, regardless of how many
- * frames or retries follow), and the 3 s warm-up. `capture()` afterwards only
- * moves the camera and waits.
- *
- * Rejects if the session cannot be established at all (bad key, 403, no WebGL).
- * That is a whole-result failure and the caller renders the honest "nothing
- * loaded" state; it never becomes a per-direction failure, because there is no
- * session in which to retry a direction.
+ * - Drives `viewer.render()` on an interval, because offscreen rAF callbacks
+ *   get throttled and tile round-trips only advance inside a render.
+ * - Debounces `loadProgress(0, 0)` with SETTLE_GRACE_MS, because the event
+ *   fires (0,0) both at startup and briefly between refinement batches.
+ * - Never accepts the initial (0,0) as settled (`seenNonZero` guard).
  */
-async function openCesiumFrameSource(
+function waitForTiles(
+  viewer: Viewer,
+  tileset: Cesium3DTileset,
+  timeoutMs: number,
+  signal?: AbortSignal,
+): Promise<void> {
+  return new Promise((resolve) => {
+    let done = false;
+    let seenNonZero = false;
+    let settleTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const finish = () => {
+      if (done) return;
+      done = true;
+      cleanup();
+      resolve();
+    };
+
+    if (signal?.aborted) {
+      finish();
+      return;
+    }
+    signal?.addEventListener("abort", finish, { once: true });
+
+    const scheduleSettle = () => {
+      if (settleTimer) clearTimeout(settleTimer);
+      settleTimer = setTimeout(finish, SETTLE_GRACE_MS);
+    };
+    const cancelSettle = () => {
+      if (settleTimer) {
+        clearTimeout(settleTimer);
+        settleTimer = null;
+      }
+    };
+
+    const removeLoadProgress = tileset.loadProgress.addEventListener(
+      (pendingRequests: number, tilesProcessing: number) => {
+        if (pendingRequests > 0 || tilesProcessing > 0) {
+          seenNonZero = true;
+          cancelSettle();
+        } else if (seenNonZero) {
+          scheduleSettle();
+        }
+      },
+    );
+    const removeAllLoaded = tileset.allTilesLoaded.addEventListener(() => {
+      seenNonZero = true;
+      scheduleSettle();
+    });
+
+    const hardTimer = setTimeout(finish, timeoutMs);
+    const renderInterval = setInterval(() => {
+      if (done) return;
+      try {
+        viewer.scene.requestRender();
+        viewer.render();
+      } catch {
+        // Ignore errors from a partially-torn-down viewer.
+      }
+    }, PUMP_INTERVAL_MS);
+
+    const cleanup = () => {
+      clearTimeout(hardTimer);
+      cancelSettle();
+      removeLoadProgress();
+      removeAllLoaded();
+      clearInterval(renderInterval);
+      signal?.removeEventListener("abort", finish);
+    };
+
+    viewer.scene.requestRender();
+    viewer.render();
+  });
+}
+
+/**
+ * Render all views in one Cesium session. Returns one outcome per view, in
+ * order; calls `onViewStart` as each begins so the UI can show progress. A
+ * direction that fails is retried once inside the still-open session (free),
+ * then reported as failed — with no image, never a placeholder.
+ *
+ * Throws only for whole-session failures (bad key, no WebGL, abort): there is
+ * no session in which any direction could succeed, so the caller shows the
+ * honest "nothing loaded" state.
+ */
+export async function renderViews(
   views: CameraView[],
   opts: RenderOptions,
-): Promise<FrameSource> {
-  const {
-    apiKey,
-    width = RENDER_TUNING.width,
-    height = RENDER_TUNING.height,
-    superSample = RENDER_TUNING.superSample,
-    // 9 s was measured to be too short: the last view of a four-view run was
-    // still at a coarse LOD when it was captured, which reads as "blocky" —
-    // exactly the impression this project must never give, even though the
-    // geometry is real photogrammetry throughout. Renderer tile requests inside
-    // an open session are unmetered, so the only cost of waiting longer is
-    // wall-clock time.
-    settleTimeoutMs = RENDER_TUNING.settleTimeoutMs,
-    maximumScreenSpaceError = RENDER_TUNING.maximumScreenSpaceError,
-    fovDeg = RENDER_TUNING.fovDeg,
-    nearPlaneM = RENDER_TUNING.nearPlaneM,
-    stationaryLoading = RENDER_TUNING.stationaryLoading,
-    signal,
-  } = opts;
+): Promise<ViewOutcome[]> {
+  const { apiKey, signal, onViewStart } = opts;
 
   const checkAborted = () => {
     if (signal?.aborted) throw new RenderAbortedError();
   };
   checkAborted();
 
-  // Hard provider guard. Cesium's createGooglePhotorealistic3DTileset does this
-  // when no key is resolvable:
-  //
-  //     const key = apiOptions.key ?? GoogleMaps.defaultApiKey;
-  //     if (!defined(key)) return requestCachedIonTileset(tilesetOptions);
-  //
-  // i.e. it silently switches to Cesium Ion's hosted copy — a different
-  // provider, a different account, and a different meter, with no signal to the
-  // user. The imagery would still be real, so this is not a fabrication risk,
-  // but 27B states on screen which provider produced each frame, and an
-  // undisclosed provider swap would make that statement false. The app already
-  // gates on a present key (useTileCaptures.tsx), so this is belt-and-suspenders
-  // against a future caller: refuse loudly rather than change provider quietly.
-  // Verified against cesium@1.143.0.
+  // Hard provider guard. When no key is resolvable, Cesium's
+  // createGooglePhotorealistic3DTileset silently falls back to Cesium Ion's
+  // hosted copy — a different provider, account, and meter, with no signal to
+  // the user. The imagery would still be real, so this is not a fabrication
+  // risk, but 27B states which provider produced each frame, and an
+  // undisclosed provider swap would make that statement false. Refuse loudly.
+  // (Verified against cesium@1.143.0.)
   if (!apiKey || !apiKey.trim()) {
     throw new Error(
       "No Map Tiles API key supplied — refusing to render rather than falling back to a different imagery provider.",
     );
   }
 
-  // Cesium requires *some* Ion token to boot even when we only use Google tiles.
-  // Empty string disables Ion's default assets; the Google tileset is loaded
-  // explicitly below with the Maps key, so no Ion asset is fetched.
+  // Cesium requires *some* Ion token to boot even when we only use Google
+  // tiles. Empty string disables Ion's default assets; the Google tileset is
+  // loaded explicitly below with the Maps key, so no Ion asset is fetched.
   Ion.defaultAccessToken = "";
 
   // Offscreen host: on-DOM (WebGL needs a real canvas) but visually hidden.
   const host = document.createElement("div");
-  host.style.cssText =
-    "position:fixed;left:-99999px;top:0;pointer-events:none;";
-  host.style.width = `${width}px`;
-  host.style.height = `${height}px`;
+  host.style.cssText = "position:fixed;left:-99999px;top:0;pointer-events:none;";
+  host.style.width = `${RENDER_TUNING.width}px`;
+  host.style.height = `${RENDER_TUNING.height}px`;
   document.body.appendChild(host);
 
   let viewer: Viewer | null = null;
@@ -449,16 +434,14 @@ async function openCesiumFrameSource(
     try {
       viewer?.destroy();
     } catch {
-      // Already torn down or mid-teardown — nothing more to do.
+      // Already torn down or mid-teardown.
     }
     host.remove();
     signal?.removeEventListener("abort", destroyNow);
   };
-  // Belt-and-suspenders: an abort mid-await (tileset creation, the warmup
-  // delay) is only caught by checkAborted() at the next checkpoint, which can
-  // be seconds away. This listener tears the WebGL context down the instant
-  // the signal fires, so an orphaned run can never overlap a fresh one on the
-  // GPU — that overlap is what produces cross-context WebGL errors.
+  // An abort mid-await is only caught at the next checkpoint, which can be
+  // seconds away. This listener tears the WebGL context down the instant the
+  // signal fires, so an orphaned run can never overlap a fresh one on the GPU.
   signal?.addEventListener("abort", destroyNow, { once: true });
 
   try {
@@ -474,320 +457,155 @@ async function openCesiumFrameSource(
       fullscreenButton: false,
       selectionIndicator: false,
       infoBox: false,
-      // We drive rendering explicitly (request-render) to avoid a render loop
-      // that would keep streaming tiles.
+      // We drive rendering explicitly, so no continuous tile streaming.
       requestRenderMode: true,
       maximumRenderTimeChange: Infinity,
-      // No default Bing/Ion base imagery layer — we only want the Google mesh.
-      // This also keeps any non-Google map service out of the same view, which
-      // Maps Platform ToS §3.2.3(e) ("No Use With Non-Google Maps") requires.
+      // No default Bing/Ion base imagery layer — only the Google mesh. This
+      // also keeps any non-Google map service out of the same view, which
+      // Maps Platform ToS §3.2.3(e) requires.
       baseLayer: false as unknown as ImageryLayer,
-      // WebGL clears its drawing buffer after compositing unless asked not to,
-      // so `canvas.toDataURL()` can come back blank/black depending on when the
-      // browser composites. Readback is the whole point of this module, so the
-      // buffer must be preserved. (Verified in Chrome: without this the capture
-      // is not reliable frame to frame.)
+      // WebGL clears its drawing buffer after compositing unless asked not
+      // to, so `canvas.toDataURL()` can come back blank/black depending on
+      // when the browser composites. Readback is the whole point of this
+      // module. (Verified in Chrome: without this, captures are unreliable
+      // frame to frame.)
       contextOptions: { webgl: { preserveDrawingBuffer: true } },
     });
 
-    viewer.scene.globe.show = false; // hide the default ellipsoid globe.
+    viewer.scene.globe.show = false; // hide the default ellipsoid globe
 
-    // Render the backing store larger than the CSS box and let the browser
-    // downsample on display. Cesium ignores devicePixelRatio by default
-    // (`useBrowserRecommendedResolution`), so without this the capture is
-    // exactly `width x height` real pixels regardless of the display. This is
-    // supersampling of our own render surface, nothing more: it changes how
-    // finely the provider's mesh is rasterised, never what the mesh contains.
-    viewer.useBrowserRecommendedResolution = true; // ignore DPR; be explicit
-    viewer.resolutionScale = superSample;
-
-    // Projection. Cesium 1.143's PerspectiveFrustum defaults are fov 60 deg on
-    // the wider axis and a near plane of **0.1 m** — not the 1 m this comment
-    // used to claim, which is a figure from older documentation. Measured from
-    // a bare Viewer on 2026-08-06. Both are set explicitly here because both
-    // are part of what the capture looks like and neither should drift.
+    // FOV + near plane, set explicitly so neither drifts with Cesium defaults.
     const frustum = viewer.camera.frustum as { fov?: number; near?: number };
     if (typeof frustum.fov === "number") {
-      frustum.fov = CesiumMath.toRadians(fovDeg);
+      frustum.fov = CesiumMath.toRadians(RENDER_TUNING.fovDeg);
     }
-    if (typeof frustum.near === "number") {
-      frustum.near = nearPlaneM;
-    }
+    if (typeof frustum.near === "number") frustum.near = 0.1;
 
     // `showCreditsOnScreen: true` is what Google's own Photorealistic 3D Tiles
-    // sample sets, and the docs require "a 3D Tiles renderer that supports the
-    // display of copyright attribution". It makes Cesium surface the per-tile
-    // `asset.copyright` strings; we read them back below and composite them
-    // into the frame so the attribution can never be separated from the pixels.
-    // https://developers.google.com/maps/documentation/tile/3d-tiles
-    // https://developers.google.com/maps/documentation/tile/policies
+    // sample sets; it surfaces the per-tile `asset.copyright` strings that we
+    // read back and bake into each frame.
     //
-    // We deliberately do NOT pass `onlyUsingWithGoogleGeocoder: true`.
-    //
-    // Cesium emits a one-time console warning ("Only the Google geocoder can be
-    // used with Google Photorealistic 3D Tiles") unless that flag is set. The
-    // flag is a self-attestation, not a switch: it changes nothing except
-    // whether the warning prints. 27B geocodes with NYC Planning GeoSearch, so
-    // setting it to `true` would be asserting something untrue about this app
-    // in order to silence a message. We take the warning instead.
-    //
-    // Re-checked 2026-08-04 for any Google-side basis for the restriction, and
-    // found none in: Photorealistic 3D Tiles (updated 2026-07-31), 3D Tiles
-    // overview (2026-07-31), "Work with a 3D Tiles renderer" (2026-07-31), Map
-    // Tiles API Policies (2026-07-31), Maps Platform ToS (last modified
-    // 2026-06-23 — zero occurrences of "geocoder"), Maps Service Specific Terms
-    // (last modified 2026-06-10 — zero occurrences of "geocoder", and no Map
-    // Tiles section at all). ToS §3.2.3(e) restricts use with a non-Google
-    // *Map*, not a non-Google geocoder; this viewer disables the base imagery
-    // layer and the globe, so no map of any kind is displayed alongside.
-    //
-    // This is a recorded absence of evidence, not a legal opinion, and not a
-    // claim that the restriction does not exist. See README "The Cesium
-    // 'Google geocoder only' warning" for the residual-risk position.
+    // We deliberately do NOT pass `onlyUsingWithGoogleGeocoder: true`: the
+    // flag is a self-attestation that only silences a Cesium console warning,
+    // and 27B geocodes with NYC Planning GeoSearch, so setting it would assert
+    // something untrue about this app. We take the warning instead. (Checked
+    // 2026-08-04: no Google document conditions 3D Tiles use on the Google
+    // geocoder; ToS §3.2.3(e) restricts use with a non-Google *map*, and this
+    // viewer displays no map alongside.)
     const tileset = await createGooglePhotorealistic3DTileset(
       { key: apiKey },
       { showCreditsOnScreen: true },
     );
     checkAborted(); // may have been destroyed by the listener while awaiting
-    // Lower the LOD error threshold below Cesium's default (16) to load
-    // building-level detail from mid-altitude. 4 was measured to be far too
-    // aggressive: one address blew past 11,000 tile requests and took ~4
-    // minutes to settle. See RENDER_TUNING for the selected value.
-    tileset.maximumScreenSpaceError = maximumScreenSpaceError;
+    tileset.maximumScreenSpaceError = RENDER_TUNING.maximumScreenSpaceError;
 
-    // Two Cesium defaults that exist to make a *moving* camera feel responsive
-    // and that are simply wrong for a stationary still capture:
-    //
-    //   foveatedScreenSpaceError (default true) deliberately raises the screen
-    //   space error for tiles away from the centre of the screen. In an
-    //   interactive globe that is a good trade. In a framed photograph it means
-    //   the edges of every capture are permanently coarser than the middle.
-    //
-    //   progressiveResolutionHeightFraction (default 0.3) asks for a
-    //   deliberately low-resolution pass first so something appears quickly.
-    //   We are not showing the intermediate frames to anyone, so it only adds
-    //   requests we then throw away.
-    //
-    // Neither changes the finest level available; they change which tiles get
-    // asked for and when. Turning both off costs nothing but wall clock.
-    tileset.foveatedScreenSpaceError = !stationaryLoading;
-    tileset.progressiveResolutionHeightFraction = stationaryLoading ? 0.0 : 0.3;
-
-    // Take ownership of tile failures, because Cesium's default is to print the
-    // failing URL — and for Photorealistic 3D Tiles that URL carries `key=`.
-    // Cesium only falls back to that default when the event has NO listener:
-    //
-    //   tileFailed.numberOfListeners > 0
-    //     ? tileFailed.raiseEvent({ url, message })
-    //     : (console.log(`A 3D tile failed to load: ${url}`), console.log(...))
-    //
-    // So registering any listener is what suppresses it. redact.ts exists "so a
-    // key never lands in an error message someone screenshots or pastes into a
-    // bug report"; this was the one path in the subsystem that bypassed it,
-    // because the code doing the logging is not ours.
-    tileset.tileFailed.addEventListener((e: { url?: string; message?: string }) => {
-      console.error("[27b] tile failed:", describeError(e?.message ?? e));
-    });
+    // Own tile failures: Cesium's default handler logs the failing URL, and
+    // for Photorealistic 3D Tiles that URL carries `key=`. Registering any
+    // listener suppresses the default.
+    tileset.tileFailed.addEventListener(
+      (e: { url?: string; message?: string }) => {
+        console.error("[27b] tile failed:", describeError(e?.message ?? e));
+      },
+    );
 
     viewer.scene.primitives.add(tileset);
 
-    // Warm the tileset before the first capture.
-    //
-    // This used to be `requestRender()` followed by a 3 s sleep, and it did
-    // almost nothing. The scene runs in `requestRenderMode`, and a 3D tileset
-    // only advances its traversal — decides which tiles it wants, and asks for
-    // them — inside `Scene.render()`. One request renders one frame, which
-    // fetches the root's immediate children and then stops; the remaining 3 s
-    // is a sleep beside an idle renderer. Every tile the picture actually needs
-    // was therefore left to be discovered inside the first capture's 16 s
-    // settle window, which is why the FIRST direction of a session so often
-    // came back as sky over a coarse global mesh while later directions —
-    // running against a tileset the earlier waits had populated — looked right.
-    //
-    // Measured on an Apple M2 (ANGLE Metal, not a software rasteriser), five
-    // presets, twenty directions: the sky-only frames were NNE and ESE, the two
-    // captured first, and the same building rendered correctly when it ran
-    // fourth in the list with a warm cache. The reports and frames are under
-    // `proof/presets-verification/`; `report-warmup-only.json` is this change
-    // on its own, before the first-capture budget below was added.
-    //
-    // So pump real frames instead. Same wall clock, same billing — renderer
-    // tile requests inside an open session are unmetered, and the root tileset
-    // request that IS billed already happened above.
-    if (views.length > 0) applyCameraView(viewer.camera, views[0]);
+    // Warm the tileset with real pumped frames — a bare sleep loads nothing,
+    // because tile discovery only advances inside Scene.render().
+    if (views.length > 0) applyCameraView(viewer, views[0]);
     await pumpFrames(viewer, WARMUP_MS, checkAborted);
     checkAborted();
 
     const activeViewer = viewer;
-
-    // The first capture of a session is not like the others.
-    //
-    // Every later view runs against a tileset the earlier waits have already
-    // populated — the neighbourhood's tiles are in memory and the traversal
-    // only has to fill in what is newly visible. The first one starts from a
-    // tileset that knows nothing but its root, and at a high floor over
-    // Manhattan the visible extent is enormous. Measured across five presets on
-    // an M2: the sky-only frames were always among the first captured, and the
-    // same view rendered correctly when it ran later with the hierarchy warm.
-    //
-    // Pumping frames during the warm-up (above) fixed some of them and cut
-    // ~17% off the total wall clock, but not all — 432 Park at floor 80 still
-    // starved with 3 s of warm-up plus a 16 s settle. So the first view gets a
-    // larger budget. Nothing is billed for waiting: renderer tile requests
-    // inside an open session are unmetered, and the one metered request has
-    // already happened.
     let firstCapture = true;
 
-    return {
-      async capture(view) {
-        checkAborted();
-        if (destroyed) throw new RenderAbortedError();
+    const captureOnce = async (view: CameraView): Promise<ViewOutcome> => {
+      checkAborted();
+      applyCameraView(activeViewer, view);
+      activeViewer.scene.requestRender();
+      const budgetMs = firstCapture
+        ? Math.round(RENDER_TUNING.settleTimeoutMs * FIRST_CAPTURE_SETTLE_FACTOR)
+        : RENDER_TUNING.settleTimeoutMs;
+      firstCapture = false;
+      await waitForTiles(activeViewer, tileset, budgetMs, signal);
+      checkAborted();
 
-        applyCameraView(activeViewer.camera, view);
+      // Give the GPU time to finish uploading textures before readback — a
+      // single render() can fire before the upload queue drains.
+      activeViewer.scene.requestRender();
+      await new Promise<void>((r) => setTimeout(r, 800));
+      activeViewer.scene.requestRender();
+      await new Promise<void>((r) => setTimeout(r, 200));
+
+      // Count the provider TRIANGLES that actually draw in the frame we are
+      // about to read back. A settle can time out having loaded nothing; the
+      // canvas then reads back fine and the app would present Cesium's sky
+      // gradient over a black earth as this building's view — the fabricated-
+      // scene failure arriving by accident. Counting tiles is not enough (a
+      // selected tile can carry no payload); triangles are the thing that can
+      // actually appear in a picture. This inspects our renderer's scene
+      // statistics, never the image pixels.
+      let trianglesDrawn = 0;
+      const stopCounting = tileset.tileVisible.addEventListener((tile) => {
+        trianglesDrawn += tile.content?.trianglesLength ?? 0;
+      });
+      try {
+        // Request inside the counting window so THIS frame is certain to draw
+        // — it is both the frame counted and the frame read back below.
         activeViewer.scene.requestRender();
-        const budgetMs = firstCapture
-          ? Math.round(settleTimeoutMs * FIRST_CAPTURE_SETTLE_FACTOR)
-          : settleTimeoutMs;
-        firstCapture = false;
-        const { settled } = await waitForTiles(
-          activeViewer,
-          tileset,
-          budgetMs,
-          signal,
-        );
-        checkAborted();
+        activeViewer.render();
+      } finally {
+        stopCounting();
+      }
 
-        // After tiles are settled, give the GPU time to finish uploading
-        // textures before reading back the canvas — a single render() call may
-        // fire before the texture upload queue drains. Two render + 1 s gives
-        // textures time.
-        activeViewer.scene.requestRender();
-        await new Promise<void>((r) => setTimeout(r, 800));
-        activeViewer.scene.requestRender();
-        await new Promise<void>((r) => setTimeout(r, 200));
-
-        // Count the provider tiles that actually DRAW in the frame we are about
-        // to read back.
-        //
-        // A settle can time out having loaded nothing. When that happens
-        // everything downstream still succeeds: the canvas reads back fine, the
-        // PNG is valid, the slot goes to `ready`, and the app presents Cesium's
-        // sky gradient over a black earth as this building's view — captioned
-        // "Still sharpening when this frame was captured". Three of the twenty
-        // frames in proof/presets-verification/report-before.json are that
-        // frame (432 Park floor 80 NNE and ESE, Empire State floor 80 NNE: edge
-        // energy 0.35-0.50 against 4.7-18.7 for a real one): a photograph of
-        // nothing, under the reader's address, with no indication anything had
-        // gone wrong. That is the fabricated-scene failure arriving by accident
-        // rather than by design, and it is not allowed either way.
-        //
-        // The guard is exercised directly by proof/verify-empty-frame-guard.mjs,
-        // which starves a real session by blocking the renderer's tile requests
-        // at the network layer: all four directions fail, twice each, and the
-        // page shows "This direction didn't load." with no image.
-        //
-        // `tileVisible` fires once per tile that survives culling, per frame.
-        // Counting the firings is NOT enough: a tile can be selected with no
-        // payload — an empty interior node, or one whose content has not
-        // arrived — and the first version of this check counted those and
-        // therefore passed the very frame it was written for. So count
-        // TRIANGLES, which is the thing that can actually appear in a picture.
-        //
-        // Counting geometry rather than measuring pixels is deliberate. The
-        // frame this guards is empty because nothing loaded; a pixel test that
-        // caught it would also catch the light court at 425 E 79th, which is a
-        // real, correct, almost featureless frame of a wall four metres away
-        // (measured: edge energy 0.9 against 0.32 for the empty one — far too
-        // close to separate safely). Geometry count tells those two apart
-        // exactly: one has thousands of triangles, the other has none.
-        let tilesDrawn = 0;
-        let trianglesDrawn = 0;
-        const stopCounting = tileset.tileVisible.addEventListener((tile) => {
-          tilesDrawn += 1;
-          trianglesDrawn += tile.content?.trianglesLength ?? 0;
-        });
-        try {
-          // The scene runs in `requestRenderMode`, so `render()` only actually
-          // draws when a render has been requested — and an earlier request may
-          // already have been consumed by the rAF loop. Requesting inside the
-          // counting window makes this frame certain to draw, which matters
-          // twice over: it is the frame `tileVisible` is counted across AND the
-          // frame `composeAttributedPng` reads back below. Counting one frame
-          // and photographing another is how this check would come to report on
-          // a picture nobody saw.
-          activeViewer.scene.requestRender();
-          activeViewer.render();
-        } finally {
-          stopCounting();
-        }
-
-        if (trianglesDrawn === 0) {
-          // Not fatal for the session: the next direction looks somewhere else
-          // and may well have tiles. Retryable, and the session's own retry
-          // budget decides whether it is worth another 16 s.
-          throw new CaptureFailedError({
-            kind: "empty-frame",
-            detail:
-              `No provider geometry drew for slot ${view.slot} after ` +
-              `${settled ? "a settled" : "an unsettled"} wait: ` +
-              `${tilesDrawn} tile(s) selected, 0 triangles. The frame is sky only.`,
-            fatalForSession: false,
-          });
-        }
-
-        // Read the attributions Google returned for the tiles in THIS frame.
-        // Cesium rebuilds the credit container each frame from the tiles it
-        // just drew, so this is per-view data, not a constant.
-        const attribution = readAttribution(activeViewer);
-
-        let dataUrl: string;
-        try {
-          dataUrl = composeAttributedPng(activeViewer.canvas, attribution);
-        } catch (err) {
-          // SecurityError: WebGL canvas tainted by cross-origin tile textures.
-          // Google Photorealistic 3D Tiles must be served with ACAO headers for
-          // readback to work. If this fires, verify that tile responses include
-          // Access-Control-Allow-Origin (check DevTools Network → tile request
-          // → Response Headers). A CORS proxy is required if headers are absent.
-          //
-          // Marked fatal for the session on purpose: the taint is a property of
-          // the WebGL context, not of this direction, so every remaining view
-          // would fail identically 16 s at a time. Before this was modelled,
-          // the throw escaped the whole four-view function and destroyed the
-          // frames that had *already succeeded*.
-          throw new CaptureFailedError({
-            kind: "readback-blocked",
-            detail: `Canvas readback blocked (CORS taint): ${describeError(err)}`,
-            fatalForSession: true,
-          });
-        }
-
+      if (trianglesDrawn === 0) {
         return {
-          result: { slot: view.slot, dataUrl, attribution },
-          settled,
+          slot: view.slot,
+          ok: false,
+          detail: `No provider geometry drew for slot ${view.slot}: 0 triangles. The frame is sky only.`,
         };
-      },
-      close: destroyNow,
-    } satisfies FrameSource;
-  } catch (err) {
-    // Setup failed — tear the context down here, since no session will exist
-    // to close it.
-    destroyNow();
-    throw err;
-  }
-}
+      }
 
-/**
- * Open a streaming render session for a plan's four views.
- *
- * The session yields each finished frame the moment it exists rather than
- * holding all four until the last one lands. See `renderSession.ts` for the
- * event contract and the retry policy; this function is only the wiring.
- */
-export async function openRenderSession(
-  views: CameraView[],
-  opts: RenderOptions & RenderSessionOptions,
-): Promise<RenderSession> {
-  const source = await openCesiumFrameSource(views, opts);
-  return createRenderSession(views, source, opts);
+      // Read the attributions Google returned for the tiles in THIS frame —
+      // Cesium rebuilds the credit container each frame, so this is per-view
+      // data, not a constant.
+      const attribution = readAttribution(activeViewer);
+      const dataUrl = composeAttributedPng(activeViewer.canvas, attribution);
+      return {
+        slot: view.slot,
+        ok: true,
+        result: { slot: view.slot, dataUrl, attribution },
+      };
+    };
+
+    const outcomes: ViewOutcome[] = [];
+    const started = Date.now();
+    for (const view of views) {
+      onViewStart?.(view.slot);
+      let outcome: ViewOutcome;
+      try {
+        outcome = await captureOnce(view);
+        // One free in-session retry: an empty frame is usually a starved
+        // settle, and the second pass runs against a warmer tileset.
+        if (!outcome.ok) outcome = await captureOnce(view);
+      } catch (err) {
+        if (err instanceof RenderAbortedError) throw err;
+        // A readback failure (CORS taint) is a property of the WebGL context,
+        // not the direction — but it is rare and terminal either way; report
+        // this direction failed and let the remaining ones state their own.
+        outcome = { slot: view.slot, ok: false, detail: describeError(err) };
+      }
+      if (!outcome.ok) {
+        console.error(`[27b] view ${view.slot} failed: ${outcome.detail}`);
+      }
+      outcomes.push(outcome);
+    }
+    // Draft instrumentation, console-only.
+    console.debug(
+      `[27b] session rendered ${outcomes.filter((o) => o.ok).length}/${views.length} views in ${Date.now() - started} ms (1 billable root-tileset request)`,
+    );
+    return outcomes;
+  } finally {
+    destroyNow();
+  }
 }

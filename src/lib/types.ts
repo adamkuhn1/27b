@@ -1,19 +1,17 @@
 // Shared domain types for the 27B pipeline.
 //
-// The pipeline is intentionally split into two halves that never blur together:
+// The pipeline is split into two halves that never blur together:
 //   - geometry (must be real): geocode -> footprint/height -> camera math
 //   - presentation (the raw Google 3D Tiles render placed at that camera)
-// Every type here belongs to the geometry half and is fully unit-testable
-// without any API key. The anti-fabrication guarantee lives in this split: no
-// type in this file can produce a scene; they only ever describe *where a real
-// camera goes*.
+// Every type here belongs to the geometry half and is unit-testable without an
+// API key. The anti-fabrication guarantee lives in this split: no type in this
+// file can produce a scene — they only describe *where a real camera goes*.
 
 /**
- * The four view slots we render. These are *positions in the result grid*, not
- * compass directions — the actual bearing of each slot depends on the building
- * (see `ViewBasis`). Naming them V1..V4 rather than N/E/S/W is deliberate: the
- * old naming hard-coded the assumption that a window faces true north, which is
- * false for essentially every building on the Manhattan grid (rotated ~29deg).
+ * The four view slots in the result grid. These are grid positions, not compass
+ * directions — the actual bearing of each slot depends on the building (see
+ * `ViewBasis`). Naming them V1..V4 rather than N/E/S/W is deliberate: the
+ * building-relative bearings on the Manhattan grid sit ~29° off true north.
  */
 export type ViewSlot = "V1" | "V2" | "V3" | "V4";
 
@@ -22,13 +20,12 @@ export const VIEW_SLOTS: readonly ViewSlot[] = ["V1", "V2", "V3", "V4"] as const
 /**
  * How the four view bearings were chosen.
  *
- * - `facade`: the footprint has a dominant rectilinear orientation, so the four
- *   views look out along the outward normals of the building's own facades —
- *   i.e. roughly what you'd see standing at a window. Bearings are still real
- *   compass bearings and are labelled as such.
- * - `compass`: the footprint has no dominant orientation (round, highly
- *   irregular, or too few edges), so we fall back to true N/E/S/W and say so.
- *   We never pretend a facade exists that the footprint doesn't support.
+ * - `facade`: the footprint has a dominant rectilinear orientation, so views
+ *   look out along the outward normals of the building's own walls — roughly
+ *   what you'd see standing at a window.
+ * - `compass`: the footprint has no dominant orientation (round or highly
+ *   irregular), so we fall back to true N/E/S/W and say so. We never pretend a
+ *   facade exists that the footprint doesn't support.
  */
 export type ViewBasis = "facade" | "compass";
 
@@ -48,28 +45,18 @@ export function compassLabel(bearingDeg: number): Compass16 {
 
 /** A geocoded NYC address. lat/lng are WGS84 decimal degrees. */
 export interface GeocodeResult {
-  /** The label the geocoder resolved (canonical, may differ from input). */
+  /** The label the geocoder resolved (canonical; may differ from input). */
   label: string;
   lat: number;
   lng: number;
   /** NYC Building Identification Number, when the geocoder returns one. */
   bin?: string;
-  /** Borough name, when available (used for a friendly display + NYC gate). */
+  /** Borough name, when available. */
   borough?: string;
-  /**
-   * Set when the live address service was unreachable and this building's
-   * committed record was used instead (see lib/knownAddresses.ts). The UI must
-   * disclose it: the coordinates are real and were captured from the real
-   * service, but they were not looked up just now, and the reader is entitled
-   * to know which of those two things happened.
-   */
-  fromRecord?: true;
-  /** ISO date the record was captured. Present only with `fromRecord`. */
-  recordedAt?: string;
 }
 
 /**
- * Building geometry from NYC OpenData Building Footprints.
+ * Building geometry from NYC Open Data Building Footprints.
  *
  * Heights are meters. `groundElevationNavd88M` is an ORTHOMETRIC height
  * (NAVD88), because that is what the source dataset publishes — see
@@ -77,46 +64,25 @@ export interface GeocodeResult {
  */
 export interface BuildingFootprint {
   bin: string;
-  /** HEIGHTROOF: roof height above ground, meters. */
+  /** Roof height above ground, meters. */
   roofHeightM: number;
-  /** GROUNDELEV: ground elevation, meters above the NAVD88 geoid. */
+  /** Ground elevation, meters above the NAVD88 geoid. */
   groundElevationNavd88M: number;
   /** Footprint centroid (WGS84), used as the camera anchor. */
   centroid: { lat: number; lng: number };
   /**
-   * Outer footprint polygon ring as [lng, lat] pairs. Stored so geometry can
-   * ray-cast from the centroid to find the actual facade distance in each
-   * direction — instead of assuming a fixed offset (which puts the camera
-   * inside large buildings like ESB whose footprint spans 60+ m across).
+   * Outer footprint polygon ring as [lng, lat] pairs. Kept so geometry can
+   * ray-cast from the centroid to the actual facade in each direction instead
+   * of assuming a fixed offset (which puts the camera inside large buildings
+   * like the Empire State Building, whose footprint spans 60+ m).
    */
   ring: Array<[number, number]>;
 }
 
 /**
- * A neighbouring building, from the same NYC Open Data Building Footprints
- * dataset as the subject. Free, keyless, and ours to query — it carries no
- * provider restriction of any kind, which is exactly why the confidence layer
- * is built on it (see lib/confidence.ts).
- */
-export interface NeighborBuilding {
-  bin: string;
-  /** Outer footprint ring as [lng, lat] pairs. */
-  ring: Array<[number, number]>;
-  /** HEIGHTROOF: roof height above its own ground, metres. */
-  roofHeightM: number;
-  /**
-   * GROUNDELEV in metres (NAVD88), or `null` when the field is absent from the
-   * record. Absent is common enough to matter and is NOT the same as zero:
-   * defaulting to 0 understates a building's top by up to ~60 m in the Bronx
-   * and Staten Island.
-   */
-  groundElevationNavd88M: number | null;
-}
-
-/**
- * The resolved camera vantage for one view. This is the geometry the Cesium
- * viewer consumes verbatim — real coordinates, real elevation, a real bearing.
- * No scene data is implied.
+ * The resolved camera vantage for one view. This is what the Cesium viewer
+ * consumes verbatim — real coordinates, real elevation, a real bearing. No
+ * scene data is implied.
  */
 export interface CameraView {
   slot: ViewSlot;
@@ -132,132 +98,39 @@ export interface CameraView {
    * the NAVD88 floor elevation via the GEOID18 conversion in lib/geoid.ts.
    */
   heightM: number;
-  /** Pitch in degrees; 0 = looking at the horizon, negative = looking down. */
+  /** Pitch in degrees; 0 = horizon, negative = looking down. */
   pitchDeg: number;
   /** Meters from the footprint centroid to the camera along `headingDeg`. */
   standoffM: number;
-  /**
-   * Meters from the footprint centroid to the building's own outer wall along
-   * `headingDeg`. `standoffM - wallDistanceM` is therefore the offset actually
-   * applied outside the facade, which is what locates the window itself — the
-   * point the enclosure layer has to measure a light court from.
-   */
-  wallDistanceM: number;
 }
 
 /**
- * How enclosed one direction is, from neighbouring building geometry.
- *
- * Derived **only** from NYC Open Data footprints and our own arithmetic. No
- * pixel of provider imagery is examined and no ray is cast against the provider
- * mesh — see the header of `lib/confidence.ts` for why that is not a stylistic
- * choice.
- */
-export type EnclosureBand = "open" | "partly-enclosed" | "enclosed";
-
-export interface DirectionConfidence {
-  slot: ViewSlot;
-  band: EnclosureBand;
-  /**
-   * Greatest angle above the camera's eye line subtended by a neighbouring
-   * roof inside the view cone, in degrees. Negative means nothing within the
-   * search radius reaches the eye line at all; the sentinel `-90` means no
-   * neighbouring building fell inside the cone at all.
-   */
-  maxObstructionAngleDeg: number;
-  /**
-   * Horizontal distance to the nearest neighbour that rises above the eye
-   * line, in metres. `null` when nothing inside the search radius does.
-   */
-  firstBlockingM: number | null;
-  /**
-   * Metres of a neighbouring building standing above the eye **at the camera's
-   * own position** — i.e. the camera is inside that building's footprint and
-   * below its roof. `null` in the ordinary case.
-   *
-   * This is the party-wall condition, and in NYC it is common rather than
-   * exotic: row and infill buildings share lot lines, so one to three of a
-   * building's four "facades" can be solid wall buried in the building next
-   * door. There is no window there, so there is no view.
-   *
-   * Set ONLY when the wall itself is inside the neighbour. The test used to be
-   * whether the *camera* — six metres out — was inside, which also caught every
-   * facade across a light court narrower than six metres, where there is a real
-   * window with a real (close) view. Those are now `courtWidthM` instead.
-   */
-  insideNeighborByM: number | null;
-  /**
-   * Width of the gap between this facade and the building opposite, in metres,
-   * when that gap is narrower than the default camera offset. `null` in the
-   * ordinary case, where the camera has its full standoff.
-   *
-   * A light court or narrow side lot. There IS a window here and it does look
-   * at something, so the direction is captured — but from inside the court,
-   * with the standoff reduced to fit (see `courtStandoffM`). The frame is a
-   * close-range view of the wall opposite, and the UI presents it as one rather
-   * than as an ordinary view that happens to look bad.
-   */
-  courtWidthM: number | null;
-}
-
-/** The per-plan result of the confidence pass. */
-export interface ConfidenceReport {
-  bySlot: Partial<Record<ViewSlot, DirectionConfidence>>;
-  /**
-   * True when at least one neighbour inside the search area had no roof height
-   * on file and was therefore skipped. A skipped building is an unknown, so the
-   * UI says the notes may miss an obstruction rather than implying open sky.
-   */
-  neighborDataIncomplete: boolean;
-  /** How many neighbouring buildings contributed to the assessment. */
-  neighborsConsidered: number;
-  /** Horizontal search radius used, metres. */
-  searchRadiusM: number;
-}
-
-/**
- * Everything the geometry half produces for a request. This object is fully
- * derived from real data; it is the contract handed to the renderer.
+ * Everything the geometry half produces for a request, plus the curated-list
+ * entry that authorised the render. Fully derived from real data; this is the
+ * contract handed to the renderer.
  */
 export interface ViewPlan {
   address: string;
   floor: number;
   geocode: GeocodeResult;
   footprint: BuildingFootprint;
+  /** The curated building this plan matched (renders are curated-only). */
+  curatedName: string;
   /** Eye elevation in the SOURCE datum (NAVD88 orthometric), meters. */
   eyeElevationNavd88M: number;
   /** Eye elevation as WGS84 ellipsoidal height (what the renderer uses). */
   eyeElevationEllipsoidalM: number;
   /** GEOID18 undulation applied at this building (m; ~-31.7 in NYC). */
   geoidHeightM: number;
-  /** True when the floor was clamped to the building roof (documented approx). */
+  /** True when the floor was clamped to the building roof. */
   floorClampedToRoof: boolean;
   /** How the four bearings were chosen — surfaced in the UI, never implied. */
   basis: ViewBasis;
-  /**
-   * Length-weighted orientation concentration of the footprint, 0..1 (see
-   * `principalFacadeAxis`). 1.0 = a perfect rectangle; the Flatiron measures
-   * 0.60. Carried through because "how well do four bearings actually fit this
-   * building" is a real measurement about an unusual building, and the visitor
-   * never used to see it.
-   */
-  facadeConcentration: number;
   views: CameraView[];
-  /**
-   * Per-direction enclosure assessment, or `null` when the neighbour lookup
-   * failed or timed out. `null` means "no notes available" — never a missing
-   * result and never an assumed-open view.
-   */
-  confidence: ConfidenceReport | null;
 }
 
-/** Discriminated result of the geometry pipeline. */
-export type ViewPlanResult =
-  | { ok: true; plan: ViewPlan; fromCache: boolean }
-  | { ok: false; reason: UnavailableReason; message: string };
-
 /**
- * Why a plan could not be produced. Every branch maps to the SAME honest
+ * Why a plan could not be produced. Every branch maps to an honest
  * "not available" UI state — there is deliberately no branch that yields a
  * fabricated fallback scene.
  */
@@ -265,144 +138,50 @@ export type UnavailableReason =
   | "not-nyc" // address is outside NYC / validation failed
   | "geocode-failed" // address could not be resolved
   | "no-footprint" // no building footprint/height record found
-  | "network-error"; // upstream data service failed
+  | "network-error" // upstream data service failed
+  | "not-supported"; // real address, but outside the curated supported set
+
+/** Discriminated result of the geometry pipeline. */
+export type ViewPlanResult =
+  | { ok: true; plan: ViewPlan }
+  | {
+      ok: false;
+      reason: UnavailableReason;
+      message: string;
+      /**
+       * For `not-supported` only: the floor window that IS verified at this
+       * building, when the address matched a curated building but the floor
+       * fell outside its verified range.
+       */
+      supportedFloors?: { min: number; max: number };
+    };
 
 // ---------------------------------------------------------------------------
-// Render session — the streaming contract between the Cesium renderer and the UI
+// Render outcomes — the contract between the Cesium renderer and the UI
 // ---------------------------------------------------------------------------
 
 /** One finished frame. */
 export interface CaptureResult {
   slot: ViewSlot;
-  /** data: URL PNG of the rendered frame, with attribution baked along the bottom. */
+  /** data: URL PNG of the frame, attribution baked along the bottom. */
   dataUrl: string;
   /**
    * The data attributions Google returned for the tiles actually displayed in
-   * this frame (e.g. ["Google", "Vexcel Imaging US, Inc."]). Kept as separate
-   * credits rather than one joined string so they can be de-duplicated across
-   * frames without splitting on a comma that belongs inside a company name.
-   * Map Tiles API policies require these to be displayed with the imagery.
+   * this frame (e.g. ["Google", "Vexcel Imaging US, Inc."]). Map Tiles API
+   * policies require these to be displayed with the imagery.
    */
   attribution: string[];
 }
 
-/**
- * Why one capture failed.
- *
- * `fatalForSession` is the load-bearing field: a canvas-readback taint will
- * fail identically for every remaining direction, so retrying it is a waste of
- * the visitor's time, whereas a single view that never settled might well work
- * on a second pass.
- */
-export interface RenderFailure {
+/** Where one direction stands with the renderer, as shown in the UI. */
+export type ViewState =
+  | { kind: "pending" }
+  | { kind: "capturing" }
+  | { kind: "ready"; result: CaptureResult }
   /**
-   * `empty-frame` means the render completed and drew no provider geometry at
-   * all — the capture is Cesium's sky gradient over a black earth and nothing
-   * else. It is separated from `capture-failed` because it is the one failure
-   * that succeeds: readback worked, no error was thrown, and without this the
-   * app puts a photograph of nothing on screen under the reader's address.
+   * The render failed or drew no provider geometry. The UI shows this as an
+   * explicit "didn't load" — never a placeholder image, never a synthetic
+   * scene. `detail` is an operator diagnostic (key-redacted); it goes to the
+   * console, not the screen.
    */
-  kind: "capture-failed" | "readback-blocked" | "empty-frame";
-  /**
-   * Operator diagnostic with any `key=` query parameter redacted. Goes to the
-   * console; it is never rendered on screen.
-   */
-  detail: string;
-  fatalForSession: boolean;
-}
-
-/**
- * Events a render session emits, in order.
- *
- * An async iterable of these rather than a `Promise<CaptureResult[]>` is what
- * makes partial success expressible *in the type*: "three landed, one didn't"
- * is a sequence of events, not a rejected promise or a convention about a
- * short array.
- */
-export type CaptureEvent =
-  | {
-      kind: "session-open";
-      /**
-       * Root tileset requests this session has cost. Exactly 1: the billable
-       * unit for Photorealistic 3D Tiles is the session, not the frame, so
-       * every capture and every in-session retry below is free. Asserted in
-       * renderSession.test.ts rather than trusted.
-       */
-      rootRequests: number;
-    }
-  | { kind: "view-started"; slot: ViewSlot; attempt: number }
-  | {
-      kind: "view-captured";
-      result: CaptureResult;
-      /**
-       * True when the capture ended because tile activity went quiet, false
-       * when the hard timeout fired first. This is our own render loop's
-       * telemetry — whether *our capture* finished refining — not an
-       * observation about what the picture contains.
-       */
-      settled: boolean;
-      elapsedMs: number;
-      attempt: number;
-    }
-  | {
-      kind: "view-failed";
-      slot: ViewSlot;
-      failure: RenderFailure;
-      attempt: number;
-      /** True when the session has automatically re-queued this direction. */
-      willRetry: boolean;
-    }
-  | { kind: "session-closed"; reason: SessionCloseReason };
-
-export type SessionCloseReason =
-  /** Every direction reached a terminal state. */
-  | "complete"
-  /** The caller aborted (superseded search, unmount, StrictMode double-invoke). */
-  | "aborted"
-  /** A failure that would repeat for every remaining direction. */
-  | "fatal"
-  /**
-   * The whole-session budget elapsed with work still outstanding. Whatever
-   * landed before it is kept; what had not is reported as not loaded.
-   */
-  | "deadline";
-
-/** A live render session. Closing it destroys the WebGL context. */
-export interface RenderSession {
-  events: AsyncIterable<CaptureEvent>;
-  /**
-   * Re-capture one direction inside the still-open session.
-   *
-   * Costs **zero** new billable requests: "Timed session tokens allow for up to
-   * three hours of renderer tile requests from a single root tileset request"
-   * (Map Tiles usage & billing, read 2026-08-05). Resolves with the resulting
-   * `view-captured` or `view-failed` event, which is also emitted on `events`.
-   */
-  recapture(slot: ViewSlot): Promise<CaptureEvent>;
-  /** False once the WebGL context is gone; `recapture` is unavailable then. */
-  readonly isOpen: boolean;
-  close(): void;
-}
-
-/**
- * Where one direction stands with the RENDERER. Not a description of the
- * building — that is `DirectionClass` in lib/directionClass.ts, and the two are
- * deliberately different types so a geometry finding can never be stored in a
- * field that timing writes to.
- *
- * `not-requested` is not a stage of loading and never becomes one: the geometry
- * established that there is nothing on that side to photograph, so nothing was
- * asked for and nothing will arrive. It is separate from `failed` because
- * nothing failed, and separate from `queued` because a queued direction is one
- * the app is still working on. WHY it was not requested is carried by the
- * direction's class, not by this value.
- *
- * Every one of the four directions has one of these from the moment the plan
- * resolves. There is no absent state.
- */
-export type RenderState =
-  | "not-requested"
-  | "queued"
-  | "capturing"
-  | "ready"
-  | "failed";
+  | { kind: "failed"; detail: string };
