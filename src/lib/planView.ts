@@ -72,7 +72,8 @@ export async function planView(
     if (!curated) {
       return unavailable(
         "not-supported",
-        "We don't have a good view for this one yet.",
+        `${geo.label} is a real address — it just isn't one of the buildings ` +
+          `we've verified renders well.`,
       );
     }
     if (floor < curated.floors.min || floor > curated.floors.max) {
