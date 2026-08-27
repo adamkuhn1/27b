@@ -1,21 +1,19 @@
-/* 27B design system.
-   Serious, understated, architectural: paper-and-ink logic on the suite's one
-   shared dark ground, hairline rules instead of boxes, the project accent used
-   sparingly. No radius anywhere: nothing here represents a physical object. */
+/* 27B: a small architectural field note, not a dashboard.
+   Warm paper, dark ink, one muted accent, thin rules instead of boxes. */
 
 :root {
-  color-scheme: dark;
-  --bg: #0b0b0c;
-  --bg-raised: #121317;
-  --bg-input: #16181d;
-  --line: #24262d;
-  --line-strong: #33363f;
-  --text: #eef0f3;
-  --text-dim: #a3a7b0;
-  --text-faint: #7a7e86;
+  color-scheme: light;
+  --bg: #f4f1e8;
+  --bg-raised: #eeeadd;
+  --bg-input: #faf8f1;
+  --line: #ddd6c4;
+  --line-strong: #c7bea6;
+  --text: #24211a;
+  --text-dim: #5c5544;
+  --text-faint: #8a8270;
   --accent: #5d7a91;
-  --accent-text: color-mix(in srgb, var(--accent) 95%, #fff);
-  --danger: #e08a6a;
+  --accent-text: #3f5a6f;
+  --danger: #a1503a;
   --serif: "EB Garamond", "Cormorant Garamond", Garamond, "Times New Roman", serif;
   --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
 }
@@ -46,15 +44,14 @@ body {
 /* --- masthead ------------------------------------------------------------ */
 
 .masthead {
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--line-strong);
   padding-bottom: 24px;
   margin-bottom: 32px;
 }
 .masthead h1 {
-  font-size: 28px;
+  font-size: 26px;
   font-weight: 500;
   margin: 0 0 8px;
-  letter-spacing: 0.01em;
 }
 .masthead .mark {
   color: var(--accent-text);
@@ -69,16 +66,13 @@ body {
 /* --- section labels ------------------------------------------------------ */
 
 .section-label {
-  font-family: var(--mono);
-  font-size: 12px;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  color: var(--text-faint);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-dim);
   margin: 0 0 12px;
 }
 
-/* --- curated picker ------------------------------------------------------ */
+/* --- curated picker: a plain index, not a card grid ----------------------- */
 
 .picker {
   margin-bottom: 32px;
@@ -92,27 +86,26 @@ body {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 12px;
+  border-top: 1px solid var(--line);
 }
 .picker-chip {
   width: 100%;
-  height: 100%;
   text-align: left;
   font: inherit;
   color: inherit;
-  background: var(--bg-raised);
-  border: 1px solid var(--line);
-  padding: 14px 16px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--line);
+  padding: 12px 4px;
   cursor: pointer;
-  display: grid;
-  gap: 4px;
-  transition: border-color 120ms ease;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 .picker-chip:hover:not(:disabled),
 .picker-chip:focus-visible {
-  border-color: var(--accent);
+  background: var(--bg-raised);
 }
 .picker-chip:disabled {
   opacity: 0.55;
@@ -122,10 +115,8 @@ body {
   font-weight: 600;
 }
 .chip-floors {
-  font-family: var(--mono);
-  font-size: 12px;
+  font-size: 14px;
   color: var(--accent-text);
-  letter-spacing: 0.04em;
 }
 .chip-note {
   color: var(--text-dim);
@@ -135,7 +126,7 @@ body {
 /* --- entry form ----------------------------------------------------------- */
 
 .entry {
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--line-strong);
   padding-top: 24px;
   margin-bottom: 40px;
 }
@@ -176,21 +167,18 @@ body {
 }
 .lookup {
   font: inherit;
-  font-family: var(--mono);
-  font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
+  font-size: 16px;
   color: var(--text);
   background: none;
   border: 1px solid var(--line-strong);
   padding: 11px 22px;
   margin-top: 27px;
   cursor: pointer;
-  transition: border-color 120ms ease;
 }
 .lookup:hover:not(:disabled),
 .lookup:focus-visible {
   border-color: var(--accent);
+  color: var(--accent-text);
 }
 .lookup:disabled {
   opacity: 0.55;
@@ -200,9 +188,8 @@ body {
 /* --- states ---------------------------------------------------------------- */
 
 .state {
-  border: 1px solid var(--line);
-  background: var(--bg-raised);
-  padding: 28px 32px;
+  border-top: 2px solid var(--line-strong);
+  padding-top: 20px;
   max-width: 72ch;
 }
 .state h2 {
@@ -245,9 +232,7 @@ body {
 .result-sub {
   margin: 0 0 20px;
   color: var(--text-faint);
-  font-family: var(--mono);
-  font-size: 13px;
-  letter-spacing: 0.03em;
+  font-size: 15px;
 }
 .frames {
   display: grid;
@@ -264,7 +249,7 @@ body {
   /* No forced aspect ratio: the attribution bar can make the PNG taller than
      4:3, and cropping it off would be a compliance problem, not a taste one. */
   height: auto;
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-strong);
 }
 .frame-empty {
   aspect-ratio: 4 / 3;
@@ -309,7 +294,7 @@ body {
     padding: 28px 16px 64px;
   }
   .masthead h1 {
-    font-size: 23px;
+    font-size: 22px;
   }
   .frames {
     grid-template-columns: 1fr;
