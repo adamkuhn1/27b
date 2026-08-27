@@ -51,8 +51,8 @@ meters away — a tall floor, or a facade facing a park or river — the render
 is genuinely photographic. When the subject is a facade across a 20 m street
 (the typical mid-block apartment), the render is a melted, artifact-heavy
 texture, and no application code can fix that: it is the source data's
-ceiling, verified at length before this rebuild (see
-`docs/RECOVERY_MAP.md`, "27B").
+ceiling, verified at length in a rendering bake-off before the curated list
+below was settled on.
 
 So the app renders only buildings and floor ranges that were **rendered live
 and visually accepted, all four directions**, on 2026-08-11:
@@ -161,8 +161,7 @@ actually starts; visitors who never pass the form never download it.
 
 - **The mesh-quality ceiling.** Anything within ~50 m of the camera renders
   poorly at these standoffs. This is the provider's resolution limit, not a
-  tuning problem — ~7,800 lines of tuning in this app's previous life did not
-  move it. It is why the curated list exists.
+  tuning problem — it is why the curated list exists.
 - **Floor height is an estimate.** 3.2 m per floor plus a 1.5 m eye; real
   buildings vary (lobbies, mechanical floors), so "floor 50" is approximate
   by a floor or two on tall buildings.
