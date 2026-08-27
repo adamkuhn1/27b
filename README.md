@@ -13,10 +13,7 @@ drawn onto an output frame is the required attribution bar.
 ## Run it
 
 ```sh
-# from the monorepo root
 npm install
-
-# in apps/27b
 cp .env.example .env.local   # then fill in the key (optional — see below)
 npm run dev                  # http://localhost:5174
 npm run build                # production build (compiles Cesium; ~25 s)

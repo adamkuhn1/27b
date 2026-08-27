@@ -316,10 +316,9 @@ describe("buildCameraViews", () => {
     // safety net for pathological rings; for any simple ring — including a C
     // whose centroid sits in the notch — the outermost-crossing raycast has
     // already left the polygon for good, so the guard provably never fires.
-    // (An earlier plan for this sprint was to surface "how far the guard had to
-    // push" as a real measurement. It is structurally always zero, so it would
-    // have been a field that could only ever read 0. Removed rather than
-    // shipped.)
+    // ("How far the guard had to push" was considered as a real measurement
+    // to surface, but it's structurally always zero -- a field that could
+    // only ever read 0 -- so it was left out.)
     const m = 1 / 111_320;
     const c = { lat: 0, lng: 0 };
     const ring: Array<[number, number]> = [

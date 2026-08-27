@@ -5,9 +5,8 @@ import type { Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import cesium from "vite-plugin-cesium";
 
-// Cesium is hoisted to the monorepo root node_modules, so resolve its build
-// dir absolutely rather than relying on vite-plugin-cesium's default of a
-// CWD-local "node_modules/cesium/Build".
+// Resolve Cesium's build dir absolutely rather than relying on
+// vite-plugin-cesium's default of a CWD-local "node_modules/cesium/Build".
 const require = createRequire(import.meta.url);
 const cesiumPkg = require.resolve("cesium/package.json");
 const cesiumBuild = path.join(path.dirname(cesiumPkg), "Build");
