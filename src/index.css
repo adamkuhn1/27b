@@ -1,0 +1,317 @@
+/* 27B design system.
+   Serious, understated, architectural: paper-and-ink logic on the suite's one
+   shared dark ground, hairline rules instead of boxes, the project accent used
+   sparingly. No radius anywhere: nothing here represents a physical object. */
+
+:root {
+  color-scheme: dark;
+  --bg: #0b0b0c;
+  --bg-raised: #121317;
+  --bg-input: #16181d;
+  --line: #24262d;
+  --line-strong: #33363f;
+  --text: #eef0f3;
+  --text-dim: #a3a7b0;
+  --text-faint: #7a7e86;
+  --accent: #5d7a91;
+  --accent-text: color-mix(in srgb, var(--accent) 95%, #fff);
+  --danger: #e08a6a;
+  --serif: "EB Garamond", "Cormorant Garamond", Garamond, "Times New Roman", serif;
+  --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+body {
+  font-family: var(--serif);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 17px;
+  line-height: 1.55;
+}
+
+.app {
+  max-width: 1060px;
+  margin: 0 auto;
+  padding: 48px 24px 96px;
+}
+
+/* --- masthead ------------------------------------------------------------ */
+
+.masthead {
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 24px;
+  margin-bottom: 32px;
+}
+.masthead h1 {
+  font-size: 28px;
+  font-weight: 500;
+  margin: 0 0 8px;
+  letter-spacing: 0.01em;
+}
+.masthead .mark {
+  color: var(--accent-text);
+  font-weight: 600;
+}
+.tagline {
+  margin: 0;
+  color: var(--text-dim);
+  max-width: 62ch;
+}
+
+/* --- section labels ------------------------------------------------------ */
+
+.section-label {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--text-faint);
+  margin: 0 0 12px;
+}
+
+/* --- curated picker ------------------------------------------------------ */
+
+.picker {
+  margin-bottom: 32px;
+}
+.picker-note {
+  margin: 0 0 16px;
+  color: var(--text-dim);
+  max-width: 70ch;
+}
+.picker-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+.picker-chip {
+  width: 100%;
+  height: 100%;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  padding: 14px 16px;
+  cursor: pointer;
+  display: grid;
+  gap: 4px;
+  transition: border-color 120ms ease;
+}
+.picker-chip:hover:not(:disabled),
+.picker-chip:focus-visible {
+  border-color: var(--accent);
+}
+.picker-chip:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.chip-name {
+  font-weight: 600;
+}
+.chip-floors {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--accent-text);
+  letter-spacing: 0.04em;
+}
+.chip-note {
+  color: var(--text-dim);
+  font-size: 15px;
+}
+
+/* --- entry form ----------------------------------------------------------- */
+
+.entry {
+  border-top: 1px solid var(--line);
+  padding-top: 24px;
+  margin-bottom: 40px;
+}
+.entry-row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+.field {
+  display: grid;
+  gap: 6px;
+  flex: 1 1 280px;
+}
+.field-floor {
+  flex: 0 1 120px;
+}
+.field span {
+  font-size: 14px;
+  color: var(--text-dim);
+}
+.field input {
+  font: inherit;
+  color: var(--text);
+  background: var(--bg-input);
+  border: 1px solid var(--line-strong);
+  padding: 10px 12px;
+  width: 100%;
+}
+.field input:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+}
+.field-error {
+  font-style: normal;
+  font-size: 14px;
+  color: var(--danger);
+}
+.lookup {
+  font: inherit;
+  font-family: var(--mono);
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text);
+  background: none;
+  border: 1px solid var(--line-strong);
+  padding: 11px 22px;
+  margin-top: 27px;
+  cursor: pointer;
+  transition: border-color 120ms ease;
+}
+.lookup:hover:not(:disabled),
+.lookup:focus-visible {
+  border-color: var(--accent);
+}
+.lookup:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* --- states ---------------------------------------------------------------- */
+
+.state {
+  border: 1px solid var(--line);
+  background: var(--bg-raised);
+  padding: 28px 32px;
+  max-width: 72ch;
+}
+.state h2 {
+  margin: 0 0 12px;
+  font-size: 21px;
+  font-weight: 600;
+}
+.state p {
+  margin: 0 0 12px;
+  color: var(--text-dim);
+}
+.state p:last-child {
+  margin-bottom: 0;
+}
+.state code {
+  font-family: var(--mono);
+  font-size: 0.85em;
+  color: var(--accent-text);
+}
+.state-list-label {
+  margin-bottom: 4px;
+}
+.state-list {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--text-dim);
+}
+.state-loading p {
+  margin: 0;
+  color: var(--text-dim);
+}
+
+/* --- result ---------------------------------------------------------------- */
+
+.result-head h2 {
+  margin: 0 0 4px;
+  font-size: 23px;
+  font-weight: 600;
+}
+.result-sub {
+  margin: 0 0 20px;
+  color: var(--text-faint);
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 0.03em;
+}
+.frames {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 20px;
+  margin-bottom: 24px;
+}
+.frame {
+  margin: 0;
+}
+.frame img {
+  display: block;
+  width: 100%;
+  /* No forced aspect ratio: the attribution bar can make the PNG taller than
+     4:3, and cropping it off would be a compliance problem, not a taste one. */
+  height: auto;
+  border: 1px solid var(--line);
+}
+.frame-empty {
+  aspect-ratio: 4 / 3;
+  border: 1px solid var(--line);
+  display: grid;
+  place-items: center;
+  background: var(--bg-raised);
+}
+.frame-empty p {
+  margin: 0;
+  padding: 0 24px;
+  color: var(--text-faint);
+  font-size: 15px;
+  text-align: center;
+}
+.frame-failed p {
+  color: var(--danger);
+}
+.frame figcaption {
+  padding-top: 8px;
+  font-size: 14px;
+  color: var(--text-dim);
+}
+
+.result-notes {
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+  max-width: 78ch;
+}
+.result-notes p {
+  margin: 0 0 10px;
+  color: var(--text-faint);
+  font-size: 15px;
+}
+.result-notes strong {
+  color: var(--text-dim);
+  font-weight: 600;
+}
+
+@media (max-width: 560px) {
+  .app {
+    padding: 28px 16px 64px;
+  }
+  .masthead h1 {
+    font-size: 23px;
+  }
+  .frames {
+    grid-template-columns: 1fr;
+  }
+}
