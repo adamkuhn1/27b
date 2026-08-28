@@ -116,12 +116,12 @@ export default function App() {
     <main className="app">
       <header className="masthead">
         <h1>
-          <span className="mark">27B</span> — which way do your windows face?
+          <span className="mark">27B</span>
         </h1>
         <p className="tagline">
-          A New York address and a floor. Four real renders of approximately
-          what you'd see — from Google's photorealistic 3D reconstruction,
-          shipped as captured.
+          See what a NYC apartment might face from a given floor. Enter a
+          supported address and floor, and 27B generates four approximate
+          views using Google's Photorealistic 3D Tiles.
         </p>
       </header>
 

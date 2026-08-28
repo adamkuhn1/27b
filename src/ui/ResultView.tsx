@@ -2,9 +2,12 @@
 // bearing its window faces, plus the disclosures that keep the result honest.
 //
 // Copy rule (non-negotiable): everything here is "approximately what you'd
-// see", never "your actual view" — the floor height is an estimate, the
+// see", never "your actual view". The floor height is an estimate, the
 // camera stands just outside the facade rather than at a window pane, and the
 // mesh is Google's photogrammetry, not a photograph taken today.
+//
+// Captions are kept to "NNE · 29°": what "facade" vs. "true" bearing means is
+// explained once, in the footer below, not repeated on every frame.
 
 import type { ViewPlan, ViewSlot, ViewState } from "../lib/types";
 
@@ -17,9 +20,7 @@ interface Props {
 function frameCaption(plan: ViewPlan, slot: ViewSlot): string {
   const view = plan.views.find((v) => v.slot === slot);
   if (!view) return "";
-  return plan.basis === "facade"
-    ? `Facing ${view.compass} (${Math.round(view.headingDeg)}° — this facade's outward normal)`
-    : `Facing ${view.compass} (${Math.round(view.headingDeg)}° true)`;
+  return `${view.compass} · ${Math.round(view.headingDeg)}°`;
 }
 
 function Frame({ plan, slot, state }: { plan: ViewPlan; slot: ViewSlot; state: ViewState }) {
@@ -55,7 +56,7 @@ export function ResultView({ plan, states }: Props) {
     <section className="result" aria-label="Rendered views">
       <header className="result-head">
         <h2>
-          {plan.curatedName} — floor {plan.floor}
+          {plan.curatedName}, floor {plan.floor}
         </h2>
         <p className="result-sub">{plan.geocode.label}</p>
       </header>
@@ -68,8 +69,8 @@ export function ResultView({ plan, states }: Props) {
 
       <footer className="result-notes">
         <p>
-          This is <strong>approximately what you'd see</strong> from this floor
-          — not your actual view. Floor height is an estimate (3.2 m per floor,
+          This is <strong>approximately what you'd see</strong> from this floor,
+          not your actual view. Floor height is an estimate (3.2 m per floor,
           eye 1.5 m above the slab{plan.floorClampedToRoof ? ", clamped to the real roof height" : ""}),
           and the camera stands just outside the building's{" "}
           {plan.basis === "facade"
@@ -79,8 +80,8 @@ export function ResultView({ plan, states }: Props) {
         </p>
         <p>
           Imagery is Google's photorealistic 3D reconstruction of New York,
-          rendered live and shipped as captured — no generative or synthetic
-          step. Attribution is baked into each frame.
+          rendered live and shipped as captured, with no generative or
+          synthetic step. Attribution is baked into each frame.
         </p>
       </footer>
     </section>

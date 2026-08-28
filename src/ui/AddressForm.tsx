@@ -82,36 +82,7 @@ export function AddressForm({ disabled, onSubmit }: Props) {
 
   return (
     <div className="address-form">
-      <section className="picker" aria-label="Buildings with verified views">
-        <h2 className="section-label">Verified buildings</h2>
-        <p className="picker-note">
-          27B renders real Google 3D imagery, and that imagery is only
-          photographic where the sightlines are long — so it offers the
-          buildings and floors it has actually verified, and says so plainly
-          for everything else.
-        </p>
-        <ul className="picker-list">
-          {CURATED_BUILDINGS.map((b) => (
-            <li key={b.bin}>
-              <button
-                type="button"
-                className="picker-chip"
-                disabled={disabled}
-                onClick={() => pick(b.address, b.suggestedFloor)}
-              >
-                <span className="chip-name">{b.name}</span>
-                <span className="chip-floors">
-                  floors {b.floors.min}–{b.floors.max}
-                </span>
-                <span className="chip-note">{b.note}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      </section>
-
       <form onSubmit={submit} className="entry" aria-label="Address lookup">
-        <h2 className="section-label">Or try an address</h2>
         <div className="entry-row">
           <label className="field">
             <span>NYC street address</span>
@@ -141,10 +112,36 @@ export function AddressForm({ disabled, onSubmit }: Props) {
             {errors.floor && <em className="field-error">{errors.floor}</em>}
           </label>
           <button type="submit" className="lookup" disabled={disabled}>
-            Look up
+            View
           </button>
         </div>
       </form>
+
+      <section className="picker" aria-label="Buildings with verified views">
+        <h2 className="section-label">Supported buildings</h2>
+        <p className="picker-note">
+          27B only renders buildings it has checked ahead of time. Other
+          addresses will get an honest "not supported yet" message.
+        </p>
+        <ul className="picker-list">
+          {CURATED_BUILDINGS.map((b) => (
+            <li key={b.bin}>
+              <button
+                type="button"
+                className="picker-chip"
+                disabled={disabled}
+                onClick={() => pick(b.address, b.suggestedFloor)}
+              >
+                <span className="chip-name">{b.name}</span>
+                <span className="chip-floors">
+                  floors {b.floors.min}-{b.floors.max}
+                </span>
+                <span className="chip-note">{b.note}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </section>
     </div>
   );
 }
