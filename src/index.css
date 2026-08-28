@@ -1,20 +1,20 @@
-/* 27B: a small architectural field note, not a dashboard.
-   Warm paper, dark ink, one muted accent, thin rules instead of boxes. */
+/* 27B: a small utility, not a design showcase. Plain system type, a
+   near-white background, one restrained accent, ordinary 1px borders. */
 
 :root {
   color-scheme: light;
-  --bg: #f4f1e8;
-  --bg-raised: #eeeadd;
-  --bg-input: #faf8f1;
-  --line: #ddd6c4;
-  --line-strong: #c7bea6;
-  --text: #24211a;
-  --text-dim: #5c5544;
-  --text-faint: #8a8270;
-  --accent: #5d7a91;
-  --accent-text: #3f5a6f;
-  --danger: #a1503a;
-  --serif: "EB Garamond", "Cormorant Garamond", Garamond, "Times New Roman", serif;
+  --bg: #ffffff;
+  --bg-raised: #f6f7f8;
+  --bg-input: #ffffff;
+  --line: #e2e4e8;
+  --line-strong: #c7cbd1;
+  --text: #16181d;
+  --text-dim: #52565f;
+  --text-faint: #797f89;
+  --accent: #35618f;
+  --accent-text: #2a4d73;
+  --danger: #b3392a;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
 }
 
@@ -28,34 +28,33 @@ body,
   margin: 0;
 }
 body {
-  font-family: var(--serif);
+  font-family: var(--sans);
   background: var(--bg);
   color: var(--text);
-  font-size: 17px;
-  line-height: 1.55;
+  font-size: 16px;
+  line-height: 1.5;
 }
 
 .app {
   max-width: 1060px;
   margin: 0 auto;
-  padding: 48px 24px 96px;
+  padding: 32px 24px 72px;
 }
 
 /* --- masthead ------------------------------------------------------------ */
 
 .masthead {
-  border-bottom: 1px solid var(--line-strong);
-  padding-bottom: 24px;
-  margin-bottom: 32px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 20px;
+  margin-bottom: 24px;
 }
 .masthead h1 {
-  font-size: 26px;
-  font-weight: 500;
-  margin: 0 0 8px;
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0 0 6px;
 }
 .masthead .mark {
   color: var(--accent-text);
-  font-weight: 600;
 }
 .tagline {
   margin: 0;
@@ -66,21 +65,86 @@ body {
 /* --- section labels ------------------------------------------------------ */
 
 .section-label {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--text-dim);
-  margin: 0 0 12px;
+  margin: 0 0 10px;
 }
 
-/* --- curated picker: a plain index, not a card grid ----------------------- */
+/* --- entry form: the main input, first on the page ------------------------ */
+
+.entry {
+  margin-bottom: 32px;
+}
+.entry-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+.field {
+  display: grid;
+  gap: 6px;
+  flex: 1 1 280px;
+}
+.field-floor {
+  flex: 0 1 110px;
+}
+.field span {
+  font-size: 13px;
+  color: var(--text-dim);
+}
+.field input {
+  font: inherit;
+  color: var(--text);
+  background: var(--bg-input);
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  padding: 9px 11px;
+  width: 100%;
+}
+.field input:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgb(53 97 143 / 0.15);
+}
+.field-error {
+  font-style: normal;
+  font-size: 13px;
+  color: var(--danger);
+}
+.lookup {
+  font: inherit;
+  font-weight: 600;
+  font-size: 15px;
+  color: #fff;
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  padding: 10px 20px;
+  margin-top: 25px;
+  cursor: pointer;
+}
+.lookup:hover:not(:disabled),
+.lookup:focus-visible {
+  background: var(--accent-text);
+  border-color: var(--accent-text);
+}
+.lookup:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* --- curated picker: a plain list, after the form -------------------------- */
 
 .picker {
   margin-bottom: 32px;
 }
 .picker-note {
-  margin: 0 0 16px;
+  margin: 0 0 14px;
   color: var(--text-dim);
   max-width: 70ch;
+  font-size: 15px;
 }
 .picker-list {
   list-style: none;
@@ -96,7 +160,7 @@ body {
   background: none;
   border: none;
   border-bottom: 1px solid var(--line);
-  padding: 12px 4px;
+  padding: 10px 4px;
   cursor: pointer;
   display: flex;
   align-items: baseline;
@@ -108,97 +172,35 @@ body {
   background: var(--bg-raised);
 }
 .picker-chip:disabled {
-  opacity: 0.55;
+  opacity: 0.5;
   cursor: default;
 }
 .chip-name {
   font-weight: 600;
 }
 .chip-floors {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--accent-text);
 }
 .chip-note {
   color: var(--text-dim);
-  font-size: 15px;
-}
-
-/* --- entry form ----------------------------------------------------------- */
-
-.entry {
-  border-top: 1px solid var(--line-strong);
-  padding-top: 24px;
-  margin-bottom: 40px;
-}
-.entry-row {
-  display: flex;
-  gap: 16px;
-  align-items: flex-start;
-  flex-wrap: wrap;
-}
-.field {
-  display: grid;
-  gap: 6px;
-  flex: 1 1 280px;
-}
-.field-floor {
-  flex: 0 1 120px;
-}
-.field span {
   font-size: 14px;
-  color: var(--text-dim);
-}
-.field input {
-  font: inherit;
-  color: var(--text);
-  background: var(--bg-input);
-  border: 1px solid var(--line-strong);
-  padding: 10px 12px;
-  width: 100%;
-}
-.field input:focus-visible {
-  outline: none;
-  border-color: var(--accent);
-}
-.field-error {
-  font-style: normal;
-  font-size: 14px;
-  color: var(--danger);
-}
-.lookup {
-  font: inherit;
-  font-size: 16px;
-  color: var(--text);
-  background: none;
-  border: 1px solid var(--line-strong);
-  padding: 11px 22px;
-  margin-top: 27px;
-  cursor: pointer;
-}
-.lookup:hover:not(:disabled),
-.lookup:focus-visible {
-  border-color: var(--accent);
-  color: var(--accent-text);
-}
-.lookup:disabled {
-  opacity: 0.55;
-  cursor: default;
 }
 
 /* --- states ---------------------------------------------------------------- */
 
 .state {
   border-top: 2px solid var(--line-strong);
-  padding-top: 20px;
+  padding-top: 18px;
   max-width: 72ch;
 }
 .state h2 {
-  margin: 0 0 12px;
-  font-size: 21px;
-  font-weight: 600;
+  margin: 0 0 10px;
+  font-size: 18px;
+  font-weight: 700;
 }
 .state p {
-  margin: 0 0 12px;
+  margin: 0 0 10px;
   color: var(--text-dim);
 }
 .state p:last-child {
@@ -208,6 +210,9 @@ body {
   font-family: var(--mono);
   font-size: 0.85em;
   color: var(--accent-text);
+  background: var(--bg-raised);
+  padding: 1px 5px;
+  border-radius: 4px;
 }
 .state-list-label {
   margin-bottom: 4px;
@@ -222,23 +227,23 @@ body {
   color: var(--text-dim);
 }
 
-/* --- result ---------------------------------------------------------------- */
+/* --- result: the actual output, meant to dominate the page ----------------- */
 
 .result-head h2 {
   margin: 0 0 4px;
-  font-size: 23px;
-  font-weight: 600;
+  font-size: 19px;
+  font-weight: 700;
 }
 .result-sub {
-  margin: 0 0 20px;
+  margin: 0 0 18px;
   color: var(--text-faint);
-  font-size: 15px;
+  font-size: 14px;
 }
 .frames {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-  gap: 20px;
-  margin-bottom: 24px;
+  gap: 16px;
+  margin-bottom: 20px;
 }
 .frame {
   margin: 0;
@@ -250,10 +255,12 @@ body {
      4:3, and cropping it off would be a compliance problem, not a taste one. */
   height: auto;
   border: 1px solid var(--line-strong);
+  border-radius: 6px;
 }
 .frame-empty {
   aspect-ratio: 4 / 3;
   border: 1px solid var(--line);
+  border-radius: 6px;
   display: grid;
   place-items: center;
   background: var(--bg-raised);
@@ -262,27 +269,27 @@ body {
   margin: 0;
   padding: 0 24px;
   color: var(--text-faint);
-  font-size: 15px;
+  font-size: 14px;
   text-align: center;
 }
 .frame-failed p {
   color: var(--danger);
 }
 .frame figcaption {
-  padding-top: 8px;
-  font-size: 14px;
+  padding-top: 6px;
+  font-size: 13px;
   color: var(--text-dim);
 }
 
 .result-notes {
   border-top: 1px solid var(--line);
-  padding-top: 16px;
+  padding-top: 14px;
   max-width: 78ch;
 }
 .result-notes p {
-  margin: 0 0 10px;
+  margin: 0 0 8px;
   color: var(--text-faint);
-  font-size: 15px;
+  font-size: 14px;
 }
 .result-notes strong {
   color: var(--text-dim);
@@ -291,12 +298,16 @@ body {
 
 @media (max-width: 560px) {
   .app {
-    padding: 28px 16px 64px;
+    padding: 20px 16px 56px;
   }
   .masthead h1 {
-    font-size: 22px;
+    font-size: 20px;
   }
   .frames {
     grid-template-columns: 1fr;
+  }
+  .lookup {
+    width: 100%;
+    margin-top: 6px;
   }
 }

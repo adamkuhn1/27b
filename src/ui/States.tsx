@@ -25,7 +25,7 @@ export function NoImagerySourceState() {
       <p>
         The address and camera geometry resolved, but no Google Map Tiles API
         key is configured, so there is no real imagery to show. 27B never
-        substitutes a synthetic scene — set{" "}
+        substitutes a synthetic scene. Set{" "}
         <code>VITE_GOOGLE_MAPS_KEY</code> to enable the renderer.
       </p>
     </div>
@@ -50,15 +50,15 @@ export function UnavailableState({
           <>
             <p>
               The 3D imagery this app renders is only photographic where the
-              sightlines are long — tall buildings, or buildings facing a park
-              or river. At a typical mid-block address the source mesh isn't
-              good enough, and we'd rather say so than show you a bad frame.
+              sightlines are long (tall buildings, or buildings facing a park
+              or river). At a typical mid-block address the source mesh isn't
+              good enough, so it says so instead of showing a bad frame.
             </p>
             <p className="state-list-label">Buildings with verified views:</p>
             <ul className="state-list">
               {CURATED_BUILDINGS.map((b) => (
                 <li key={b.bin}>
-                  {b.name} — floors {b.floors.min}–{b.floors.max}
+                  {b.name}, floors {b.floors.min}-{b.floors.max}
                 </li>
               ))}
             </ul>

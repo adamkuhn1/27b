@@ -72,7 +72,7 @@ export async function planView(
     if (!curated) {
       return unavailable(
         "not-supported",
-        `${geo.label} is a real address — it just isn't one of the buildings ` +
+        `${geo.label} is a real address, but it isn't one of the buildings ` +
           `we've verified renders well.`,
       );
     }
@@ -80,7 +80,7 @@ export async function planView(
       return unavailable(
         "not-supported",
         `At ${curated.name} we've only verified good views from floors ` +
-          `${curated.floors.min}–${curated.floors.max}.`,
+          `${curated.floors.min}-${curated.floors.max}.`,
         curated.floors,
       );
     }
