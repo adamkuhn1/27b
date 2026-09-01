@@ -1,4 +1,4 @@
-"""Ported from the frontend's src/lib/geometry.test.ts and geoid.test.ts."""
+"""Camera geometry and geoid-interpolation tests."""
 
 import math
 
@@ -286,7 +286,7 @@ class TestPolygonCentroid:
 
 
 # ---------------------------------------------------------------------------
-# Ported from geoid.test.ts
+# Geoid interpolation (geoid_height_m)
 # ---------------------------------------------------------------------------
 
 # Ground truth sampled from NOAA NGS's Geoid Height Service (GEOID18) on

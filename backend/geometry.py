@@ -1,9 +1,8 @@
 """Camera geometry: turn real building data into four real camera vantages.
 
-Ported from the frontend's src/lib/geometry.ts + src/lib/geoid.ts (that
-TypeScript is now deleted; this is the only copy). This module is the
-mathematical heart of the "geometry is real" guarantee and is fully unit
-tested. It does four things, all pure, all standard-library math:
+This module is the mathematical heart of the "geometry is real" guarantee
+and is fully unit tested. It does four things, all pure, all
+standard-library math:
 
   1. estimate the eye elevation for a floor, in the source datum (NAVD88) and
      in the WGS84 ellipsoidal datum the renderer actually consumes,
@@ -512,12 +511,12 @@ def polygon_centroid(ring: Ring) -> tuple[float, float]:
         return (sum_lat / len(pts), sum_lng / len(pts))
 
     # Shift to a local origin before the shoelace, and shift back at the
-    # end. Run on raw WGS84 degrees this loses the answer to cancellation
-    # -- see geometry.ts's original comment (git history) for the measured
-    # 0.37-10.4 m error this fixes across real NYC footprints. Translation
-    # is exact enough to remove the problem because it makes the terms the
-    # same order as the result; the centroid of a translated polygon is the
-    # translated centroid, so nothing else changes.
+    # end. Run on raw WGS84 degrees, this loses the answer to cancellation:
+    # measured on real NYC footprints, the error grew with vertex count,
+    # from ~0.4 m up to ~10 m on a 29-point footprint. Translation removes
+    # the problem because it makes the terms the same order as the result;
+    # the centroid of a translated polygon is the translated centroid, so
+    # nothing else changes.
     ox = sum(p[0] for p in pts) / len(pts)
     oy = sum(p[1] for p in pts) / len(pts)
 

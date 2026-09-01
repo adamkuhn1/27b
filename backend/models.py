@@ -1,11 +1,10 @@
 """API contract: the typed shapes /api/view-plan and /api/curated-buildings
 exchange with the frontend.
 
-Field names are camelCase on the wire (matching the pre-migration TS types
-exactly, via Pydantic's alias generator) so the frontend's own types barely
-had to change. Every response the frontend actually receives from
-/api/view-plan is `ViewPlanResponse` -- success and every documented failure
-reason alike -- never an HTTP error status. See planning.py for why.
+Field names are camelCase on the wire (via Pydantic's alias generator) to
+match the frontend's TS types. Every response from /api/view-plan is
+`ViewPlanResponse` -- success and every documented failure reason alike --
+never an HTTP error status. See planning.py for why.
 """
 
 from __future__ import annotations
@@ -124,11 +123,10 @@ class ViewPlanRequest(ApiModel):
 
 
 class ViewPlanResponse(ApiModel):
-    """Discriminated on `ok`, exactly mirroring the pre-migration TS
-    `ViewPlanResult` union. Every branch -- success, a bad address, an
+    """Discriminated on `ok`. Every branch -- success, a bad address, an
     unsupported building, an unreachable upstream service, missing
-    geometry -- is this same typed shape at HTTP 200. There is no
-    ok:false-via-4xx/5xx path for an expected outcome; see planning.py."""
+    geometry -- is this same typed shape at HTTP 200; there is no
+    ok:false-via-4xx/5xx path for an expected outcome. See planning.py."""
 
     ok: bool
     plan: ViewPlan | None = None

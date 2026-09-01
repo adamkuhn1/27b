@@ -1,13 +1,7 @@
-// The frontend's entire connection to the backend: two small fetch calls.
-//
-// Everything that used to run in-process here -- geocoding, the curated
-// gate, footprint/elevation lookups, facade-relative camera math -- now
-// lives in the Python backend (backend/planning.py + backend/geometry.py),
-// behind POST /api/view-plan. This module is deliberately thin: it makes the
-// request, and reshapes the backend's flat JSON body into the same
-// discriminated `ViewPlanResult` union the rest of the app already expected,
-// so nothing downstream (App.tsx, ResultView.tsx, States.tsx) had to change
-// its own logic to consume it.
+// The frontend's connection to the planning backend: two fetch calls.
+// planView() calls POST /api/view-plan and reshapes the backend's flat JSON
+// body into the discriminated ViewPlanResult union the rest of the app
+// (App.tsx, ResultView.tsx, States.tsx) consumes.
 //
 // In dev, `/api` is proxied to the backend by vite.config.ts, so this never
 // needs to know the backend's host or worry about CORS.

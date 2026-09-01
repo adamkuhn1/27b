@@ -50,8 +50,8 @@ export default defineConfig({
     // The planning backend (backend/main.py, run separately with
     // `uvicorn main:app --reload`) owns /api; proxying it here means the
     // frontend can just fetch("/api/...") in dev with no CORS setup and no
-    // hardcoded backend host. `npm run build` never sees this -- production
-    // API routing is out of scope for this migration (see README).
+    // hardcoded backend host. `npm run build` never sees this -- there is
+    // no production API routing yet (see README).
     proxy: {
       "/api": "http://localhost:8000",
     },
