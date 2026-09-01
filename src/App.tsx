@@ -1,9 +1,10 @@
 // 27B — application shell and state machine.
 //
-// Flow: address + floor -> geometry pipeline (lib/planView.ts) -> if the plan
-// resolves and a key is configured, a single Cesium render session captures
-// the four facade views progressively. Every failure branch lands in an
-// explicit honest state; there is no fallback imagery of any kind.
+// Flow: address + floor -> POST /api/view-plan (the Python backend's
+// geometry pipeline -- see backend/planning.py) -> if the plan resolves and
+// a key is configured, a single Cesium render session captures the four
+// facade views progressively. Every failure branch lands in an explicit
+// honest state; there is no fallback imagery of any kind.
 //
 // Cesium is imported dynamically here and nowhere else. The engine is ~1.7 MB
 // gzipped, and a visitor who never gets past the form (or who only ever sees
@@ -13,8 +14,8 @@ import { useEffect, useRef, useState } from "react";
 import { AddressForm, type AddressFormValue } from "./ui/AddressForm";
 import { LoadingState, NoImagerySourceState, UnavailableState } from "./ui/States";
 import { ResultView } from "./ui/ResultView";
-import { planView } from "./lib/planView";
-import type { ViewPlanResult, ViewSlot, ViewState } from "./lib/types";
+import { planView, fetchCuratedBuildings } from "./lib/api";
+import type { CuratedBuilding, ViewPlanResult, ViewSlot, ViewState } from "./lib/types";
 
 /** The Google Maps Platform key that unlocks Photorealistic 3D Tiles. */
 function googleMapsKey(): string | undefined {
@@ -43,6 +44,22 @@ export default function App() {
   const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => () => abortRef.current?.abort(), []);
+
+  // Fetched once from the backend rather than bundled statically, now that
+  // the supported-building list lives server-side (backend/planning.py) --
+  // see lib/api.ts. Starts empty; the picker and the not-supported state
+  // both render fine with zero chips for the brief moment before this
+  // resolves.
+  const [curatedBuildings, setCuratedBuildings] = useState<CuratedBuilding[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    fetchCuratedBuildings().then((list) => {
+      if (!cancelled) setCuratedBuildings(list);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const lookup = async ({ address, floor }: AddressFormValue) => {
     abortRef.current?.abort();
@@ -125,7 +142,11 @@ export default function App() {
         </p>
       </header>
 
-      <AddressForm disabled={state.kind === "planning"} onSubmit={lookup} />
+      <AddressForm
+        disabled={state.kind === "planning"}
+        curatedBuildings={curatedBuildings}
+        onSubmit={lookup}
+      />
 
       {state.kind === "planning" && (
         <LoadingState label="Resolving the address and building geometry…" />
@@ -137,6 +158,7 @@ export default function App() {
             reason={state.result.reason}
             message={state.result.message}
             supportedFloors={state.result.supportedFloors}
+            curatedBuildings={curatedBuildings}
           />
         ) : !googleMapsKey() ? (
           <NoImagerySourceState />

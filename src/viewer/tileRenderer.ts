@@ -143,9 +143,9 @@ export function describeError(err: unknown): string {
 
 /**
  * Position + orient the Cesium camera for a CameraView. The destination is the
- * real lat/lng and the WGS84 *ellipsoidal* height computed by lib/geometry.ts
- * — Cartesian3.fromDegrees consumes ellipsoidal heights, which is exactly why
- * the GEOID18 conversion upstream is load-bearing (~32 m otherwise).
+ * real lat/lng and the WGS84 *ellipsoidal* height computed by the backend's
+ * geometry.py — Cartesian3.fromDegrees consumes ellipsoidal heights, which is
+ * exactly why the GEOID18 conversion upstream is load-bearing (~32 m otherwise).
  */
 export function applyCameraView(viewer: Viewer, view: CameraView): void {
   viewer.camera.setView({
