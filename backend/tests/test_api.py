@@ -39,7 +39,7 @@ def test_view_plan_returns_200_with_camel_case_body_on_success(monkeypatch):
     assert res.status_code == 200
     body = res.json()
     assert body["ok"] is True
-    # camelCase on the wire, matching the pre-migration TS field names.
+    # camelCase on the wire, matching the frontend's TS field names.
     assert body["plan"]["curatedName"] == "Empire State Building"
     assert body["plan"]["eyeElevationNavd88M"] == 270
     assert body["plan"]["views"][0]["headingDeg"] == 29

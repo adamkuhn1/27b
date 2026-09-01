@@ -1,5 +1,4 @@
-"""Ported from the frontend's src/lib/addressMatch.test.ts, footprint.test.ts,
-and planView.test.ts."""
+"""Address matching, footprint parsing, and plan orchestration tests."""
 
 import pytest
 
@@ -9,7 +8,7 @@ import planning
 from planning import FootprintError, GeocodeError
 
 # ---------------------------------------------------------------------------
-# Ported from addressMatch.test.ts
+# Address matching
 # ---------------------------------------------------------------------------
 
 # Every fixture below is a VERBATIM capture of a live NYC Planning GeoSearch
@@ -139,7 +138,7 @@ class TestVerifyAddressMatchRealResponses:
 
 
 # ---------------------------------------------------------------------------
-# Ported from footprint.test.ts
+# Footprint parsing
 # ---------------------------------------------------------------------------
 
 FT_TO_M = 0.3048
@@ -198,7 +197,7 @@ class TestParseFootprint:
 
 
 # ---------------------------------------------------------------------------
-# Ported from planView.test.ts
+# Plan orchestration (plan_view)
 # ---------------------------------------------------------------------------
 
 ESB = next(b for b in planning.CURATED_BUILDINGS if b.name == "Empire State Building")

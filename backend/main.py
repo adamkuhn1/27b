@@ -23,10 +23,9 @@ import planning
 
 app = FastAPI(title="27B planning API")
 
-# Local dev only -- this app is never deployed public (see repo CLAUDE.md).
-# The Vite dev server also proxies /api to this same origin (vite.config.ts),
-# which sidesteps CORS entirely for the normal `npm run dev` path; this stays
-# as a fallback for hitting the API directly (curl, a second browser tab).
+# Local dev only. The Vite dev server proxies /api to this same origin
+# (vite.config.ts), which sidesteps CORS for the normal `npm run dev` path;
+# this is a fallback for hitting the API directly (curl, a second tab).
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5174", "http://127.0.0.1:5174"],
