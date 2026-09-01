@@ -600,7 +600,6 @@ export async function renderViews(
       }
       outcomes.push(outcome);
     }
-    // Draft instrumentation, console-only.
     console.debug(
       `[27b] session rendered ${outcomes.filter((o) => o.ok).length}/${views.length} views in ${Date.now() - started} ms (1 billable root-tileset request)`,
     );

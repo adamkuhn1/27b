@@ -1,24 +1,17 @@
 """The non-rendering planning pipeline: (address, floor) -> a typed plan, or
 an honest, typed reason it can't be produced.
 
-Ported from the frontend's src/lib/{geocode,addressMatch,footprint,curated,
-planView}.ts (that TypeScript is now deleted; this is the only copy).
 Orchestration:
 
     geocode -> verify match -> curated gate -> footprint -> elevation ->
     facade-relative cameras (geometry.py)
 
-Every failure path returns a structured ViewPlanResponse(ok=False, ...) that
-main.py hands straight back as an HTTP 200 body -- there is deliberately NO
-code path here that fabricates coordinates, a building, or a scene, and NO
-code path in main.py that turns one of these outcomes into an HTTP error
-status. If real data is missing, the request is unavailable, full stop; see
-the module docstring on models.ViewPlanResponse for why that stays a typed
-value instead of an exception crossing the API boundary.
+Every failure path returns a structured ViewPlanResponse(ok=False, ...) --
+never a fabricated building, coordinate, or scene, and never an HTTP error
+status for an expected outcome (see models.ViewPlanResponse).
 
-The curated gate sits BEFORE the footprint fetch on purpose: an unsupported
-address costs one keyless geocode call and nothing else -- no Open Data
-query.
+The curated gate sits BEFORE the footprint fetch: an unsupported address
+costs one keyless geocode call and nothing else.
 """
 
 from __future__ import annotations
@@ -597,8 +590,6 @@ async def plan_view(
             ],
         )
 
-        # Draft instrumentation, console-only: the geometry half is expected
-        # to resolve in ~1s (two keyless HTTP calls + pure math).
         print(f"[27b] plan resolved in {(time.monotonic() - started) * 1000:.0f} ms")
         return models.ViewPlanResponse(ok=True, plan=plan)
 
@@ -607,10 +598,8 @@ async def plan_view(
     except FootprintError as err:
         return _unavailable(err.kind, err.message)
     except Exception:
-        # Unknown error: still honest, never a fake scene. Mirrors the
-        # pre-migration TS catch-all -- see main.py for the one place this
-        # can still surface as a real 5xx (a bug in this function itself,
-        # not a modeled domain outcome).
+        # Unexpected bug, not a modeled domain outcome -- still honest,
+        # never a fake scene.
         return _unavailable(
             "network-error",
             "Something went wrong resolving this address. Please try again.",

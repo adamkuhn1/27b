@@ -1,13 +1,12 @@
 // Shared frontend types for the 27B API contract + render/UI state.
 //
-// The geometry pipeline itself (geocode, footprint fetch, elevation math,
-// facade math) now lives in the Python backend (backend/planning.py +
+// The geometry pipeline (geocode, footprint fetch, elevation math, facade
+// math) lives in the Python backend (backend/planning.py +
 // backend/geometry.py) behind POST /api/view-plan. These types are the
-// TYPED SHAPE of that contract on the frontend side, plus the presentation
-// types (CaptureResult, ViewState) for the raw Google 3D Tiles render placed
-// at the camera the backend returns. No type in this file can produce a
-// scene -- they only describe *where a real camera goes* and *what the
-// renderer did with it*.
+// typed shape of that contract, plus the presentation types (CaptureResult,
+// ViewState) for the Google 3D Tiles render placed at the camera the
+// backend returns. No type here can produce a scene -- they only describe
+// where a real camera goes and what the renderer did with it.
 
 /**
  * The four view slots in the result grid. These are grid positions, not
@@ -114,9 +113,8 @@ export type UnavailableReason =
   | "network-error" // upstream data service failed
   | "not-supported"; // real address, but outside the curated supported set
 
-/** Discriminated result of POST /api/view-plan. lib/api.ts reshapes the
- *  backend's flat JSON body into this union so the rest of the frontend
- *  narrows on `.ok` exactly as it did when this was computed in-process. */
+/** Discriminated result of POST /api/view-plan; lib/api.ts reshapes the
+ *  backend's flat JSON body into this union so callers narrow on `.ok`. */
 export type ViewPlanResult =
   | { ok: true; plan: ViewPlan }
   | {

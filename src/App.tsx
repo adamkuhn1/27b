@@ -45,11 +45,9 @@ export default function App() {
 
   useEffect(() => () => abortRef.current?.abort(), []);
 
-  // Fetched once from the backend rather than bundled statically, now that
-  // the supported-building list lives server-side (backend/planning.py) --
-  // see lib/api.ts. Starts empty; the picker and the not-supported state
-  // both render fine with zero chips for the brief moment before this
-  // resolves.
+  // Fetched once from the backend (see lib/api.ts). Starts empty; the
+  // picker and the not-supported state both render fine with zero chips
+  // for the brief moment before this resolves.
   const [curatedBuildings, setCuratedBuildings] = useState<CuratedBuilding[]>([]);
   useEffect(() => {
     let cancelled = false;
