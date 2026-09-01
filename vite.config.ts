@@ -46,6 +46,16 @@ function lazyCesium(): Plugin {
 export default defineConfig({
   plugins: [react(), lazyCesium()],
   base: "./",
+  server: {
+    // The planning backend (backend/main.py, run separately with
+    // `uvicorn main:app --reload`) owns /api; proxying it here means the
+    // frontend can just fetch("/api/...") in dev with no CORS setup and no
+    // hardcoded backend host. `npm run build` never sees this -- production
+    // API routing is out of scope for this migration (see README).
+    proxy: {
+      "/api": "http://localhost:8000",
+    },
+  },
   build: {
     // Cesium's ESM source is genuinely ~5 MB; the point of this build is that
     // it sits in a lazy chunk, not that it is small. Keep the warning for our
