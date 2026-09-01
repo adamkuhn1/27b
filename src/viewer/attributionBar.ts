@@ -13,17 +13,13 @@
 // pixels so the credit cannot be separated from the picture by, say, saving the
 // image on its own.
 //
-// The bar was previously a flat 12 px on an 800 px-wide capture. Nothing ever
-// cropped it — but the frame is scaled down to fit its pane on screen, and the
-// text scales with it. In the four-up grid the panes measured 247-513 CSS px,
-// so 12 source pixels landed as 3.7-7.7 device pixels at DPR 1: present,
-// uncropped, and unreadable. The same constant also ignored `superSample`, so
-// raising the backing store made the credit line smaller relative to the image.
-//
-// Both are the same mistake — a constant tied to the source raster rather than
-// to the picture. The frame width already includes `superSample` (Cesium's
-// `resolutionScale` multiplies the backing store, and the capture reads the
-// backing store), so deriving from it fixes the supersampling case as well.
+// A flat 12 px on an 800 px-wide capture was legible at that raster, but the
+// frame is scaled down to fit its pane on screen (247-513 CSS px in the
+// four-up grid), so 12 source pixels landed at 3.7-7.7 device pixels: present
+// but unreadable. The fix is to size the text as a fraction of the frame
+// width instead of a fixed pixel count, which also self-corrects for
+// `superSample` (Cesium's `resolutionScale`, which the frame width already
+// includes).
 
 /**
  * Bar text height as a fraction of frame width. 0.015 is 12 px at the 800 px
