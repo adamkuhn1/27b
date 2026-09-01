@@ -10,16 +10,47 @@ outside those facades using **Google Photorealistic 3D Tiles** (via CesiumJS)
 no generative step, no compositing, no pixel analysis: the only thing ever
 drawn onto an output frame is the required attribution bar.
 
+## Two processes, not a distributed system
+
+This is a React frontend and a small Python planning API, run as two local
+processes -- not microservices, not a deployed backend. The split exists for
+one reason: to put a real language/architecture boundary between "figure out
+where a camera goes" and "render what's there." The **frontend** is the UI,
+the Google Maps key, the lazy-loaded Cesium renderer, and nothing else. The
+**backend** (`backend/`, FastAPI) does the geocoding, the curated-building
+gate, the NYC Open Data footprint lookup, and the camera math -- and never
+talks to Google's imagery at all. See "Pipeline architecture" below for
+which half does what, and `backend/models.py` for why every backend
+response is a typed value, never an HTTP error, for anything the pipeline
+can anticipate.
+
 ## Run it
 
+Two terminals -- the backend and the frontend dev server run independently.
+
 ```sh
+# Terminal 1: the planning backend
+cd backend
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn main:app --reload --port 8000
+pytest                        # unit tests: geometry, address-matching,
+                               # footprint parsing, the plan_view pipeline
+                               # (all pure/injected-deps -- no live network)
+
+# Terminal 2: the frontend
 npm install
-cp .env.example .env.local   # then fill in the key (optional — see below)
-npm run dev                  # http://localhost:5174
-npm run build                # production build (compiles Cesium; ~25 s)
-npm test                     # unit tests (pure math, no network, no key)
+cp .env.example .env.local    # then fill in the Google key (optional — see below)
+npm run dev                   # http://localhost:5174 -- proxies /api to
+                               # the backend above (see vite.config.ts)
+npm run build                 # production build (compiles Cesium; ~25 s)
+npm test                      # frontend unit tests (renderer/UI logic only
+                               # now -- the planning math moved to backend/)
 npm run typecheck
 ```
+
+`npm run build` only builds the frontend. This migration does not add a
+production deploy path for the backend -- see "Known limitations."
 
 ### Environment
 
@@ -93,33 +124,50 @@ rejected address and looking.
 ## Pipeline architecture
 
 ```
+FRONTEND (React)                    BACKEND (Python / FastAPI)
 address + floor
-  → geocode            NYC Planning GeoSearch (free, keyless, NYC-only —
-  |                    doubles as the "is this NYC" gate). The result is
-  |                    verified against the typed address (housenumber/street
-  |                    BEFORE locality) so a fuzzy geocoder fallback can never
-  |                    silently substitute a different real building.
-  → curated gate       BIN looked up in the verified list. Unsupported →
-  |                    honest state, zero further cost.
-  → footprint          NYC Open Data Building Footprints (free, keyless):
-  |                    roof height, ground elevation (NAVD88), polygon ring.
-  → elevation          floor → eye height (3.2 m/floor + 1.5 m eye, clamped
-  |                    to the real roof), then NAVD88 → WGS84 ellipsoidal via
-  |                    a baked GEOID18 lattice. Skipping this conversion is a
-  |                    silent ~32 m (ten-floor) error — it is load-bearing.
-  → camera math        dominant facade axis from the footprint edges
-  |                    (length-weighted exp(4iθ); ~29° on the Manhattan grid,
-  |                    verified on the real ESB footprint), four outward
-  |                    normals, camera pushed past the OUTERMOST wall
-  |                    crossing + 6 m and verified outside the polygon.
-  |                    Round/irregular footprints fall back to true compass
-  |                    bearings, and the UI says so.
+  ── POST /api/view-plan ──▶
+                                       → geocode            NYC Planning GeoSearch (free,
+                                       |                    keyless, NYC-only — doubles as the
+                                       |                    "is this NYC" gate). The result is
+                                       |                    verified against the typed address
+                                       |                    (housenumber/street BEFORE locality)
+                                       |                    so a fuzzy geocoder fallback can
+                                       |                    never silently substitute a
+                                       |                    different real building.
+                                       → curated gate       BIN looked up in the verified list.
+                                       |                    Unsupported → honest state, zero
+                                       |                    further cost.
+                                       → footprint          NYC Open Data Building Footprints
+                                       |                    (free, keyless): roof height, ground
+                                       |                    elevation (NAVD88), polygon ring.
+                                       → elevation          floor → eye height (3.2 m/floor +
+                                       |                    1.5 m eye, clamped to the real
+                                       |                    roof), then NAVD88 → WGS84
+                                       |                    ellipsoidal via a baked GEOID18
+                                       |                    lattice. Skipping this conversion is
+                                       |                    a silent ~32 m (ten-floor) error —
+                                       |                    it is load-bearing.
+                                       → camera math        dominant facade axis from the
+                                       |                    footprint edges (length-weighted
+                                       |                    exp(4iθ); ~29° on the Manhattan
+                                       |                    grid, verified on the real ESB
+                                       |                    footprint), four outward normals,
+                                       |                    camera pushed past the OUTERMOST
+                                       |                    wall crossing + 6 m and verified
+                                       |                    outside the polygon. Round/irregular
+                                       |                    footprints fall back to true compass
+                                       |                    bearings, and the UI says so.
+  ◀── typed ViewPlan or ──────────────┘
+      an honest unavailable reason
+      (always HTTP 200 — see
+      backend/models.py)
   → render             one offscreen Cesium session, Google Photorealistic
-  |                    3D Tiles. FOV 75°, preserveDrawingBuffer, warm-up
-  |                    pumping, per-view tile-settle wait. A frame that drew
-  |                    zero provider triangles is reported as failed — never
-  |                    shown. (That check reads our renderer's scene stats,
-  |                    not pixels.)
+  |                    3D Tiles, driven by the camera plan above. FOV 75°,
+  |                    preserveDrawingBuffer, warm-up pumping, per-view
+  |                    tile-settle wait. A frame that drew zero provider
+  |                    triangles is reported as failed — never shown. (That
+  |                    check reads our renderer's scene stats, not pixels.)
   → attribution        the per-frame credits Google returns are baked into
   |                    the PNG as a bottom bar — the only compositing in the
   |                    pipeline.
@@ -128,11 +176,20 @@ address + floor
                        you'd see" — never "your actual view".
 ```
 
-Key source files: `src/lib/geometry.ts` (camera math), `src/lib/geoid.ts`
-(datum conversion), `src/lib/addressMatch.ts` (anti-substitution),
-`src/lib/curated.ts` (the supported list), `src/lib/planView.ts`
-(orchestration), `src/viewer/tileRenderer.ts` (Cesium session + capture),
-`src/viewer/attributionBar.ts` (bar layout, unit-tested).
+Backend source files (`backend/`): `main.py` (the two FastAPI routes),
+`planning.py` (geocoding, address-match verification, the curated gate,
+footprint fetch, and the `plan_view` orchestration — everything above the
+line), `geometry.py` (the pure camera/datum math — everything above the
+line's actual arithmetic, plus the baked GEOID18 lattice), `models.py` (the
+typed request/response contract). No database, no auth, no queues, no
+Docker — four files, stdlib math, one HTTP client (`httpx`).
+
+Frontend source files (`src/`): `lib/api.ts` (the two fetch calls to the
+backend above, and the only place the frontend knows the backend exists),
+`viewer/tileRenderer.ts` (Cesium session + capture, unchanged by this
+migration), `viewer/attributionBar.ts` (bar layout, unit-tested,
+unchanged). `lib/types.ts` now describes the wire contract instead of
+computing it.
 
 Cesium (~1.7 MB gzipped) lives in a lazy chunk loaded only when a render
 actually starts; visitors who never pass the form never download it.
@@ -147,8 +204,9 @@ actually starts; visitors who never pass the form never download it.
   (bad address, missing footprint, service down, no key, failed capture) is a
   message, not a picture.
 - **No silent substitution.** An address the geocoder can't verify
-  fails honestly (`addressMatch.ts` — checks house number and street before
-  locality, which is what catches Pelias's confident fuzzy fallbacks).
+  fails honestly (`backend/planning.py`'s `verify_address_match` — checks
+  house number and street before locality, which is what catches Pelias's
+  confident fuzzy fallbacks).
 - **No imagery caching.** Only free, keyless municipal *geometry* may be
   cached; provider pixels never are (and currently nothing is).
 - **Estimates are labelled.** Floor height is an assumption (3.2 m/floor)
@@ -170,3 +228,9 @@ actually starts; visitors who never pass the form never download it.
   reason candidates are verified by rendering, not by arithmetic alone.
 - **Repeat lookups re-render.** Required by the no-caching terms; each is a
   new billable event.
+- **No production deploy path for the backend, yet.** This migration adds a
+  local FastAPI process (`backend/`) and wires the frontend to it via a Vite
+  dev-server proxy; it does not add hosting, a process manager, HTTPS, or a
+  production CORS origin for it. Running both halves locally (see "Run it")
+  is the only supported way to use this app right now — consistent with the
+  rest of the suite staying private and undeployed.

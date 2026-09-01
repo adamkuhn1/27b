@@ -1,14 +1,15 @@
 // Address + floor input, and the curated-building picker.
 //
 // The picker is the primary way in: 27B only renders buildings on the curated
-// list (see lib/curated.ts for why), so the supported set is presented up
-// front as the offer — not discovered by trial and error. Free-text entry
+// list (see backend/planning.py's CURATED_BUILDINGS for why), so the
+// supported set -- fetched from GET /api/curated-buildings, see lib/api.ts --
+// is presented up front as the offer, not discovered by trial and error. Free-text entry
 // stays, because "type any address and get an honest answer" is part of the
 // product: an unsupported address gets a clear not-yet state, never a broken
 // render.
 
 import { useState, type FormEvent } from "react";
-import { CURATED_BUILDINGS } from "../lib/curated";
+import type { CuratedBuilding } from "../lib/types";
 
 export interface AddressFormValue {
   address: string;
@@ -58,10 +59,13 @@ export function validateForm(
 
 interface Props {
   disabled: boolean;
+  /** Fetched from the backend (GET /api/curated-buildings) by App.tsx --
+   *  see lib/api.ts. May be empty briefly while that request is in flight. */
+  curatedBuildings: CuratedBuilding[];
   onSubmit: (value: AddressFormValue) => void;
 }
 
-export function AddressForm({ disabled, onSubmit }: Props) {
+export function AddressForm({ disabled, curatedBuildings, onSubmit }: Props) {
   const [address, setAddress] = useState("");
   const [floor, setFloor] = useState("");
   const [errors, setErrors] = useState<AddressValidationError>({});
@@ -124,7 +128,7 @@ export function AddressForm({ disabled, onSubmit }: Props) {
           addresses will get an honest "not supported yet" message.
         </p>
         <ul className="picker-list">
-          {CURATED_BUILDINGS.map((b) => (
+          {curatedBuildings.map((b) => (
             <li key={b.bin}>
               <button
                 type="button"

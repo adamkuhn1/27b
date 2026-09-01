@@ -5,8 +5,7 @@
 // block-model, or simulated scene. The not-supported state is first-class —
 // it is the answer most free-text addresses will get, by design.
 
-import { CURATED_BUILDINGS } from "../lib/curated";
-import type { UnavailableReason } from "../lib/types";
+import type { CuratedBuilding, UnavailableReason } from "../lib/types";
 
 export function LoadingState({ label }: { label: string }) {
   return (
@@ -36,10 +35,14 @@ export function UnavailableState({
   reason,
   message,
   supportedFloors,
+  curatedBuildings,
 }: {
   reason: UnavailableReason;
   message: string;
   supportedFloors?: { min: number; max: number };
+  /** Fetched from the backend (GET /api/curated-buildings) by App.tsx --
+   *  see lib/api.ts. */
+  curatedBuildings: CuratedBuilding[];
 }) {
   if (reason === "not-supported") {
     return (
@@ -56,7 +59,7 @@ export function UnavailableState({
             </p>
             <p className="state-list-label">Buildings with verified views:</p>
             <ul className="state-list">
-              {CURATED_BUILDINGS.map((b) => (
+              {curatedBuildings.map((b) => (
                 <li key={b.bin}>
                   {b.name}, floors {b.floors.min}-{b.floors.max}
                 </li>
