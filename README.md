@@ -1,5 +1,7 @@
 # 27B
 
+[![CI](https://github.com/adamkuhn1/27b/actions/workflows/ci.yml/badge.svg)](https://github.com/adamkuhn1/27b/actions/workflows/ci.yml)
+
 Enter a New York address and a floor, and 27B renders four real photogrammetric
 views of what you'd see out the windows on that floor.
 
