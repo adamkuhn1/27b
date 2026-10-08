@@ -35,8 +35,11 @@ footprint lookup, and the geometry math. It never touches Google's imagery.
 Every response — success or a specific failure reason — is a typed Pydantic
 model (`backend/models.py`), not an HTTP error code.
 
-The backend currently runs locally alongside the frontend dev server (see
-"Run locally"); it has not been deployed.
+Locally the backend runs alongside the frontend dev server (see "Run
+locally"). For deployment, `vercel.json` builds both into one Vercel project:
+the Vite build is served statically and `api/index.py` serves the same
+FastAPI app as a Python function at `/api/*`, so the frontend needs no API
+host or CORS configuration.
 
 ## Technical highlights
 
