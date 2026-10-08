@@ -1,0 +1,5 @@
+# Runtime dependencies for the deployed API (Vercel reads this file).
+# backend/requirements.txt adds the test tools for local development.
+fastapi>=0.141,<0.142
+httpx>=0.28,<0.29
+pydantic>=2.13,<3

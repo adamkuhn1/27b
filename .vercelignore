@@ -1,0 +1,8 @@
+node_modules
+dist
+backend/.venv
+backend/tests
+backend/.mypy_cache
+backend/.pytest_cache
+**/__pycache__
+.env.local
