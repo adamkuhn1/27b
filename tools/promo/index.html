@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>27B promo capture</title>
+    <style>
+      html, body { margin: 0; background: #000; }
+      #stage { position: relative; overflow: hidden; }
+      #stage .cesium-viewer-bottom { z-index: 3; }
+      /* Cesium's own logo (not a provider credit, and a broken image here). */
+      #stage .cesium-credit-logoContainer { display: none !important; }
+      .label {
+        position: absolute; left: 44px; bottom: 64px; z-index: 2;
+        color: #fff; font: 500 15px/1.35 -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+        text-shadow: 0 1px 12px rgba(0, 0, 0, 0.55), 0 0 2px rgba(0, 0, 0, 0.6);
+        letter-spacing: 0.01em;
+      }
+      .label .name { font-size: 34px; font-weight: 600; letter-spacing: -0.01em; }
+      .label .facing { margin-top: 6px; font-variant-numeric: tabular-nums; opacity: 0.92; }
+      .promo {
+        position: absolute; top: 22px; right: 26px; z-index: 2;
+        color: rgba(255, 255, 255, 0.85); font: 500 12px/1 -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+        letter-spacing: 0.08em; text-transform: uppercase;
+        text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="stage">
+      <div class="promo">For promotional purposes only</div>
+      <div class="label" hidden>
+        <div class="name"></div>
+        <div class="where"></div>
+        <div class="facing"></div>
+      </div>
+    </div>
+    <script type="module" src="./promo.ts"></script>
+  </body>
+</html>
