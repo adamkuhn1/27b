@@ -2,6 +2,8 @@
 
 [![CI](https://github.com/adamkuhn1/27b/actions/workflows/ci.yml/badge.svg)](https://github.com/adamkuhn1/27b/actions/workflows/ci.yml)
 
+![The view north from floor 85 of 432 Park Avenue, rendered by 27B: Central Park and the Upper East Side in Google Photorealistic 3D Tiles](docs/27b-hero.jpg)
+
 Enter a New York address and a floor, and 27B renders four real photogrammetric
 views of what you'd see out the windows on that floor.
 
