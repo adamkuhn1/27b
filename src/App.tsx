@@ -82,6 +82,8 @@ export default function App() {
     if (!key) return; // ResultView is not shown without a key — see render()
 
     const setSlot = (slot: ViewSlot, s: ViewState) => {
+      // A superseded session must not paint into a newer lookup's frames.
+      if (controller.signal.aborted) return;
       setState((prev) =>
         prev.kind === "result"
           ? { ...prev, viewStates: { ...prev.viewStates, [slot]: s } }
@@ -93,19 +95,20 @@ export default function App() {
       // Lazy: this import is what pulls Cesium into the page.
       const { renderViews } = await import("./viewer/tileRenderer");
       if (controller.signal.aborted) return;
-      const outcomes = await renderViews(result.plan.views, {
+      // Each frame is shown the moment it lands, so ResultView's
+      // "N of 4" progress line advances view by view.
+      await renderViews(result.plan.views, {
         apiKey: key,
         signal: controller.signal,
         onViewStart: (slot) => setSlot(slot, { kind: "capturing" }),
+        onViewDone: (o) =>
+          setSlot(
+            o.slot,
+            o.ok
+              ? { kind: "ready", result: o.result }
+              : { kind: "failed", detail: o.detail },
+          ),
       });
-      for (const o of outcomes) {
-        setSlot(
-          o.slot,
-          o.ok
-            ? { kind: "ready", result: o.result }
-            : { kind: "failed", detail: o.detail },
-        );
-      }
     } catch (err) {
       // A RenderAbortedError also lands here; the aborted check covers it.
       if (controller.signal.aborted) return;

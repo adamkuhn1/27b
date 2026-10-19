@@ -17,6 +17,66 @@ interface Props {
   states: Record<ViewSlot, ViewState>;
 }
 
+export interface RenderProgress {
+  /** Views with a final outcome (ready or failed). */
+  done: number;
+  failed: number;
+  total: number;
+  /** Status line, or null once every view rendered (nothing left to say). */
+  label: string | null;
+}
+
+/** How far the render session has got, counted over the plan's views. A
+ *  failed view counts as done (it won't change) and is called out, never
+ *  folded into the rendered count. */
+export function renderProgress(
+  slots: readonly ViewSlot[],
+  states: Record<ViewSlot, ViewState>,
+): RenderProgress {
+  const total = slots.length;
+  let ready = 0;
+  let failed = 0;
+  for (const slot of slots) {
+    const kind = states[slot]?.kind;
+    if (kind === "ready") ready++;
+    else if (kind === "failed") failed++;
+  }
+  const done = ready + failed;
+  const failedNote = failed > 0 ? ` · ${failed} didn't load` : "";
+  let label: string | null;
+  if (done < total) {
+    label = `Rendering… ${ready} of ${total} views ready${failedNote}`;
+  } else if (failed > 0) {
+    label = `${ready} of ${total} views rendered${failedNote}`;
+  } else {
+    label = null;
+  }
+  return { done, failed, total, label };
+}
+
+function ProgressLine({ progress }: { progress: RenderProgress }) {
+  const { done, total, label } = progress;
+  // The live region stays mounted (empty when finished) so screen readers
+  // reliably announce each change.
+  return (
+    <div className="render-progress" role="status" aria-live="polite">
+      {label && (
+        <>
+          <p>{label}</p>
+          {done < total && (
+            <div className="render-progress-track" aria-hidden="true">
+              <div
+                className="render-progress-fill"
+                style={{ width: `${(done / total) * 100}%` }}
+              />
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
 function frameCaption(plan: ViewPlan, slot: ViewSlot): string {
   const view = plan.views.find((v) => v.slot === slot);
   if (!view) return "";
@@ -59,6 +119,12 @@ export function ResultView({ plan, states }: Props) {
           {plan.curatedName}, floor {plan.floor}
         </h2>
         <p className="result-sub">{plan.geocode.label}</p>
+        <ProgressLine
+          progress={renderProgress(
+            plan.views.map((v) => v.slot),
+            states,
+          )}
+        />
       </header>
 
       <div className="frames">

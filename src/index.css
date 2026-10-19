@@ -239,6 +239,34 @@ body {
   color: var(--text-faint);
   font-size: 14px;
 }
+.render-progress p {
+  margin: -8px 0 8px;
+  color: var(--text-dim);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+.render-progress-track {
+  height: 3px;
+  max-width: 240px;
+  margin-bottom: 18px;
+  background: var(--line);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.render-progress-fill {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.4s ease-out;
+}
+/* Finished with a failure: no bar, so keep the usual gap above the frames. */
+.render-progress p:only-child {
+  margin-bottom: 18px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .render-progress-fill {
+    transition: none;
+  }
+}
 .frames {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));

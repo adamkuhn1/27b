@@ -258,6 +258,12 @@ export interface RenderOptions {
   signal?: AbortSignal;
   /** Per-view progress callback: fires when a view starts capturing. */
   onViewStart?: (slot: ViewSlot) => void;
+  /**
+   * Per-view progress callback: fires as soon as a view's final outcome
+   * (after its retry) is known, so the UI can show frames as they land
+   * instead of all four at the end of the session.
+   */
+  onViewDone?: (outcome: ViewOutcome) => void;
 }
 
 /** The outcome of one direction. */
@@ -382,7 +388,8 @@ function waitForTiles(
 
 /**
  * Render all views in one Cesium session. Returns one outcome per view, in
- * order; calls `onViewStart` as each begins so the UI can show progress. A
+ * order; calls `onViewStart` as each begins and `onViewDone` as each
+ * finishes so the UI can show progress. A
  * direction that fails is retried once inside the still-open session (free),
  * then reported as failed — with no image, never a placeholder.
  *
@@ -394,7 +401,7 @@ export async function renderViews(
   views: CameraView[],
   opts: RenderOptions,
 ): Promise<ViewOutcome[]> {
-  const { apiKey, signal, onViewStart } = opts;
+  const { apiKey, signal, onViewStart, onViewDone } = opts;
 
   const checkAborted = () => {
     if (signal?.aborted) throw new RenderAbortedError();
@@ -599,6 +606,7 @@ export async function renderViews(
         console.error(`[27b] view ${view.slot} failed: ${outcome.detail}`);
       }
       outcomes.push(outcome);
+      onViewDone?.(outcome);
     }
     console.debug(
       `[27b] session rendered ${outcomes.filter((o) => o.ok).length}/${views.length} views in ${Date.now() - started} ms (1 billable root-tileset request)`,
