@@ -28,35 +28,49 @@ export async function planView(
   floor: number,
   signal?: AbortSignal,
 ): Promise<ViewPlanResult> {
-  const res = await fetch("/api/view-plan", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ address, floor }),
-    signal,
-  });
+  let res: Response;
+  let data: RawViewPlanResponse;
+  try {
+    res = await fetch("/api/view-plan", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ address, floor }),
+      signal,
+    });
 
-  if (!res.ok) {
-    // The backend only ever returns non-200 for something outside the
-    // domain model (a malformed request, a genuine bug) -- see
-    // backend/models.py's ViewPlanResponse docstring. Route it to the same
-    // honest unavailable state as every other failure, never a fake scene.
-    return {
-      ok: false,
-      reason: "network-error",
-      message: "Something went wrong resolving this address. Please try again.",
-    };
+    if (!res.ok) {
+      // The backend only ever returns non-200 for something outside the
+      // domain model (a malformed request, a genuine bug) -- see
+      // backend/models.py's ViewPlanResponse docstring. Route it to the same
+      // honest unavailable state as every other failure, never a fake scene.
+      return NETWORK_ERROR;
+    }
+
+    data = (await res.json()) as RawViewPlanResponse;
+  } catch (err) {
+    // A superseded lookup must still reject, so App.tsx can drop it.
+    if (signal?.aborted) throw err;
+    // Backend unreachable (fetch rejects) or a non-JSON body (e.g. a proxy
+    // error page). Without this the rejection leaves the UI stuck in its
+    // "planning" state with the form disabled.
+    return NETWORK_ERROR;
   }
 
-  const data = (await res.json()) as RawViewPlanResponse;
   return data.ok
     ? { ok: true, plan: data.plan! }
     : {
         ok: false,
         reason: data.reason ?? "network-error",
-        message: data.message ?? "Something went wrong resolving this address. Please try again.",
+        message: data.message ?? NETWORK_ERROR.message,
         supportedFloors: data.supportedFloors,
       };
 }
+
+const NETWORK_ERROR = {
+  ok: false,
+  reason: "network-error",
+  message: "Something went wrong resolving this address. Please try again.",
+} as const satisfies ViewPlanResult;
 
 /** The supported-building list the picker chips render (GET
  *  /api/curated-buildings). Fetched once, in App.tsx, and passed down --
