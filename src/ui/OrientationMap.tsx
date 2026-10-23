@@ -16,7 +16,7 @@ const M_PER_DEG = (Math.PI / 180) * 6_371_008.8;
 /** Layout of the square diagram, in viewBox units. */
 export const MAP_SIZE = 200;
 const CAMERA_RING = 32; // farthest camera's distance from the centre
-const ARROW_LEN = 28;
+const ARROW_LEN = 22;
 const LABEL_GAP = 9;
 
 export interface MapArrow {
@@ -142,8 +142,8 @@ export function OrientationMap({
 
         {/* True north, fixed: the reference the arrows are read against. */}
         <g className="om-north">
-          <line x1={18} y1={44} x2={18} y2={20} markerEnd={`url(#${markerId}-north)`} />
-          <text x={18} y={14} textAnchor="middle">
+          <line x1={18} y1={46} x2={18} y2={23} markerEnd={`url(#${markerId}-north)`} />
+          <text x={18} y={17} textAnchor="middle">
             N
           </text>
         </g>

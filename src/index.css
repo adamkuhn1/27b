@@ -241,21 +241,28 @@ body {
 }
 
 /* Top-down camera diagram: north up, one arrow per view. */
+/* Caption sits beside the map, not under it, so the figure is no taller
+   than the map itself and doesn't leave an empty band under the title. */
 .orientation-map {
   flex: none;
-  width: 168px;
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: flex-end;
+  gap: 12px;
   margin: 0 0 16px;
 }
 .orientation-map svg {
   display: block;
-  width: 100%;
-  height: auto;
+  flex: none;
+  width: 136px;
+  height: 136px;
   border: 1px solid var(--line);
   border-radius: 6px;
   background: var(--bg-raised);
 }
 .orientation-map figcaption {
-  padding-top: 6px;
+  width: 128px;
+  text-align: right;
   font-size: 12px;
   line-height: 1.35;
   color: var(--text-dim);
@@ -266,7 +273,7 @@ body {
 }
 .om-north text {
   fill: var(--text);
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
 }
 .om-standoff {
@@ -286,7 +293,7 @@ body {
 }
 .om-view text {
   fill: var(--text-dim);
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
 }
 .om-head-view {
@@ -404,6 +411,13 @@ body {
   .result-head {
     flex-direction: column;
     gap: 0;
+  }
+  /* Stacked under the title: map first, caption to its right. */
+  .orientation-map {
+    flex-direction: row;
+  }
+  .orientation-map figcaption {
+    text-align: left;
   }
   .lookup {
     width: 100%;
