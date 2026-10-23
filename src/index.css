@@ -229,6 +229,73 @@ body {
 
 /* --- result: the actual output, meant to dominate the page ----------------- */
 
+.result-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+.result-title {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Top-down camera diagram: north up, one arrow per view. */
+.orientation-map {
+  flex: none;
+  width: 168px;
+  margin: 0 0 16px;
+}
+.orientation-map svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--bg-raised);
+}
+.orientation-map figcaption {
+  padding-top: 6px;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--text-dim);
+}
+.om-north line {
+  stroke: var(--text-dim);
+  stroke-width: 1.5;
+}
+.om-north text {
+  fill: var(--text);
+  font-size: 13px;
+  font-weight: 700;
+}
+.om-standoff {
+  stroke: var(--line-strong);
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+}
+.om-building {
+  fill: var(--text-faint);
+}
+.om-view circle {
+  fill: var(--accent);
+}
+.om-view line {
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+.om-view text {
+  fill: var(--text-dim);
+  font-size: 13px;
+  font-weight: 600;
+}
+.om-head-view {
+  fill: var(--accent);
+}
+.om-head-north {
+  fill: var(--text-dim);
+}
+
 .result-head h2 {
   margin: 0 0 4px;
   font-size: 19px;
@@ -333,6 +400,10 @@ body {
   }
   .frames {
     grid-template-columns: 1fr;
+  }
+  .result-head {
+    flex-direction: column;
+    gap: 0;
   }
   .lookup {
     width: 100%;

@@ -10,6 +10,7 @@
 // explained once, in the footer below, not repeated on every frame.
 
 import type { ViewPlan, ViewSlot, ViewState } from "../lib/types";
+import { OrientationMap } from "./OrientationMap";
 
 interface Props {
   plan: ViewPlan;
@@ -115,15 +116,22 @@ export function ResultView({ plan, states }: Props) {
   return (
     <section className="result" aria-label="Rendered views">
       <header className="result-head">
-        <h2>
-          {plan.curatedName}, floor {plan.floor}
-        </h2>
-        <p className="result-sub">{plan.geocode.label}</p>
-        <ProgressLine
-          progress={renderProgress(
-            plan.views.map((v) => v.slot),
-            states,
-          )}
+        <div className="result-title">
+          <h2>
+            {plan.curatedName}, floor {plan.floor}
+          </h2>
+          <p className="result-sub">{plan.geocode.label}</p>
+          <ProgressLine
+            progress={renderProgress(
+              plan.views.map((v) => v.slot),
+              states,
+            )}
+          />
+        </div>
+        <OrientationMap
+          views={plan.views}
+          centroid={plan.footprint.centroid}
+          basis={plan.basis}
         />
       </header>
 
