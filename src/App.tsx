@@ -59,7 +59,23 @@ export default function App() {
     };
   }, []);
 
+  // The query behind the current result, so the not-supported state's
+  // "Try floor N" button can re-run it at a supported floor.
+  const lastQueryRef = useRef<AddressFormValue | null>(null);
+  // Set only by that retry, so the form's floor box shows the floor being
+  // viewed. A fresh object each time, so a repeat of the same floor still
+  // re-syncs the field.
+  const [floorOverride, setFloorOverride] = useState<{ floor: number } | undefined>();
+
+  const retryAtFloor = (floor: number) => {
+    const last = lastQueryRef.current;
+    if (!last) return;
+    setFloorOverride({ floor });
+    void lookup({ address: last.address, floor });
+  };
+
   const lookup = async ({ address, floor }: AddressFormValue) => {
+    lastQueryRef.current = { address, floor };
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
@@ -146,6 +162,7 @@ export default function App() {
       <AddressForm
         disabled={state.kind === "planning"}
         curatedBuildings={curatedBuildings}
+        floorOverride={floorOverride}
         onSubmit={lookup}
       />
 
@@ -159,6 +176,8 @@ export default function App() {
             reason={state.result.reason}
             message={state.result.message}
             supportedFloors={state.result.supportedFloors}
+            requestedFloor={lastQueryRef.current?.floor}
+            onRetry={retryAtFloor}
             curatedBuildings={curatedBuildings}
           />
         ) : !googleMapsKey() ? (

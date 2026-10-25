@@ -8,7 +8,7 @@
 // product: an unsupported address gets a clear not-yet state, never a broken
 // render.
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import type { CuratedBuilding } from "../lib/types";
 
 export interface AddressFormValue {
@@ -62,13 +62,23 @@ interface Props {
   /** Fetched from the backend (GET /api/curated-buildings) by App.tsx --
    *  see lib/api.ts. May be empty briefly while that request is in flight. */
   curatedBuildings: CuratedBuilding[];
+  /** Set by App when a lookup is re-run at another floor from outside the
+   *  form (the not-supported "Try floor N" button); written into the floor
+   *  field so it shows the floor being viewed. */
+  floorOverride?: { floor: number };
   onSubmit: (value: AddressFormValue) => void;
 }
 
-export function AddressForm({ disabled, curatedBuildings, onSubmit }: Props) {
+export function AddressForm({ disabled, curatedBuildings, floorOverride, onSubmit }: Props) {
   const [address, setAddress] = useState("");
   const [floor, setFloor] = useState("");
   const [errors, setErrors] = useState<AddressValidationError>({});
+
+  useEffect(() => {
+    if (!floorOverride) return;
+    setFloor(String(floorOverride.floor));
+    setErrors({});
+  }, [floorOverride]);
 
   const submit = (e: FormEvent) => {
     e.preventDefault();

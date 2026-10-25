@@ -31,24 +31,52 @@ export function NoImagerySourceState() {
   );
 }
 
+/** The floor inside `range` closest to `floor`: the range's nearer end when
+ *  `floor` is outside it, `floor` itself when it's already inside. */
+export function nearestSupportedFloor(
+  floor: number,
+  range: { min: number; max: number },
+): number {
+  return Math.min(range.max, Math.max(range.min, floor));
+}
+
 export function UnavailableState({
   reason,
   message,
   supportedFloors,
+  requestedFloor,
+  onRetry,
   curatedBuildings,
 }: {
   reason: UnavailableReason;
   message: string;
   supportedFloors?: { min: number; max: number };
+  /** The floor the visitor asked for; with `onRetry`, enables the
+   *  "Try floor N" shortcut when the building is supported but the floor isn't. */
+  requestedFloor?: number;
+  onRetry?: (floor: number) => void;
   /** Fetched from the backend (GET /api/curated-buildings) by App.tsx --
    *  see lib/api.ts. */
   curatedBuildings: CuratedBuilding[];
 }) {
   if (reason === "not-supported") {
+    const retryFloor =
+      supportedFloors && requestedFloor !== undefined && onRetry
+        ? nearestSupportedFloor(requestedFloor, supportedFloors)
+        : undefined;
     return (
       <div className="state" role="status">
         <h2>We don't have a good view for this one yet</h2>
         <p>{message}</p>
+        {retryFloor !== undefined && onRetry && (
+          <button
+            type="button"
+            className="lookup state-action"
+            onClick={() => onRetry(retryFloor)}
+          >
+            Try floor {retryFloor}
+          </button>
+        )}
         {!supportedFloors && (
           <>
             <p>
